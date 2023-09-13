@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users'
+    'users',
+    'products'
 ]
 
 MIDDLEWARE = [
@@ -79,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'hardcoregames',
         'USER': 'postgres',
-        'PASSWORD': '#1998jhoan',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'DATABASE_PORT': '5432',
     }
