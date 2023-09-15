@@ -2,7 +2,6 @@ import json
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.http import HttpResponse, JsonResponse
@@ -11,14 +10,18 @@ from django.views.decorators.csrf import csrf_exempt
 import users
 from users.models import User_Customized
 from utils.getJsonFromRequest import GetJsonFromRequest
+import jwt
 
 
 # Create your views here.
 def get_all_users(request):
     all_users = User.objects.all()
     response = serializers.serialize("json", all_users)
-    return HttpResponse(JsonResponse({'message': 'proceso exitoso', 'response':  json.loads(response), 'code': '00', 'status': 200}),
-                        content_type='application/json')
+    payload = {'message': 'proceso exitoso', 'response': json.loads(response), 'code': '00', 'status': 200}
+    response_encrypt = jwt.encode({"response": payload}, 'prueba-secret')
+
+    return HttpResponse(JsonResponse({"token": response_encrypt}), content_type='application/json')
+
 
 @csrf_exempt
 def get_user_by_email(request, self=None):
@@ -30,9 +33,25 @@ def get_user_by_email(request, self=None):
             response = serializers.serialize("json", user_selected)
             return HttpResponse(JsonResponse(
                 {'message': 'proceso exitoso', 'response': json.loads(response), 'code': '00', 'status': 200}),
-                                content_type='application/json')
+                content_type='application/json')
+        return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
+                            content_type="application/json")\
+
+@csrf_exempt
+def get_user_by_id(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        id = body['id']
+        user_selected = User.objects.filter(id=id)
+        if user_selected.exists():
+            response = serializers.serialize("json", user_selected)
+            response = GetJsonFromRequest.jsonArrToJson(self, response)
+            return HttpResponse(JsonResponse(
+                {'message': 'proceso exitoso', 'data': json.loads(response), 'code': '00', 'status': 200}),
+                content_type='application/json')
         return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
                             content_type="application/json")
+
 
 @login_required
 def index(request):
@@ -65,16 +84,20 @@ def register(request, self=None):
 
 
 @csrf_exempt
-def login_request(request):
+def login_request(request, self=None):
     if request.method == "POST":
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
         username = body['user']
         password = body['password']
         user = authenticate(username=username, password=password)
+        user_selected = User.objects.filter(username=username)
+
         if user is not None:
             login(request, user)
-            return HttpResponse(JsonResponse({'status': 200, 'message': 'usuario logeado existosamente', 'code': '00'}),
+            response = serializers.serialize("json", user_selected)
+            response = GetJsonFromRequest.jsonArrToJson(self, response)
+            return HttpResponse(JsonResponse({'data': json.loads(response), 'message': 'usuario logeado existosamente', 'code': '00'}),
                                 content_type="application/json")
         return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
                             content_type="application/json")
