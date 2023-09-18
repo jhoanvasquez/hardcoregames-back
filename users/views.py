@@ -9,8 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from users.models import User_Customized, TypeDocument
 from utils.getJsonFromRequest import GetJsonFromRequest
-
 from utils.joinModels import JoinModels
+
 
 
 # Create your views here.
@@ -114,6 +114,7 @@ def login_request(request, self=None):
             models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
             payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
+
         return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
                             content_type="application/json")
 
