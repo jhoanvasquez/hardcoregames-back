@@ -7,10 +7,10 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-import users
-from users.models import User_Customized
+from users.models import User_Customized, TypeDocument
 from utils.getJsonFromRequest import GetJsonFromRequest
-import jwt
+
+from utils.joinModels import JoinModels
 
 
 # Create your views here.
@@ -18,9 +18,8 @@ def get_all_users(request):
     all_users = User.objects.all()
     response = serializers.serialize("json", all_users)
     payload = {'message': 'proceso exitoso', 'response': json.loads(response), 'code': '00', 'status': 200}
-    response_encrypt = jwt.encode({"response": payload}, 'prueba-secret')
 
-    return HttpResponse(JsonResponse({"token": response_encrypt}), content_type='application/json')
+    return HttpResponse(JsonResponse(payload), content_type='application/json')
 
 
 @csrf_exempt
@@ -30,26 +29,27 @@ def get_user_by_email(request, self=None):
         email = body['email']
         user_selected = User.objects.filter(username=email)
         if user_selected.exists():
-            response = serializers.serialize("json", user_selected)
-            return HttpResponse(JsonResponse(
-                {'message': 'proceso exitoso', 'response': json.loads(response), 'code': '00', 'status': 200}),
-                content_type='application/json')
+            user_customized_selected = User_Customized.objects.filter(username=email)
+            models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
+            payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
+
         return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
-                            content_type="application/json")\
+                            content_type="application/json")
+
 
 @csrf_exempt
-def get_user_by_id(request, self=None):
-    if request.method == "POST":
-        body = GetJsonFromRequest.__int__(self, request)
-        id = body['id']
-        user_selected = User.objects.filter(id=id)
+def get_user_by_id(request, id_user, self=None):
+    if request.method == "GET":
+        id_user = id_user
+        user_selected = User.objects.filter(id=id_user)
         if user_selected.exists():
-            response = serializers.serialize("json", user_selected)
-            response = GetJsonFromRequest.jsonArrToJson(self, response)
-            return HttpResponse(JsonResponse(
-                {'message': 'proceso exitoso', 'data': json.loads(response), 'code': '00', 'status': 200}),
-                content_type='application/json')
-        return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
+            user_customized_selected = User_Customized.objects.filter(user_id=id_user)
+            models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
+            payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
+
+        return HttpResponse(JsonResponse({'data': {}, 'status': 200, 'code': '01', 'message': 'el usuario no existe'}),
                             content_type="application/json")
 
 
@@ -67,17 +67,32 @@ def register(request, self=None):
         email = body['email']
         password = body['password']
         phone_number = body['phone_number']
+        id_document = body['id_document']
+        type_id_document = body['type_id_document']
+        avatar = body['avatar']
+
         exist_user = User.objects.filter(username=email).exists()
         if exist_user:
             return HttpResponse(
                 JsonResponse({'message': 'ya esxiste un usuario con este email', "status": 200, "code": "01"}),
                 content_type="application/json")
-        user = User.objects.create_user(first_name=first_name, last_name=last_name,
-                                        username=email, email=email, password=password)
+        user = User.objects.create_user(
+            first_name=first_name,
+            last_name=last_name,
+            username=email,
+            email=email,
+            password=password
+        )
 
         user.save()
         last_user_id = User.objects.last().id
-        user_customized = User_Customized(user_id=last_user_id, phone_number=phone_number)
+        type_id_selected = TypeDocument.objects.get(type_id=type_id_document)
+        user_customized = User_Customized(user_id=last_user_id,
+                                          phone_number=phone_number,
+                                          id_document=id_document,
+                                          type_id_document=type_id_selected,
+                                          avatar=avatar
+                                          )
         user_customized.save()
         return HttpResponse(JsonResponse({'message': 'usuario registrado exitosamente', "status": 200, "code": "00"}),
                             content_type="application/json")
@@ -95,10 +110,10 @@ def login_request(request, self=None):
 
         if user is not None:
             login(request, user)
-            response = serializers.serialize("json", user_selected)
-            response = GetJsonFromRequest.jsonArrToJson(self, response)
-            return HttpResponse(JsonResponse({'data': json.loads(response), 'message': 'usuario logeado existosamente', 'code': '00'}),
-                                content_type="application/json")
+            user_customized_selected = User_Customized.objects.filter(user_id=user_selected.get( email=username ))
+            models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
+            payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
         return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
                             content_type="application/json")
 
