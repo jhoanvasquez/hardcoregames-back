@@ -37,8 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'users',
-    'products'
+    'products',
+
 ]
 
 MIDDLEWARE = [
@@ -49,9 +51,39 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'ecommerceHardcoregamesBack.urls'
+
+# CORS_ALLOWED_ORIGINS = {
+#  'http://localhost:4200',
+# }
+
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     'http://localhost:4200',
+# ]
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
+# CORS_ALLOW_HEADERS = (
+#     "accept",
+#     "authorization",
+#     "content-type",
+#     "user-agent",
+#     "x-csrftoken",
+#     "x-requested-with",
+# )
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 TEMPLATES = [
     {
@@ -80,7 +112,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'hardcoregames',
         'USER': 'postgres',
-        'PASSWORD': '#1998jhoan',
+        'PASSWORD': 'admin',
         'HOST': 'localhost',
         'DATABASE_PORT': '5432',
     }

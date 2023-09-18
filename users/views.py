@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 import users
 from users.models import User_Customized
 from utils.getJsonFromRequest import GetJsonFromRequest
-import jwt
+# import jwt
 
 
 # Create your views here.
@@ -98,7 +98,9 @@ def login_request(request, self=None):
             response = serializers.serialize("json", user_selected)
             response = GetJsonFromRequest.jsonArrToJson(self, response)
             return HttpResponse(JsonResponse({'data': json.loads(response), 'message': 'usuario logeado existosamente', 'code': '00'}),
+                                
                                 content_type="application/json")
+                                
         return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
                             content_type="application/json")
 
