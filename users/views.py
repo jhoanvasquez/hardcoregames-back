@@ -12,8 +12,6 @@ from utils.getJsonFromRequest import GetJsonFromRequest
 from utils.joinModels import JoinModels
 
 
-
-# Create your views here.
 def get_all_users(request):
     all_users = User.objects.all()
     response = serializers.serialize("json", all_users)
@@ -110,7 +108,7 @@ def login_request(request, self=None):
 
         if user is not None:
             login(request, user)
-            user_customized_selected = User_Customized.objects.filter(user_id=user_selected.get( email=username ))
+            user_customized_selected = User_Customized.objects.filter(user_id=user_selected.get(email=username))
             models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
             payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
@@ -126,3 +124,16 @@ def logout_request(request):
         return HttpResponse(JsonResponse({'message': 'usuario logout'}), content_type="application/json")
     return HttpResponse(JsonResponse({'message': 'no hay usuario', 'status': 200, 'code': '01'}),
                         content_type="application/json")
+
+
+def get_all_document_types(request):
+    all_document_types = TypeDocument.objects.all()
+    response = serializers.serialize("json", all_document_types)
+    response_json = json.loads(response)
+    payload = {"data": response_json,
+               'message': 'proceso exitoso',
+               'code': '00',
+               'status': 200
+               }
+
+    return HttpResponse(JsonResponse(payload), content_type='application/json')
