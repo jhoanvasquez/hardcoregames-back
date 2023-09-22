@@ -16,15 +16,18 @@ class PaymentType(models.Model):
 
 class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=200, default="")
     description = models.CharField(max_length=200)
     stock = models.IntegerField()
     price = models.IntegerField()
-    email_for_product = models.CharField(max_length=100)
+    email_for_product = models.EmailField(max_length=100)
     pass_for_product = models.CharField(max_length=100)
     days_enable = models.IntegerField()
     date_register = models.DateField(default=now)
+    date_last_modified = models.DateField(default=now)
     image = models.CharField(max_length=500)
     type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE)
+    calification = models.IntegerField(default=0)
 
 
 class Sales(models.Model):
