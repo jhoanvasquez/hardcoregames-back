@@ -13,7 +13,6 @@ class PaymentType(models.Model):
     id_payment_type = models.AutoField(primary_key=True)
     description = models.CharField(max_length=200)
 
-
 class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
@@ -28,7 +27,6 @@ class Products(models.Model):
     image = models.CharField(max_length=500)
     type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE)
     calification = models.IntegerField(default=0)
-
 
 class Sales(models.Model):
     id_sale = models.AutoField(primary_key=True)

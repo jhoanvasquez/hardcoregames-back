@@ -1,15 +1,46 @@
 import json
 
+from django.contrib.auth.models import User
 from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from products.models import Products, ProductsType
-from products.productSerializers import ProductsSerializer
+from products.models import Products, ProductsType, Sales, PaymentType
+from products.productSerializers import ProductsSerializer, ProductSerializer
+from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
 
-# Create your views here.
+@csrf_exempt
+def create_sale(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        description = body['description']
+        status_sale = body['status_sale']
+        date_sale = body['date_sale']
+        last_modified = body['last_modified']
+        payment_id = body['payment_id']
+        product_id = body['product_id']
+        user_id = body['user_id']
+
+        product = Products.objects.filter(pk=product_id).first()
+        user = User.objects.filter(pk=user_id).first()
+        payment_type = PaymentType.objects.filter(pk=payment_id).first()
+
+        sale = Sales(
+            description=description,
+            status_sale=status_sale,
+            date_sale=date_sale,
+            last_modified=last_modified,
+            payment_id=payment_type,
+            user_id=user,
+            product_id=product
+        )
+        sale.save()
+        return HttpResponse(JsonResponse({'message': 'venta registrada exitosamente', "status": 200, "code": "00"}),
+                            content_type="application/json")
+
+
 @csrf_exempt
 def create_product(request, self=None):
     if request.method == "POST":
@@ -64,3 +95,19 @@ def get_news_for_products(request):
         serializer = ProductsSerializer(all_products, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
+def get_products_by_id(request, id_product):
+    if request.method == "GET":
+
+        product = Products.objects.filter(pk=id_product)
+        if product.exists():
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def sendEmail(request):
+    SendEmail().__int__()
+    return HttpResponse(JsonResponse({'message': 'Email enviado', "status": 200, "code": "00"}),
+                        content_type="application/json")
