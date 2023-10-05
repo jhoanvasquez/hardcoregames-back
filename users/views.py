@@ -1,13 +1,17 @@
 import json
+import uuid
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ecommerceHardcoregamesBack import settings
 from users.models import User_Customized, TypeDocument
+from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 from utils.joinModels import JoinModels
 
@@ -113,7 +117,7 @@ def login_request(request, self=None):
             payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
 
-        return HttpResponse(JsonResponse({'message': "usuario no existe", 'status': 200, 'code': '01'}),
+        return HttpResponse(JsonResponse({'message': "usuario o contraseña incorrectos", 'status': 200, 'code': '01'}),
                             content_type="application/json")
 
 
@@ -137,3 +141,85 @@ def get_all_document_types(request):
                }
 
     return HttpResponse(JsonResponse(payload), content_type='application/json')
+
+
+@csrf_exempt
+def update_user(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        user_id = body['user_id']
+        first_name = body['first_name']
+        last_name = body['last_name']
+        id_document = body['id_document']
+        exist_user = User.objects.filter(pk=user_id).exists()
+        if exist_user:
+            User.objects.filter(pk=user_id).update(first_name=first_name,
+                                                   last_name=last_name)
+            User_Customized.objects.filter(user_id=user_id).update(id_document=id_document)
+            return HttpResponse(
+                JsonResponse({'message': 'datos actualizados exitosamente', "status": 200, "code": "00"}),
+                content_type="application/json")
+
+        return HttpResponse(JsonResponse({'message': 'usuario no existe', "status": 200, "code": "01"}),
+                            content_type="application/json")
+
+
+@csrf_exempt
+def change_password(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        user_id = body['user_id']
+        current_pass = body['current_pass']
+        new_pass = body['new_pass']
+        exist_user = User.objects.filter(pk=user_id).exists()
+        if exist_user:
+            user = User.objects.get(pk=user_id)
+            is_pass = user.check_password(current_pass)
+            if is_pass:
+                user.set_password(new_pass)
+                user.save()
+                return HttpResponse(
+                    JsonResponse({'message': 'datos actualizados exitosamente', "status": 200, "code": "00"}),
+                    content_type="application/json")
+            return HttpResponse(
+                JsonResponse({'message': 'datos incorrectos', "status": 200, "code": "01"}),
+                content_type="application/json")
+
+        return HttpResponse(JsonResponse({'message': 'usuario no existe', "status": 200, "code": "01"}),
+                            content_type="application/json")
+
+
+@csrf_exempt
+def token_pass(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        username = body['username']
+        exist_user = User.objects.filter(username=username).exists()
+        subject_email = settings.SUBJECT_EMAIL_FOR_TOKEN
+        text_email = settings.EMAIL_FOR_TOKEN
+        if exist_user:
+            token = str(uuid.uuid4())[0:5]
+            text_email += "<center><b>"+token+"</b><center>"
+            SendEmail.__int__(self, text_email, subject_email, username)
+            return HttpResponse(
+                JsonResponse({'token': token, "status": 200, "code": "00"}),
+                content_type="application/json")
+
+        return HttpResponse(JsonResponse({'message': 'usuario no existe', "status": 200, "code": "01"}),
+                            content_type="application/json")
+@csrf_exempt
+def set_password(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        username = body['username']
+        new_pass = body['new_password']
+        exist_user = User.objects.filter(username=username).exists()
+        if exist_user:
+            user = User.objects.get(username=username)
+            user.set_password(new_pass)
+            user.save()
+            return HttpResponse(
+                JsonResponse({'message': "constraseña actualizada exitosamente", "status": 200, "code": "00"}),
+                content_type="application/json")
+        return HttpResponse(JsonResponse({'message': 'usuario no existe', "status": 200, "code": "01"}),
+                            content_type="application/json")

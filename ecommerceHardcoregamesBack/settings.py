@@ -159,3 +159,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+FROM_EMAIL="jhoan0498@gmail.com"
+PASS_SMTP="bbcg cluw zlia hhui "
+SUBJECT_EMAIL_FOR_TOKEN = "Código para cambio de contraseña HardCoreGames"
+EMAIL_FOR_TOKEN = "<html>" \
+                    "<body>" \
+                        "<h2>Solicitud de nueva contraseña HardCoreGames</h2><br>" \
+                        "<justify>Está recibiendo este correo electrónico porque se ha solicitado un cambio de contraseña para la cuenta de HardCoreGames. " \
+                        "Su codigo de activacion para cambio de contraseña es:</justify> " \
+                    "</body>" \
+                  "</html>"
