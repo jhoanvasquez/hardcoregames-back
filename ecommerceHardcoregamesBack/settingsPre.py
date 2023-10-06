@@ -27,7 +27,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,6 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
+    'users',
+    'products',
 ]
 
 MIDDLEWARE = [
@@ -77,9 +89,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'hardcoregames',
-        'USER': 'postgres',
-        'PASSWORD': '#1998jhoan',
-        'HOST': 'localhost',
+        'USER': 'fl0user',
+        'PASSWORD': 'KisSWYJ5kb4r',
+        'HOST': 'ep-delicate-mountain-73350267.us-east-2.aws.neon.fl0.io',
         'DATABASE_PORT': '5432',
     }
 }
@@ -125,3 +137,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+FROM_EMAIL="jhoan0498@gmail.com"
+PASS_SMTP="bbcg cluw zlia hhui "
+SUBJECT_EMAIL_FOR_TOKEN = "Código para cambio de contraseña HardCoreGames"
+EMAIL_FOR_TOKEN = "<html>" \
+                    "<body>" \
+                        "<h2>Solicitud de nueva contraseña HardCoreGames</h2><br>" \
+                        "<justify>Está recibiendo este correo electrónico porque se ha solicitado un cambio de contraseña para la cuenta de HardCoreGames. " \
+                        "Su codigo de activacion para cambio de contraseña es:</justify> " \
+                    "</body>" \
+                  "</html>"
