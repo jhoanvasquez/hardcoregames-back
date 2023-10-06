@@ -95,6 +95,8 @@ def get_news_for_products(request):
         serializer = ProductsSerializer(all_products, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 def get_products_by_id(request, id_product):
     if request.method == "GET":
 

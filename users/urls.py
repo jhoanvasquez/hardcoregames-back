@@ -10,4 +10,8 @@ urlpatterns = [
     path("findUserByEmail/", views.get_user_by_email, name="find_user_by_email"),
     path("findUserById/<int:id_user>", views.get_user_by_id, name="find_user_by_id"),
     path("documentTypes/", views.get_all_document_types, name="get_all_document_types"),
+    path("updateUser/", views.update_user, name="update_user"),
+    path("changePassword/", views.change_password, name="change_password"),
+    path("setPassword/", views.set_password, name="set_password"),
+    path("tokenPass/", views.token_pass, name="token_pass")
 ]
