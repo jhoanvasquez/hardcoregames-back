@@ -3,7 +3,6 @@ import uuid
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.http import HttpResponse, JsonResponse
@@ -11,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ecommerceHardcoregamesBack import settings
 from users.models import User_Customized, TypeDocument
+from users.userSerializer import UserSerializer
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 from utils.joinModels import JoinModels
@@ -108,13 +108,12 @@ def login_request(request, self=None):
         username = body['user']
         password = body['password']
         user = authenticate(username=username, password=password)
-        user_selected = User.objects.filter(username=username)
-
         if user is not None:
             login(request, user)
-            # user_customized_selected = User_Customized.objects.filter(user_id=user_selected.get(email=username))
-            # models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
-            payload = {"fields": "models_joined", 'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            user_loged = User.objects.filter(username = username)
+            print(user_loged)
+            serializer = UserSerializer(user_loged, many=True)
+            payload = {"fields": serializer.data[0], 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
 
         return HttpResponse(JsonResponse({'message': "usuario o contraseña incorrectos", 'status': 200, 'code': '01'}),
