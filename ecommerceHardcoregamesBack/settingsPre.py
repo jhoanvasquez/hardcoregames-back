@@ -29,6 +29,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+# CORS_ALLOWED_ORIGINS = {
+#  'http://localhost:4200',
+# }
+
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     'http://localhost:4200',
+# ]
+
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
@@ -39,6 +47,11 @@ CORS_ALLOW_METHODS = (
 )
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost',
+    'http://localhost:4200'
+)
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -62,6 +75,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'ecommerceHardcoregamesBack.urls'
