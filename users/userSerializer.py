@@ -14,7 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('pk', 'first_name', 'last_name', 'is_superuser')
+        fields = ('pk', 'first_name', 'last_name', 'is_superuser', 'email', 'username')
 
 
 class UserCustomSerializer(serializers.ModelSerializer):
