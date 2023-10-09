@@ -49,8 +49,7 @@ def get_user_by_id(request, id_user, self=None):
             user_customized_selected = User_Customized.objects.filter(user_id=id_user)
             serializer = UserResponseSerializer(user_selected, many=True)
             serializer_user_custom = UserCustomSerializer(user_customized_selected, many=True)
-            response_json = serializer.data[0] | serializer_user_custom.data[0]
-            payload = {"fields": response_json,
+            payload = {"fields": serializer.data[0], "other_fields": serializer_user_custom.data[0],
                        'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
 
