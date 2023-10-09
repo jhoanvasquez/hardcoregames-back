@@ -112,9 +112,9 @@ def login_request(request, self=None):
 
         if user is not None:
             login(request, user)
-            user_customized_selected = User_Customized.objects.filter(user_id=user_selected.get(email=username))
-            models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
-            payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            # user_customized_selected = User_Customized.objects.filter(user_id=user_selected.get(email=username))
+            # models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
+            payload = {"fields": "models_joined", 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
 
         return HttpResponse(JsonResponse({'message': "usuario o contraseña incorrectos", 'status': 200, 'code': '01'}),
