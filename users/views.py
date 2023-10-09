@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from ecommerceHardcoregamesBack import settings
 from users.models import User_Customized, TypeDocument
-from users.userSerializer import UserSerializer
+from users.userSerializer import UserSerializer, UserResponseSerializer, UserCustomSerializer
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 from utils.joinModels import JoinModels
@@ -47,8 +47,11 @@ def get_user_by_id(request, id_user, self=None):
         user_selected = User.objects.filter(id=id_user)
         if user_selected.exists():
             user_customized_selected = User_Customized.objects.filter(user_id=id_user)
-            models_joined = JoinModels.__int__(self, user_selected, user_customized_selected)
-            payload = {"fields": models_joined, 'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            serializer = UserResponseSerializer(user_selected, many=True)
+            serializer_user_custom = UserCustomSerializer(user_customized_selected, many=True)
+            response_json = serializer.data[0] | serializer_user_custom.data[0]
+            payload = {"fields": response_json,
+                       'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
 
         return HttpResponse(JsonResponse({'data': {}, 'status': 200, 'code': '01', 'message': 'el usuario no existe'}),
@@ -111,7 +114,6 @@ def login_request(request, self=None):
         if user is not None:
             login(request, user)
             user_loged = User.objects.filter(username = username)
-            print(user_loged)
             serializer = UserSerializer(user_loged, many=True)
             payload = {"fields": serializer.data[0], 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
