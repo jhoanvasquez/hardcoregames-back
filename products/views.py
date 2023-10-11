@@ -1,11 +1,12 @@
 import json
+from datetime import date, timedelta
 
 from django.contrib.auth.models import User
 from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from products.models import Products, ProductsType, Sales, PaymentType
+from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail
 from products.productSerializers import ProductsSerializer, ProductSerializer
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
@@ -14,29 +15,37 @@ from utils.getJsonFromRequest import GetJsonFromRequest
 @csrf_exempt
 def create_sale(request, self=None):
     if request.method == "POST":
+        today = date.today()
         body = GetJsonFromRequest.__int__(self, request)
-        description = body['description']
         status_sale = body['status_sale']
         date_sale = body['date_sale']
-        last_modified = body['last_modified']
         payment_id = body['payment_id']
-        product_id = body['product_id']
         user_id = body['user_id']
-
-        product = Products.objects.filter(pk=product_id).first()
-        user = User.objects.filter(pk=user_id).first()
-        payment_type = PaymentType.objects.filter(pk=payment_id).first()
-
+        amount = body['amount']
+        payment_type_instance = PaymentType.objects.filter(pk=payment_id).first()
+        user_instance = User.objects.filter(pk=user_id).first()
         sale = Sales(
-            description=description,
             status_sale=status_sale,
             date_sale=date_sale,
-            last_modified=last_modified,
-            payment_id=payment_type,
-            user_id=user,
-            product_id=product
+            payment_id=payment_type_instance,
+            user_id=user_instance,
+            amount=amount,
         )
         sale.save()
+        for product in body['products']:
+            product_instance = Products.objects.filter(pk=product['product_id']).first()
+            sale_instance = Sales.objects.filter(pk=sale.id_sale).first()
+            days_enabled_product = product_instance.days_enable
+            date_expiration = today + timedelta(days=int(days_enabled_product)) if product_instance.days_enable > 0 else None
+            sale_detail = SaleDetail(
+                price=product['price'],
+                quantity=product['quantity'],
+                total_value=product['total_value'],
+                date_expiration=date_expiration,
+                product_id=product_instance,
+                fk_id_sale=sale_instance,
+            )
+            sale_detail.save()
         return HttpResponse(JsonResponse({'message': 'venta registrada exitosamente', "status": 200, "code": "00"}),
                             content_type="application/json")
 
