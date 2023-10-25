@@ -5,8 +5,10 @@ from django.contrib.admin import SimpleListFilter
 from django.urls import reverse
 from django.utils.html import format_html
 
+from products.accountProductForm import AccountProductForm
 from products.formProducts import ProductsFormCreate
-from products.models import Products, PaymentType, ProductsType, Sales, SaleDetail
+from products.models import Products, PaymentType, ProductsType, Sales, SaleDetail, ProductAccounts
+from utils.getJsonFromRequest import GetJsonFromRequest
 
 
 class CloseToExp(SimpleListFilter):
@@ -54,6 +56,23 @@ class SalesAdmin(admin.ModelAdmin):
     list_display = ['id_sale', 'date_sale', 'status_sale', 'amount', 'status_sale', 'payment_id', 'user_id']
 
 
+class ProductAccountsAdmin(admin.ModelAdmin):
+    list_display = ['correo', 'password', 'activa', 'producto']
+    form = AccountProductForm
+
+    # pass
+    def save_model(self, request, obj, form, change):
+        email_form = form.cleaned_data.get('correo')
+        title_product = form.cleaned_data.get('producto')
+        count_account_product = ProductAccounts.objects.filter(correo=email_form).count()
+        stock_product = Products.objects.filter(title=title_product).values("stock")[0]['stock']
+        if int(stock_product) >= count_account_product:
+            super(ProductAccountsAdmin, self).save_model(request, obj, form, change)
+        else:
+            messages.set_level(request, messages.ERROR)
+            messages.error(request, "El número de cuentas para este producto ha excedido el stock")
+
+
 class SalesDetailAdmin(admin.ModelAdmin):
     def product_id(obj):
         url = reverse('admin:products_products_change', args=[obj.product_id.id_product])
@@ -78,17 +97,18 @@ class SalesDetailAdmin(admin.ModelAdmin):
     # list_display_links = ("id_sale", product_id)
 
     @admin.action(description='Enviar mensaje de renovación')
-    def send_email_renovation(modeladmin, request, queryset):
+    def send_email_renovation(self, request, queryset):
         for sale in queryset:
             print(sale)
         messages.add_message(request, messages.INFO, 'Mensaje enviado exitosamente')
+
     actions = [send_email_renovation]
 
 
 admin.site.site_header = 'Administración HardCoreGames'
 # Register your models here.
 admin.site.register(Products, ProductsAdmin)
-admin.site.register(PaymentType, PaymentAdmin)
 admin.site.register(ProductsType, ProductsTypeAdmin)
 admin.site.register(Sales, SalesAdmin)
 admin.site.register(SaleDetail, SalesDetailAdmin)
+admin.site.register(ProductAccounts, ProductAccountsAdmin)

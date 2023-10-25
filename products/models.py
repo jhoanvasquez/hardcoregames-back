@@ -1,7 +1,5 @@
-from django.contrib import admin
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils.html import format_html
 from django.utils.timezone import now
 
 
@@ -29,7 +27,7 @@ class PaymentType(models.Model):
 class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
-    description = models.CharField(max_length=200)
+    description = models.TextField()
     stock = models.IntegerField()
     price = models.IntegerField()
     email_for_product = models.EmailField(max_length=100)
@@ -42,7 +40,7 @@ class Products(models.Model):
     calification = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.id_product) + " : " + self.title
+        return self.title
 
     class Meta:
         verbose_name = 'un producto'
@@ -77,3 +75,20 @@ class SaleDetail(models.Model):
     class Meta:
         verbose_name = 'una detalle de venta'
         verbose_name_plural = 'Detalle de ventas'
+
+    def __str__(self):
+        return "Detalle de venta para producto " + self.product_id.title
+
+class ProductAccounts(models.Model):
+    id_product_accounts = models.AutoField(primary_key=True)
+    correo = models.CharField(max_length=20)
+    password = models.CharField(max_length=20)
+    activa = models.BooleanField()
+    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'una cuenta para producto'
+        verbose_name_plural = 'Cuentas para productos'
+
+    def __str__(self):
+        return "Cuenta: "+self.correo+" para producto " + self.producto.title

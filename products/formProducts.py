@@ -1,6 +1,5 @@
 from django import forms
-from django.forms import ModelForm, PasswordInput
-
+from django.forms import PasswordInput
 from products.models import Products
 
 
