@@ -28,8 +28,8 @@ class CloseToExp(SimpleListFilter):
 
 
 class ProductsAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'description', 'stock', 'price', 'email_for_product',
-                    'pass_for_product', 'days_enable', 'date_register', 'image', 'date_last_modified',
+    list_display = ['pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
+                    'date_last_modified',
                     'get_type_product', 'calification']
 
     list_display_links = ("title",)
@@ -57,14 +57,14 @@ class SalesAdmin(admin.ModelAdmin):
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
-    list_display = ['correo', 'password', 'activa', 'producto']
+    list_display = ['cuenta', 'password', 'activa', 'producto']
     form = AccountProductForm
 
     # pass
     def save_model(self, request, obj, form, change):
-        email_form = form.cleaned_data.get('correo')
+        email_form = form.cleaned_data.get('cuenta')
         title_product = form.cleaned_data.get('producto')
-        count_account_product = ProductAccounts.objects.filter(correo=email_form).count()
+        count_account_product = ProductAccounts.objects.filter(cuenta=email_form).count()
         stock_product = Products.objects.filter(title=title_product).values("stock")[0]['stock']
         if int(stock_product) >= count_account_product:
             super(ProductAccountsAdmin, self).save_model(request, obj, form, change)
@@ -84,13 +84,19 @@ class SalesDetailAdmin(admin.ModelAdmin):
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.fk_id_sale)
 
+    def cuenta(obj):
+        print(obj.cuenta.cuenta, "cuenta")
+        url = reverse('admin:products_productaccounts_change', args=[obj.cuenta.id_product_accounts])
+        return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
+                           url, obj.cuenta.cuenta)
+
     product_id.short_description = 'Producto'
     sale_id.short_description = 'ID Venta'
     list_display = [field.name for field in SaleDetail._meta.get_fields()]
 
-    list_display.remove("product_id")
     list_display.remove("fk_id_sale")
-    list_display += [product_id]
+    list_display.remove("cuenta")
+    list_display += [cuenta]
     list_display += [sale_id]
     list_filter = [CloseToExp]
 

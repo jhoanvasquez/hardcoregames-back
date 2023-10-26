@@ -30,8 +30,6 @@ class Products(models.Model):
     description = models.TextField()
     stock = models.IntegerField()
     price = models.IntegerField()
-    email_for_product = models.EmailField(max_length=100)
-    pass_for_product = models.CharField(max_length=100)
     days_enable = models.IntegerField()
     date_register = models.DateField(default=now)
     date_last_modified = models.DateField(default=now)
@@ -63,25 +61,9 @@ class Sales(models.Model):
         return str(self.id_sale)
 
 
-class SaleDetail(models.Model):
-    id_sale_detail = models.AutoField(primary_key=True)
-    price = models.IntegerField()
-    quantity = models.IntegerField()
-    total_value = models.IntegerField(default=0)
-    date_expiration = models.DateField(null=True)
-    product_id = models.ForeignKey(Products, on_delete=models.CASCADE)
-    fk_id_sale = models.ForeignKey(Sales, on_delete=models.CASCADE, null=True)
-
-    class Meta:
-        verbose_name = 'una detalle de venta'
-        verbose_name_plural = 'Detalle de ventas'
-
-    def __str__(self):
-        return "Detalle de venta para producto " + self.product_id.title
-
 class ProductAccounts(models.Model):
     id_product_accounts = models.AutoField(primary_key=True)
-    correo = models.CharField(max_length=20)
+    cuenta = models.CharField(max_length=20)
     password = models.CharField(max_length=20)
     activa = models.BooleanField()
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
@@ -91,4 +73,21 @@ class ProductAccounts(models.Model):
         verbose_name_plural = 'Cuentas para productos'
 
     def __str__(self):
-        return "Cuenta: "+self.correo+" para producto " + self.producto.title
+        return self.cuenta
+
+
+class SaleDetail(models.Model):
+    id_sale_detail = models.AutoField(primary_key=True)
+    price = models.IntegerField()
+    quantity = models.IntegerField()
+    total_value = models.IntegerField(default=0)
+    date_expiration = models.DateField(null=True)
+    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, default=1)
+    fk_id_sale = models.ForeignKey(Sales, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        verbose_name = 'una detalle de venta'
+        verbose_name_plural = 'Detalle de ventas'
+
+    def __str__(self):
+        return "Detalle de venta para la cuenta " + self.cuenta.cuenta
