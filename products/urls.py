@@ -12,6 +12,6 @@ urlpatterns = [
     path("shoppingCar/", views.shopping_car, name="shopping_car"),
     path("getShoppingCar/", views.get_shopping_car, name="get_shopping_car"),
     path("updateShoppingCar/<int:shooping_car_id>", views.update_shopping_car, name="update_shopping_car"),
-    path("deleteShoppingCar/<int:shooping_car_id>", views.update_shopping_car, name="update_shopping_car"),
+    path("deleteShoppingCar/<int:shooping_car_id>", views.update_shopping_car, name="delete_shopping_car"),
     path("sendEmail/", views.sendEmail, name="sendEmail"),
 ]
