@@ -144,11 +144,8 @@ def shopping_car(request, self=None):
 def get_shopping_car(request):
     if request.method == "GET":
         user_id = request.GET['user_id']
-        product_id = request.GET['product_id']
-        user = User.objects.filter(pk=user_id)
-        product = Products.objects.filter(pk=product_id)
-        if product.count() > 0 and user.count() > 0:
-
+        user = ShoppingCar.objects.filter(usuario=user_id)
+        if user.count() > 0:
             if request.GET['state']:
                 state = True if request.GET['state'] == "true" else False
                 shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state)
@@ -166,14 +163,10 @@ def get_shopping_car(request):
 def update_shopping_car(request, shooping_car_id, self=None):
     if request.method == "PUT":
         body = GetJsonFromRequest.__int__(self, request)
-        user_id = body['user_id']
-        product_id = body['product_id']
         state = body['state']
         shooping_car = ShoppingCar.objects.filter(pk=shooping_car_id)
         if shooping_car.count() > 0:
             ShoppingCar.objects.filter(pk=shooping_car_id).update(
-                # usuario=user_id,
-                # producto=product,
                 estado=state
             )
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}

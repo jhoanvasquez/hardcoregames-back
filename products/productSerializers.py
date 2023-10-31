@@ -26,4 +26,4 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
     type = serializers.IntegerField(source='producto.type_id_id', read_only=True)
     class Meta:
         model = ShoppingCar
-        fields = ('pk','id_product','title_product', 'stock', 'price', 'type')
+        fields = ('pk','id_product','title_product', 'stock', 'price', 'type', 'estado')
