@@ -98,8 +98,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecommerceHardcoregamesBack.wsgi.application'
 
-APPEND_SLASH = True
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
