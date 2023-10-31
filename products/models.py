@@ -82,7 +82,7 @@ class SaleDetail(models.Model):
     quantity = models.IntegerField()
     total_value = models.IntegerField(default=0)
     date_expiration = models.DateField(null=True)
-    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, default=1)
+    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
     fk_id_sale = models.ForeignKey(Sales, on_delete=models.CASCADE, null=True)
 
     class Meta:
@@ -91,3 +91,13 @@ class SaleDetail(models.Model):
 
     def __str__(self):
         return "Detalle de venta para la cuenta " + self.cuenta.cuenta
+
+
+class ShoppingCar(models.Model):
+    id_shopping_car = models.AutoField(primary_key=True)
+    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    estado = models.BooleanField();
+
+    # def __str__(self):
+    #     return "Detalle de venta para la cuenta " + self.cuenta.cuenta

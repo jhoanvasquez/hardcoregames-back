@@ -72,6 +72,9 @@ class ProductAccountsAdmin(admin.ModelAdmin):
             messages.set_level(request, messages.ERROR)
             messages.error(request, "El número de cuentas para este producto ha excedido el stock")
 
+    # def get_truncated_str(self, obj):
+    #     # Change it however you want, shortening is just an example
+    #     return Truncator(str(obj)).words(10)
 
 class SalesDetailAdmin(admin.ModelAdmin):
     def product_id(obj):

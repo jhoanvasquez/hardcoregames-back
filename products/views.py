@@ -6,8 +6,8 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail
-from products.productSerializers import ProductsSerializer, ProductSerializer
+from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar
+from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -36,7 +36,8 @@ def create_sale(request, self=None):
             product_instance = Products.objects.filter(pk=product['product_id']).first()
             sale_instance = Sales.objects.filter(pk=sale.id_sale).first()
             days_enabled_product = product_instance.days_enable
-            date_expiration = today + timedelta(days=int(days_enabled_product)) if product_instance.days_enable > 0 else None
+            date_expiration = today + timedelta(
+                days=int(days_enabled_product)) if product_instance.days_enable > 0 else None
             sale_detail = SaleDetail(
                 price=product['price'],
                 quantity=product['quantity'],
@@ -115,6 +116,69 @@ def get_products_by_id(request, id_product):
             payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+@csrf_exempt
+def shopping_car(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        user_id = body['user_id']
+        product_id = body['product_id']
+        state = body['state']
+        user = User.objects.filter(pk=user_id)
+        product = Products.objects.filter(pk=product_id)
+        if product.count() > 0 and user.count() > 0:
+            shopping_car = ShoppingCar(
+                usuario=user.get(),
+                producto=product.get(),
+                estado=state
+            )
+            shopping_car.save()
+            payload = {'message': 'proceso exitoso', 'data': True, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def get_shopping_car(request):
+    if request.method == "GET":
+        user_id = request.GET['user_id']
+        product_id = request.GET['product_id']
+        user = User.objects.filter(pk=user_id)
+        product = Products.objects.filter(pk=product_id)
+        if product.count() > 0 and user.count() > 0:
+
+            if request.GET['state']:
+                state = True if request.GET['state'] == "true" else False
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state)
+            else:
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id)
+            shopping_cars_serialized = ShoppingCarSerializer(shopping_cars, many=True)
+            payload = {'message': 'proceso exitoso', 'user_id': int(user_id),
+                       'data': shopping_cars_serialized.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+@csrf_exempt
+def update_shopping_car(request, shooping_car_id, self=None):
+    if request.method == "PUT":
+        body = GetJsonFromRequest.__int__(self, request)
+        user_id = body['user_id']
+        product_id = body['product_id']
+        state = body['state']
+        shooping_car = ShoppingCar.objects.filter(pk=shooping_car_id)
+        if shooping_car.count() > 0:
+            ShoppingCar.objects.filter(pk=shooping_car_id).update(
+                # usuario=user_id,
+                # producto=product,
+                estado=state
+            )
+            payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
