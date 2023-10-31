@@ -148,9 +148,9 @@ def get_shopping_car(request):
         if user.count() > 0:
             if request.GET['state']:
                 state = True if request.GET['state'] == "true" else False
-                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state)
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state).order_by('pk')
             else:
-                shopping_cars = ShoppingCar.objects.filter(usuario=user_id)
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id).order_by('pk')
             shopping_cars_serialized = ShoppingCarSerializer(shopping_cars, many=True)
             payload = {'message': 'proceso exitoso', 'user_id': int(user_id),
                        'data': shopping_cars_serialized.data, 'code': '00', 'status': 200}
