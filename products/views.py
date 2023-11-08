@@ -172,6 +172,17 @@ def update_shopping_car(request, shooping_car_id, self=None):
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")\
+
+@csrf_exempt
+def delete_product_shopping_car(request, shooping_car_id):
+    if request.method == "DELETE":
+        shooping_car = ShoppingCar.objects.filter(pk=shooping_car_id)
+        if shooping_car.count() > 0:
+            ShoppingCar.objects.filter(pk=shooping_car_id).delete()
+            payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
