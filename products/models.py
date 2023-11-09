@@ -86,7 +86,7 @@ class SaleDetail(models.Model):
     fk_id_sale = models.ForeignKey(Sales, on_delete=models.CASCADE, null=True)
 
     class Meta:
-        verbose_name = 'una detalle de venta'
+        verbose_name = 'un detalle de venta'
         verbose_name_plural = 'Detalle de ventas'
 
     def __str__(self):
@@ -101,3 +101,30 @@ class ShoppingCar(models.Model):
 
     # def __str__(self):
     #     return "Detalle de venta para la cuenta " + self.cuenta.cuenta
+
+
+class Licenses(models.Model):
+    id_license = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return "una licencia"
+
+class Consoles(models.Model):
+    id_console = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return "una consola"
+
+
+class License_detail(models.Model):
+    id_license_detail = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+    precio_producto = models.IntegerField()
+    estado = models.BooleanField();
+    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
+    licencia = models.ForeignKey(Licenses, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "detalle de licencia para productos"

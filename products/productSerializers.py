@@ -1,21 +1,23 @@
 from rest_framework import serializers
-from products.models import Products, ShoppingCar
+from products.models import Products, ShoppingCar, Licenses, Consoles
 
 
 class ProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-        'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image', 'date_last_modified',
-        'type_id', 'calification')
+            'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
+            'date_last_modified',
+            'type_id', 'calification')
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-        'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image', 'date_last_modified',
-        'type_id', 'calification')
+            'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
+            'date_last_modified',
+            'type_id', 'calification')
 
 
 class ShoppingCarSerializer(serializers.ModelSerializer):
@@ -25,6 +27,19 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
     price = serializers.IntegerField(source='producto.price', read_only=True)
     type = serializers.IntegerField(source='producto.type_id_id', read_only=True)
     image = serializers.CharField(source='producto.image', read_only=True)
+
     class Meta:
         model = ShoppingCar
-        fields = ('pk','id_product','title_product', 'stock', 'price', 'type', 'estado', 'image')
+        fields = ('pk', 'id_product', 'title_product', 'stock', 'price', 'type', 'estado', 'image')
+
+
+class LicencesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Licenses
+        fields = ('pk', 'descripcion')
+
+
+class ConsolesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Consoles
+        fields = ('pk', 'descripcion')

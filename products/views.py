@@ -6,8 +6,9 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar
-from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer
+from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles
+from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
+    LicencesSerializer, ConsolesSerializer
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -119,6 +120,22 @@ def get_products_by_id(request, id_product):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
+def get_licences(request):
+    if request.method == "GET":
+        all_licenses = Licenses.objects.all()
+        serializer = LicencesSerializer(all_licenses, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def get_consoles(request):
+    if request.method == "GET":
+        all_consoles = Consoles.objects.all()
+        serializer = ConsolesSerializer(all_consoles, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 @csrf_exempt
 def shopping_car(request, self=None):
     if request.method == "POST":
@@ -172,7 +189,8 @@ def update_shopping_car(request, shooping_car_id, self=None):
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
-        return HttpResponse(JsonResponse(payload), content_type="application/json")\
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
 
 @csrf_exempt
 def delete_product_shopping_car(request, shooping_car_id):
