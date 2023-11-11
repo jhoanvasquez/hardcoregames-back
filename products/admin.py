@@ -36,7 +36,7 @@ class ProductsAdmin(admin.ModelAdmin):
     }
 
     list_display = ['pk', 'title', 'stock', 'price', 'image',
-                    'get_type_product','tipo_juego','consola','calification']
+                    'get_type_product','tipo_juego','consola','calification', 'combinations_price']
 
     list_display_links = ("title",)
 

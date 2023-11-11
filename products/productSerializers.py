@@ -8,7 +8,7 @@ class ProductsSerializer(serializers.ModelSerializer):
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
             'date_last_modified',
-            'type_id', 'calification')
+            'type_id', 'calification', 'combinations_price')
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
             'date_last_modified',
-            'type_id', 'calification')
+            'type_id', 'calification', 'combinations_price')
 
 
 class ShoppingCarSerializer(serializers.ModelSerializer):

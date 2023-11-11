@@ -1,3 +1,4 @@
+import jsonfield as jsonfield
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
@@ -54,6 +55,7 @@ class Products(models.Model):
     calification = models.IntegerField(default=0)
     consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
+    combinations_price = jsonfield.JSONField(default={});
 
     def __str__(self):
         return self.title
