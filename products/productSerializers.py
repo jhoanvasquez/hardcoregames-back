@@ -33,13 +33,7 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
         fields = ('pk', 'id_product', 'title_product', 'stock', 'price', 'type', 'estado', 'image')
 
 
-class LicencesSerializer(serializers.ModelSerializer):
+class SerializerForTypes(serializers.ModelSerializer):
     class Meta:
         model = Licenses
-        fields = ('pk', 'descripcion')
-
-
-class ConsolesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Consoles
         fields = ('pk', 'descripcion')

@@ -2,8 +2,11 @@ from datetime import date, timedelta
 
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
+from django.db import models
+from django.forms import Textarea
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.text import Truncator
 
 from products.accountProductForm import AccountProductForm
 from products.formProducts import ProductsFormCreate
@@ -28,9 +31,12 @@ class CloseToExp(SimpleListFilter):
 
 
 class ProductsAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
-                    'date_last_modified',
-                    'get_type_product', 'calification']
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows': 4})},
+    }
+
+    list_display = ['pk', 'title', 'stock', 'price', 'image',
+                    'get_type_product','tipo_juego','consola','calification']
 
     list_display_links = ("title",)
 
@@ -43,6 +49,9 @@ class ProductsAdmin(admin.ModelAdmin):
     list_filter = ["days_enable", "calification"]
     form = ProductsFormCreate
 
+    def get_truncated_str(self, obj):
+        # Change it however you want, shortening is just an example
+        return Truncator(str(obj)).words(10)
 
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['pk', 'description']

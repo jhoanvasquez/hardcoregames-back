@@ -1,14 +1,12 @@
-import json
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
-from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles
-from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
-    LicencesSerializer, ConsolesSerializer
+from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles, \
+    TypeGames
+from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, SerializerForTypes
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -86,7 +84,7 @@ def create_product(request, self=None):
 
 def get_all_products(request):
     if request.method == "GET":
-        all_products = Products.objects.all()
+        all_products = Products.objects.filter(stock__gt=0)
         serializer = ProductsSerializer(all_products, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -94,7 +92,7 @@ def get_all_products(request):
 
 def get_favorite_products(request):
     if request.method == "GET":
-        all_products = Products.objects.all().order_by('-calification')
+        all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
         serializer = ProductsSerializer(all_products, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -102,7 +100,7 @@ def get_favorite_products(request):
 
 def get_news_for_products(request):
     if request.method == "GET":
-        all_products = Products.objects.all().order_by('-date_last_modified')
+        all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
         serializer = ProductsSerializer(all_products, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -110,11 +108,33 @@ def get_news_for_products(request):
 
 def get_products_by_id(request, id_product):
     if request.method == "GET":
-
-        product = Products.objects.filter(pk=id_product)
+        product = Products.objects.filter(pk=id_product, stock__gt=0)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def get_products_by_type_console(request, id_console):
+    if request.method == "GET":
+        # console = Consoles.objects.get(pk=id_console)
+        product = Products.objects.filter(consola=id_console, stock__gt=0).exclude(consola__isnull=True)
+        if product.exists():
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def get_products_by_type_game(request, id_type_game):
+    if request.method == "GET":
+        product = Products.objects.filter(tipo_juego=id_type_game, stock__gt=0)
+        if product.exists():
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -123,7 +143,7 @@ def get_products_by_id(request, id_product):
 def get_licences(request):
     if request.method == "GET":
         all_licenses = Licenses.objects.all()
-        serializer = LicencesSerializer(all_licenses, many=True)
+        serializer = SerializerForTypes(all_licenses, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -131,7 +151,15 @@ def get_licences(request):
 def get_consoles(request):
     if request.method == "GET":
         all_consoles = Consoles.objects.all()
-        serializer = ConsolesSerializer(all_consoles, many=True)
+        serializer = SerializerForTypes(all_consoles, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def get_type_games(request):
+    if request.method == "GET":
+        all_type_games = TypeGames.objects.all()
+        serializer = SerializerForTypes(all_type_games, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 

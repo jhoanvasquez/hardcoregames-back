@@ -24,6 +24,22 @@ class PaymentType(models.Model):
         return self.description
 
 
+class Consoles(models.Model):
+    id_console = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.descripcion
+
+
+class TypeGames(models.Model):
+    id_type_game = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.descripcion
+
+
 class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
@@ -36,6 +52,8 @@ class Products(models.Model):
     image = models.CharField(max_length=500)
     type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE)
     calification = models.IntegerField(default=0)
+    consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
+    tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.title
@@ -109,13 +127,6 @@ class Licenses(models.Model):
 
     def __str__(self):
         return "una licencia"
-
-class Consoles(models.Model):
-    id_console = models.AutoField(primary_key=True)
-    descripcion = models.CharField(max_length=100)
-
-    def __str__(self):
-        return "una consola"
 
 
 class License_detail(models.Model):
