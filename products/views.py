@@ -4,9 +4,11 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles, \
-    TypeGames
-from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, SerializerForTypes
+    TypeGames, GameDetail
+from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
+    SerializerForTypes, SerializerGameDetail
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -164,6 +166,14 @@ def get_type_games(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
+def get_combination_price_by_game(request, id_product):
+    if request.method == "GET":
+        combination = GameDetail.objects.filter(producto = id_product, estado=True)
+        serializer = SerializerGameDetail(combination, many=True)
+        payload = {'message': 'proceso exitoso','product_id':id_product, 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 @csrf_exempt
 def shopping_car(request, self=None):
     if request.method == "POST":
@@ -235,4 +245,10 @@ def delete_product_shopping_car(request, shooping_car_id):
 def sendEmail(request):
     SendEmail().__int__()
     return HttpResponse(JsonResponse({'message': 'Email enviado', "status": 200, "code": "00"}),
+                        content_type="application/json")
+
+
+def manageFile(request):
+    ManegePricesFile()
+    return HttpResponse(JsonResponse({'message': 'File procesado', "status": 200, "code": "00"}),
                         content_type="application/json")

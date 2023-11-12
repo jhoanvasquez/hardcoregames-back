@@ -10,8 +10,7 @@ from django.utils.text import Truncator
 
 from products.accountProductForm import AccountProductForm
 from products.formProducts import ProductsFormCreate
-from products.models import Products, PaymentType, ProductsType, Sales, SaleDetail, ProductAccounts
-from utils.getJsonFromRequest import GetJsonFromRequest
+from products.models import Products, ProductsType, Sales, SaleDetail, ProductAccounts, Files
 
 
 class CloseToExp(SimpleListFilter):
@@ -36,7 +35,7 @@ class ProductsAdmin(admin.ModelAdmin):
     }
 
     list_display = ['pk', 'title', 'stock', 'price', 'image',
-                    'get_type_product','tipo_juego','consola','calification', 'combinations_price']
+                    'get_type_product', 'tipo_juego', 'consola', 'calification']
 
     list_display_links = ("title",)
 
@@ -53,6 +52,7 @@ class ProductsAdmin(admin.ModelAdmin):
         # Change it however you want, shortening is just an example
         return Truncator(str(obj)).words(10)
 
+
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['pk', 'description']
 
@@ -63,6 +63,10 @@ class ProductsTypeAdmin(admin.ModelAdmin):
 
 class SalesAdmin(admin.ModelAdmin):
     list_display = ['id_sale', 'date_sale', 'status_sale', 'amount', 'status_sale', 'payment_id', 'user_id']
+
+
+class FilesAdmin(admin.ModelAdmin):
+    list_display = ['ruta', 'estado']
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
@@ -84,6 +88,7 @@ class ProductAccountsAdmin(admin.ModelAdmin):
     # def get_truncated_str(self, obj):
     #     # Change it however you want, shortening is just an example
     #     return Truncator(str(obj)).words(10)
+
 
 class SalesDetailAdmin(admin.ModelAdmin):
     def product_id(obj):
@@ -130,3 +135,4 @@ admin.site.register(ProductsType, ProductsTypeAdmin)
 admin.site.register(Sales, SalesAdmin)
 admin.site.register(SaleDetail, SalesDetailAdmin)
 admin.site.register(ProductAccounts, ProductAccountsAdmin)
+admin.site.register(Files, FilesAdmin)

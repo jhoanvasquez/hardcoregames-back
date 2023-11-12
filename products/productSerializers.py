@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from products.models import Products, ShoppingCar, Licenses, Consoles
+from products.models import Products, ShoppingCar, Licenses, GameDetail
 
 
 class ProductsSerializer(serializers.ModelSerializer):
@@ -8,7 +8,7 @@ class ProductsSerializer(serializers.ModelSerializer):
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
             'date_last_modified',
-            'type_id', 'calification', 'combinations_price')
+            'type_id', 'calification')
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -17,7 +17,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
             'date_last_modified',
-            'type_id', 'calification', 'combinations_price')
+            'type_id', 'calification')
 
 
 class ShoppingCarSerializer(serializers.ModelSerializer):
@@ -37,3 +37,11 @@ class SerializerForTypes(serializers.ModelSerializer):
     class Meta:
         model = Licenses
         fields = ('pk', 'descripcion')
+
+
+class SerializerGameDetail(serializers.ModelSerializer):
+    desc_licence = serializers.CharField(source='licencia.descripcion', read_only=True)
+    desc_console = serializers.CharField(source='consola.descripcion', read_only=True)
+    class Meta:
+        model = GameDetail
+        fields = ('consola', 'desc_console','licencia', 'desc_licence','stock', 'precio')

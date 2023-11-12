@@ -1,4 +1,3 @@
-import jsonfield as jsonfield
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
@@ -55,7 +54,6 @@ class Products(models.Model):
     calification = models.IntegerField(default=0)
     consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
-    combinations_price = jsonfield.JSONField(default={});
 
     def __str__(self):
         return self.title
@@ -117,7 +115,7 @@ class ShoppingCar(models.Model):
     id_shopping_car = models.AutoField(primary_key=True)
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    estado = models.BooleanField();
+    estado = models.BooleanField()
 
     # def __str__(self):
     #     return "Detalle de venta para la cuenta " + self.cuenta.cuenta
@@ -128,16 +126,20 @@ class Licenses(models.Model):
     descripcion = models.CharField(max_length=100)
 
     def __str__(self):
-        return "una licencia"
+        return self.descripcion
 
 
-class License_detail(models.Model):
-    id_license_detail = models.AutoField(primary_key=True)
-    descripcion = models.CharField(max_length=100)
-    precio_producto = models.IntegerField()
-    estado = models.BooleanField();
-    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
-    licencia = models.ForeignKey(Licenses, on_delete=models.CASCADE)
+class GameDetail(models.Model):
+    id_game_detail = models.AutoField(primary_key=True)
+    producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
+    consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
+    licencia = models.ForeignKey(Licenses, on_delete=models.CASCADE, null=True)
+    stock = models.IntegerField()
+    precio = models.IntegerField(default=0)
+    estado = models.BooleanField()
 
-    def __str__(self):
-        return "detalle de licencia para productos"
+
+class Files(models.Model):
+    id_file = models.AutoField(primary_key=True)
+    ruta = models.FileField(upload_to='files/')
+    estado = models.BooleanField()

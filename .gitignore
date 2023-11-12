@@ -138,3 +138,4 @@ GitHub.sublime-settings
 products/migrations/
 users/migrations/
 *.msg
+files/

@@ -11,6 +11,7 @@ urlpatterns = [
     path("getProductById/<int:id_product>", views.get_products_by_id, name="get_products_by_id"),
     path("getProductByTypeGame/<int:id_type_game>", views.get_products_by_type_game, name="get_products_by_type_game"),
     path("getProductByTypeConsole/<int:id_console>", views.get_products_by_type_console, name="get_products_by_id"),
+    path("getCombinationPriceByGame/<int:id_product>", views.get_combination_price_by_game, name="get_combination_price_by_game"),
     path("getLicensces/", views.get_licences, name="get_products_by_id"),
     path("getConsoles/", views.get_consoles, name="get_products_by_id"),
     path("getTypeGames/", views.get_type_games, name="get_type_games"),
@@ -19,4 +20,5 @@ urlpatterns = [
     path("deleteShoppingCar/<int:shooping_car_id>", views.delete_product_shopping_car, name="delete_shopping_car"),
     path("shoppingCar/", views.shopping_car, name="shopping_car"),
     path("sendEmail/", views.sendEmail, name="sendEmail"),
+    path("manageFile/", views.manageFile, name="manageFile"),
 ]
