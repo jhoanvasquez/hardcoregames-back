@@ -113,7 +113,7 @@ def get_products_by_id(request, id_product):
         product = Products.objects.filter(pk=id_product, stock__gt=0)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
