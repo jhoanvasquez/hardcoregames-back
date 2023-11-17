@@ -168,7 +168,12 @@ def get_type_games(request):
 
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
-        combination = GameDetail.objects.filter(producto = id_product, estado=True)
+        console_product = Products.objects.filter(id_product = id_product)
+        console_title = Consoles.objects.filter(id_console__exact = console_product.values('consola')
+                                                .first()['consola']).values().first()['descripcion']
+
+        console_search = Consoles.objects.filter(descripcion__icontains = console_title.split(" ")[0])
+        combination = GameDetail.objects.filter(producto = id_product, estado=True, consola__in=console_search)
         serializer = SerializerGameDetail(combination, many=True)
         payload = {'message': 'proceso exitoso','product_id':id_product, 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")

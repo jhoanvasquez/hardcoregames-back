@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.timezone import now
@@ -81,8 +82,8 @@ class Sales(models.Model):
 
 class ProductAccounts(models.Model):
     id_product_accounts = models.AutoField(primary_key=True)
-    cuenta = models.CharField(max_length=20)
-    password = models.CharField(max_length=20)
+    cuenta = models.CharField(max_length=200)
+    password = models.CharField(max_length=100, null=True)
     activa = models.BooleanField()
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
 
@@ -141,5 +142,5 @@ class GameDetail(models.Model):
 
 class Files(models.Model):
     id_file = models.AutoField(primary_key=True)
-    ruta = models.FileField(upload_to='files/')
-    estado = models.BooleanField()
+    archivo = models.FileField(upload_to=settings.STATIC_URL_FILES)
+    estado = models.BooleanField(default=True)

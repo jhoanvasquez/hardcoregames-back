@@ -1,5 +1,8 @@
+import glob
+import os
 from datetime import date, timedelta
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.db import models
@@ -8,9 +11,10 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.text import Truncator
 
-from products.accountProductForm import AccountProductForm
+from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
-from products.models import Products, ProductsType, Sales, SaleDetail, ProductAccounts, Files
+from products.managePriceFile import ManegePricesFile
+from products.models import Products, ProductsType, Sales, SaleDetail, ProductAccounts, Files, GameDetail
 
 
 class CloseToExp(SimpleListFilter):
@@ -48,10 +52,6 @@ class ProductsAdmin(admin.ModelAdmin):
     list_filter = ["days_enable", "calification"]
     form = ProductsFormCreate
 
-    def get_truncated_str(self, obj):
-        # Change it however you want, shortening is just an example
-        return Truncator(str(obj)).words(10)
-
 
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['pk', 'description']
@@ -61,12 +61,27 @@ class ProductsTypeAdmin(admin.ModelAdmin):
     list_display = ['pk', 'description']
 
 
+class GameDetailAdmin(admin.ModelAdmin):
+    list_display = ['producto','consola','licencia','stock']
+
+
 class SalesAdmin(admin.ModelAdmin):
     list_display = ['id_sale', 'date_sale', 'status_sale', 'amount', 'status_sale', 'payment_id', 'user_id']
 
 
 class FilesAdmin(admin.ModelAdmin):
-    list_display = ['ruta', 'estado']
+    list_display = ['archivo']
+    form = FileForm
+
+    def save_model(self, request, obj, form, change):
+        for filename in glob.glob(settings.STATIC_URL_FILES + '*.xlsx'):
+            os.remove(filename)
+        Files.objects.all().delete()
+        super(FilesAdmin, self).save_model(request, obj, form, change)
+        ManegePricesFile()
+        # else:
+        #     messages.set_level(request, messages.ERROR)
+        #     messages.error(request, "El número de cuentas para este producto ha excedido el stock")
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
@@ -84,10 +99,6 @@ class ProductAccountsAdmin(admin.ModelAdmin):
         else:
             messages.set_level(request, messages.ERROR)
             messages.error(request, "El número de cuentas para este producto ha excedido el stock")
-
-    # def get_truncated_str(self, obj):
-    #     # Change it however you want, shortening is just an example
-    #     return Truncator(str(obj)).words(10)
 
 
 class SalesDetailAdmin(admin.ModelAdmin):
@@ -135,4 +146,5 @@ admin.site.register(ProductsType, ProductsTypeAdmin)
 admin.site.register(Sales, SalesAdmin)
 admin.site.register(SaleDetail, SalesDetailAdmin)
 admin.site.register(ProductAccounts, ProductAccountsAdmin)
+admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
