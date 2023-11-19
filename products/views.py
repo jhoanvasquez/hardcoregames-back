@@ -1,3 +1,4 @@
+import json
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
@@ -8,7 +9,7 @@ from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
-    SerializerForTypes, SerializerGameDetail
+    SerializerForTypes, SerializerGameDetail, SerializerForConsole
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -153,7 +154,7 @@ def get_licences(request):
 def get_consoles(request):
     if request.method == "GET":
         all_consoles = Consoles.objects.all()
-        serializer = SerializerForTypes(all_consoles, many=True)
+        serializer = SerializerForConsole(all_consoles, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -168,14 +169,25 @@ def get_type_games(request):
 
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
-        console_product = Products.objects.filter(id_product = id_product)
-        console_title = Consoles.objects.filter(id_console__exact = console_product.values('consola')
+        console_product = Products.objects.filter(id_product=id_product)
+        console_title = Consoles.objects.filter(id_console__exact=console_product.values('consola')
                                                 .first()['consola']).values().first()['descripcion']
 
-        console_search = Consoles.objects.filter(descripcion__icontains = console_title.split(" ")[0])
-        combination = GameDetail.objects.filter(producto = id_product, estado=True, consola__in=console_search)
+        console_search = Consoles.objects.filter(descripcion__icontains=console_title.split(" ")[0])
+
+        combination = GameDetail.objects.filter(producto=id_product, estado=True, consola__in=console_search)
+        print(console_title.split(" ")[0])
+        if "xbox" in console_title.split(" ")[0].lower():
+            data_response = json.dumps(response_xbox_price(combination))
+            payload = {'message': 'proceso exitoso', 'product_id': id_product,
+                       'data': json.loads(data_response),
+                       'code': '00',
+                       'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
         serializer = SerializerGameDetail(combination, many=True)
-        payload = {'message': 'proceso exitoso','product_id':id_product, 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
+                   'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -218,7 +230,6 @@ def get_shopping_car(request):
         payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-
 @csrf_exempt
 def update_shopping_car(request, shooping_car_id, self=None):
     if request.method == "PUT":
@@ -257,3 +268,26 @@ def manageFile(request):
     ManegePricesFile()
     return HttpResponse(JsonResponse({'message': 'File procesado', "status": 200, "code": "00"}),
                         content_type="application/json")
+
+
+def response_xbox_price(queryset):
+    data = []
+    for item in queryset:
+        data.append({
+            'consola': item.consola.get_id_console(),
+            'desc_console': "Xbox one",
+            'licencia': item.licencia.get_id_licence(),
+            'desc_licence': item.licencia.__str__(),
+            'stock': 1,
+            'precio': item.precio
+        })
+        data.append({
+            'consola': item.consola.get_id_console(),
+            'desc_console': "Xbox Series",
+            'licencia': item.licencia.get_id_licence(),
+            'desc_licence': item.licencia.__str__(),
+            'stock': 1,
+            'precio': item.precio
+        })
+
+    return data

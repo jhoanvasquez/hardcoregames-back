@@ -62,7 +62,7 @@ class ProductsTypeAdmin(admin.ModelAdmin):
 
 
 class GameDetailAdmin(admin.ModelAdmin):
-    list_display = ['producto','consola','licencia','stock']
+    list_display = ['producto','consola','licencia','stock', 'precio']
 
 
 class SalesAdmin(admin.ModelAdmin):

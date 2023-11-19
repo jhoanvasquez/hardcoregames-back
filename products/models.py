@@ -28,10 +28,13 @@ class PaymentType(models.Model):
 class Consoles(models.Model):
     id_console = models.AutoField(primary_key=True)
     descripcion = models.CharField(max_length=100)
+    estado = models.BooleanField(null=True)
 
     def __str__(self):
         return self.descripcion
 
+    def get_id_console(self):
+        return self.id_console
 
 class TypeGames(models.Model):
     id_type_game = models.AutoField(primary_key=True)
@@ -129,6 +132,8 @@ class Licenses(models.Model):
     def __str__(self):
         return self.descripcion
 
+    def get_id_licence(self):
+        return self.id_license
 
 class GameDetail(models.Model):
     id_game_detail = models.AutoField(primary_key=True)

@@ -1,6 +1,7 @@
 import os
 
 import openpyxl
+from django import forms
 from django.conf import settings
 
 from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail
@@ -18,20 +19,24 @@ def readFilePs(sheetPs, id_primaria, id_secundaria):
             account = sheet.cell(row=i, column=1).value
             password = sheet.cell(row=i, column=2).value
             id_product = sheet.cell(row=i, column=3).value
+            product_for_create = Products.objects.filter(id_product=id_product)
+
+            if not product_for_create.exists():
+                raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
 
             if account is None or id_product is None:
                 continue
 
             exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
                                                            producto=int(id_product)).exists()
+
             if not exist_account:
                 ProductAccounts(
                     cuenta=account.lower(),
                     password=password,
                     activa=True,
-                    producto=Products.objects.filter(id_product=id_product).first()
+                    producto=product_for_create.first()
                 ).save()
-
             sheet_price_ps4_1 = sheet.cell(row=i, column=4).value
             sheet_price_ps4_2 = sheet.cell(row=i, column=5).value
             sheet_price_ps5_1 = sheet.cell(row=i, column=6).value
@@ -47,12 +52,11 @@ def readFilePs(sheetPs, id_primaria, id_secundaria):
                 saveOrUpdateGameDetail(id_product, id_ps5, id_secundaria, sheet_price_ps5_2)
 
     except Exception as e:
-        print("problemas en el manejo del archivo cuentas play station" + e)
+        print("problemas en el manejo del archivo cuentas play station " + str(e))
 
 
 def readFileXbx(sheetPs, id_primaria, id_secundaria):
-    id_xboxs = Consoles.objects.filter(descripcion__icontains="xbox series")
-    id_xbox1 = Consoles.objects.filter(descripcion__icontains="xbox one")
+    id_xbox = Consoles.objects.filter(descripcion__exact="xbox")
 
     try:
         sheet = sheetPs
@@ -63,36 +67,40 @@ def readFileXbx(sheetPs, id_primaria, id_secundaria):
             password = sheet.cell(row=i, column=2).value
             id_product = sheet.cell(row=i, column=3).value
 
+            product_for_create = Products.objects.filter(id_product=id_product)
+
+            if not product_for_create.exists():
+                raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
+
             if account is None or id_product is None:
                 continue
 
             exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
                                                            producto=int(id_product)).exists()
+
             if not exist_account:
                 ProductAccounts(
                     cuenta=account.lower(),
                     password=password,
                     activa=True,
-                    producto=Products.objects.filter(id_product=id_product).first()
+                    producto=product_for_create.first()
                 ).save()
 
             sheet_price_xbox_1 = sheet.cell(row=i, column=4).value
             sheet_price_xbox_2 = sheet.cell(row=i, column=5).value
 
             if sheet_price_xbox_1 is not None:
-                saveOrUpdateGameDetail(id_product, id_xboxs, id_primaria, sheet_price_xbox_1)
-                saveOrUpdateGameDetail(id_product, id_xbox1, id_primaria, sheet_price_xbox_1)
+                saveOrUpdateGameDetail(id_product, id_xbox, id_primaria, sheet_price_xbox_1)
             if sheet_price_xbox_2 is not None:
-                saveOrUpdateGameDetail(id_product, id_xboxs, id_secundaria, sheet_price_xbox_2)
-                saveOrUpdateGameDetail(id_product, id_xbox1, id_secundaria, sheet_price_xbox_2)
+                saveOrUpdateGameDetail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2)
 
     except Exception as e:
-        print("problemas en el manejo del archivo cuentas xbox" + e)
+        print("problemas en el manejo del archivo cuentas xbox " + str(e))
 
 
 class ManegePricesFile:
     def __init__(self):
-        path = os.path.abspath(settings.STATIC_URL_FILES+"preciosHardcore.xlsx")
+        path = os.path.abspath(settings.STATIC_URL_FILES + "preciosHardcore.xlsx")
         excel_document = openpyxl.load_workbook(path)
         sheet_ps = excel_document.get_sheet_by_name('cuentas_ps')
         sheet_xbox = excel_document.get_sheet_by_name('cuentas_xbox')
