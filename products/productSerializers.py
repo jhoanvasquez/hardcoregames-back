@@ -43,7 +43,7 @@ class SerializerForTypes(serializers.ModelSerializer):
 class SerializerForConsole(serializers.ModelSerializer):
     class Meta:
         model = Consoles
-        fields = ('pk', 'descripcion', 'id_marca')
+        fields = ('pk', 'descripcion',)
 
 
 class SerializerGameDetail(serializers.ModelSerializer):
