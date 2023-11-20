@@ -230,29 +230,30 @@ def get_shopping_car(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
-def accountForSale(request):
-    if request.method == "GET":
-        id_product = request.GET['id_product']
-        id_licence = request.GET['id_licence']
-        id_console = request.GET['id_console']
-        account_avaible = GameDetail.objects.filter(
-                                                        producto__exact=id_product,
-                                                        licencia__exact=id_licence,
-                                                        consola__exact=id_console,
-                                                        stock__gt=0
-                                                    )
-        if account_avaible.exists():
-            product_selected = Products.objects.filter(id_product = id_product)
-            account_selected = ProductAccounts.objects.filter(producto_id=id_product, activa=True)
-            account_avaible.update(stock=account_avaible.values().get()['stock'] - 1)
-            Products.objects.filter(id_product = id_product).update(stock=product_selected.values().get()["stock"] - 1)
-            if product_selected.values().get()['stock'] == 0:
-                account_selected.update(activa=False)
-            data_response = json.dumps(response_account_for_sale(account_selected,
-                                                      account_avaible.values().get()['id_game_detail']))
-            payload = {'message': 'proceso exitoso',
-                       'data': json.loads(data_response), 'code': '00', 'status': 200}
-            return HttpResponse(JsonResponse(payload), content_type="application/json")
+@csrf_exempt
+def confirmSale(request):
+    if request.method == "POST":
+        # id_product = request.GET['id_product']
+        # id_licence = request.GET['id_licence']
+        # id_console = request.GET['id_console']
+        # account_avaible = GameDetail.objects.filter(
+        #                                                 producto__exact=id_product,
+        #                                                 licencia__exact=id_licence,
+        #                                                 consola__exact=id_console,
+        #                                                 stock__gt=0
+        #                                             )
+        # if account_avaible.exists():
+        #     product_selected = Products.objects.filter(id_product = id_product)
+        #     account_selected = ProductAccounts.objects.filter(producto_id=id_product, activa=True)
+        #     account_avaible.update(stock=account_avaible.values().get()['stock'] - 1)
+        #     Products.objects.filter(id_product = id_product).update(stock=product_selected.values().get()["stock"] - 1)
+        #     if product_selected.values().get()['stock'] == 0:
+        #         account_selected.update(activa=False)
+        #     data_response = json.dumps(response_account_for_sale(account_selected,
+        #                                               account_avaible.values().get()['id_game_detail']))
+        #     payload = {'message': 'proceso exitoso',
+        #                'data': json.loads(data_response), 'code': '00', 'status': 200}
+        #     return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
