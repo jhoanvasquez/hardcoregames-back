@@ -36,6 +36,9 @@ class Consoles(models.Model):
     def get_id_console(self):
         return self.id_console
 
+    class Meta:
+        verbose_name = 'una consola'
+        verbose_name_plural = 'Consolas'
 
 class TypeGames(models.Model):
     id_type_game = models.AutoField(primary_key=True)

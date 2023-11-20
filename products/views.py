@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles, \
-    TypeGames, GameDetail
+    TypeGames, GameDetail, ProductAccounts
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole
 from utils.SendEmail import SendEmail
@@ -176,7 +176,6 @@ def get_combination_price_by_game(request, id_product):
         console_search = Consoles.objects.filter(descripcion__icontains=console_title.split(" ")[0])
 
         combination = GameDetail.objects.filter(producto=id_product, estado=True, consola__in=console_search)
-        print(console_title.split(" ")[0])
         if "xbox" in console_title.split(" ")[0].lower():
             data_response = json.dumps(response_xbox_price(combination))
             payload = {'message': 'proceso exitoso', 'product_id': id_product,
@@ -230,6 +229,34 @@ def get_shopping_car(request):
         payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
+
+def accountForSale(request):
+    if request.method == "GET":
+        id_product = request.GET['id_product']
+        id_licence = request.GET['id_licence']
+        id_console = request.GET['id_console']
+        account_avaible = GameDetail.objects.filter(
+                                                        producto__exact=id_product,
+                                                        licencia__exact=id_licence,
+                                                        consola__exact=id_console,
+                                                        stock__gt=0
+                                                    )
+        if account_avaible.exists():
+            product_selected = Products.objects.filter(id_product = id_product)
+            account_selected = ProductAccounts.objects.filter(producto_id=id_product, activa=True)
+            account_avaible.update(stock=account_avaible.values().get()['stock'] - 1)
+            Products.objects.filter(id_product = id_product).update(stock=product_selected.values().get()["stock"] - 1)
+            if product_selected.values().get()['stock'] == 0:
+                account_selected.update(activa=False)
+            data_response = json.dumps(response_account_for_sale(account_selected,
+                                                      account_avaible.values().get()['id_game_detail']))
+            payload = {'message': 'proceso exitoso',
+                       'data': json.loads(data_response), 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 @csrf_exempt
 def update_shopping_car(request, shooping_car_id, self=None):
     if request.method == "PUT":
@@ -274,6 +301,7 @@ def response_xbox_price(queryset):
     data = []
     for item in queryset:
         data.append({
+            'pk': item.id_game_detail,
             'consola': item.consola.get_id_console(),
             'desc_console': "Xbox one",
             'licencia': item.licencia.get_id_licence(),
@@ -282,6 +310,7 @@ def response_xbox_price(queryset):
             'precio': item.precio
         })
         data.append({
+            'pk': item.id_game_detail,
             'consola': item.consola.get_id_console(),
             'desc_console': "Xbox Series",
             'licencia': item.licencia.get_id_licence(),
@@ -290,4 +319,15 @@ def response_xbox_price(queryset):
             'precio': item.precio
         })
 
+    return data
+
+
+def response_account_for_sale(queryset, id_ref):
+    data = []
+    for item in queryset:
+        data.append({
+            'id_ref': id_ref,
+            'cuenta': item.cuenta,
+            'password': item.password
+        })
     return data

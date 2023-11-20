@@ -14,7 +14,7 @@ from django.utils.text import Truncator
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
-from products.models import Products, ProductsType, Sales, SaleDetail, ProductAccounts, Files, GameDetail
+from products.models import Products, ProductsType, Sales, SaleDetail, ProductAccounts, Files, GameDetail, Consoles
 
 
 class CloseToExp(SimpleListFilter):
@@ -61,8 +61,13 @@ class ProductsTypeAdmin(admin.ModelAdmin):
     list_display = ['pk', 'description']
 
 
+class ConsolesAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'descripcion', 'estado']
+
+
 class GameDetailAdmin(admin.ModelAdmin):
     list_display = ['producto', 'consola', 'licencia', 'stock', 'precio']
+    list_filter = ["consola", 'licencia']
 
 
 class SalesAdmin(admin.ModelAdmin):
@@ -142,5 +147,6 @@ admin.site.register(ProductsType, ProductsTypeAdmin)
 admin.site.register(Sales, SalesAdmin)
 admin.site.register(SaleDetail, SalesDetailAdmin)
 admin.site.register(ProductAccounts, ProductAccountsAdmin)
+admin.site.register(Consoles, ConsolesAdmin)
 admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)

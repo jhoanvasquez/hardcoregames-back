@@ -52,4 +52,4 @@ class SerializerGameDetail(serializers.ModelSerializer):
 
     class Meta:
         model = GameDetail
-        fields = ('consola', 'desc_console', 'licencia', 'desc_licence', 'stock', 'precio')
+        fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence', 'stock', 'precio')
