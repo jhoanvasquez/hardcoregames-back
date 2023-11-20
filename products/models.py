@@ -36,6 +36,7 @@ class Consoles(models.Model):
     def get_id_console(self):
         return self.id_console
 
+
 class TypeGames(models.Model):
     id_type_game = models.AutoField(primary_key=True)
     descripcion = models.CharField(max_length=100)
@@ -48,7 +49,7 @@ class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
     description = models.TextField()
-    stock = models.IntegerField()
+    stock = models.IntegerField(default=0)
     price = models.IntegerField()
     days_enable = models.IntegerField()
     date_register = models.DateField(default=now)
@@ -135,6 +136,7 @@ class Licenses(models.Model):
     def get_id_licence(self):
         return self.id_license
 
+
 class GameDetail(models.Model):
     id_game_detail = models.AutoField(primary_key=True)
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
@@ -144,8 +146,16 @@ class GameDetail(models.Model):
     precio = models.IntegerField(default=0)
     estado = models.BooleanField()
 
+    class Meta:
+        verbose_name = 'Precio por consola y licencia'
+        verbose_name_plural = 'Precios por consola y licencia'
+
 
 class Files(models.Model):
     id_file = models.AutoField(primary_key=True)
     archivo = models.FileField(upload_to=settings.STATIC_URL_FILES)
     estado = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'un archivo para precios'
+        verbose_name_plural = 'Archivos para precios'

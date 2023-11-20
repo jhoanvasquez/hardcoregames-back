@@ -48,8 +48,8 @@ class ProductsAdmin(admin.ModelAdmin):
         return obj.type_id.description
 
     get_type_product.short_description = 'Tipo de producto'
-    search_fields = ['description', 'calification']
-    list_filter = ["days_enable", "calification"]
+    search_fields = ['title', 'description', 'calification']
+    list_filter = ["calification", 'tipo_juego']
     form = ProductsFormCreate
 
 
@@ -62,7 +62,7 @@ class ProductsTypeAdmin(admin.ModelAdmin):
 
 
 class GameDetailAdmin(admin.ModelAdmin):
-    list_display = ['producto','consola','licencia','stock', 'precio']
+    list_display = ['producto', 'consola', 'licencia', 'stock', 'precio']
 
 
 class SalesAdmin(admin.ModelAdmin):
@@ -79,16 +79,12 @@ class FilesAdmin(admin.ModelAdmin):
         Files.objects.all().delete()
         super(FilesAdmin, self).save_model(request, obj, form, change)
         ManegePricesFile()
-        # else:
-        #     messages.set_level(request, messages.ERROR)
-        #     messages.error(request, "El número de cuentas para este producto ha excedido el stock")
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
     list_display = ['cuenta', 'password', 'activa', 'producto']
     form = AccountProductForm
 
-    # pass
     def save_model(self, request, obj, form, change):
         email_form = form.cleaned_data.get('cuenta')
         title_product = form.cleaned_data.get('producto')

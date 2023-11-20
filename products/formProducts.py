@@ -5,4 +5,4 @@ from products.models import Products
 class ProductsFormCreate(forms.ModelForm):
     class Meta:
         model = Products
-        fields = '__all__'
+        exclude = ['stock', 'days_enable', 'date_last_modified', 'date_register']
