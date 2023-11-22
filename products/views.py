@@ -53,38 +53,6 @@ def create_sale(request, self=None):
                             content_type="application/json")
 
 
-@csrf_exempt
-def create_product(request, self=None):
-    if request.method == "POST":
-        body = GetJsonFromRequest.__int__(self, request)
-        description = body['description']
-        stock = body['stock']
-        price = body['price']
-        email_for_product = body['email_for_product']
-        pass_for_product = body['pass_for_product']
-        days_enable = body['days_enable']
-        date_register = body['date_register']
-        image = body['image']
-        type_id_id = body['type_id_id']
-
-        product_type = ProductsType.objects.filter(id_product_type=type_id_id).first()
-        product = Products(
-            description=description,
-            stock=stock,
-            price=price,
-            email_for_product=email_for_product,
-            pass_for_product=pass_for_product,
-            days_enable=days_enable,
-            date_register=date_register,
-            image=image,
-            type_id=product_type
-
-        )
-        product.save()
-        return HttpResponse(JsonResponse({'message': 'producto registrado exitosamente', "status": 200, "code": "00"}),
-                            content_type="application/json")
-
-
 def get_all_products(request):
     if request.method == "GET":
         all_products = Products.objects.filter(stock__gt=0)
@@ -122,8 +90,8 @@ def get_products_by_id(request, id_product):
 
 def get_products_by_type_console(request, id_console):
     if request.method == "GET":
-        # console = Consoles.objects.get(pk=id_console)
-        product = Products.objects.filter(consola=id_console, stock__gt=0).exclude(consola__isnull=True)
+        console = Consoles.objects.filter(pk=id_console)
+        product = Products.objects.filter(consola__in=console, stock__gt=0).exclude(consola__isnull=True)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
@@ -169,21 +137,15 @@ def get_type_games(request):
 
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
-        console_product = Products.objects.filter(id_product=id_product)
-        console_title = Consoles.objects.filter(id_console__exact=console_product.values('consola')
-                                                .first()['consola']).values().first()['descripcion']
-
-        console_search = Consoles.objects.filter(descripcion__icontains=console_title.split(" ")[0])
-
-        combination = GameDetail.objects.filter(producto=id_product, estado=True, consola__in=console_search)
-        if "xbox" in console_title.split(" ")[0].lower():
+        xbox_id = Consoles.objects.filter(estado=False)
+        combination = GameDetail.objects.filter(producto=id_product, estado=True,)
+        if combination.first().consola == xbox_id.first():
             data_response = json.dumps(response_xbox_price(combination))
             payload = {'message': 'proceso exitoso', 'product_id': id_product,
                        'data': json.loads(data_response),
                        'code': '00',
                        'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-
         serializer = SerializerGameDetail(combination, many=True)
         payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                    'status': 200}

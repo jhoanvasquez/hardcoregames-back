@@ -54,13 +54,13 @@ class Products(models.Model):
     description = models.TextField()
     stock = models.IntegerField(default=0)
     price = models.IntegerField()
-    days_enable = models.IntegerField()
+    days_enable = models.IntegerField(null=True)
     date_register = models.DateField(default=now)
     date_last_modified = models.DateField(default=now)
     image = models.CharField(max_length=500)
     type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE)
     calification = models.IntegerField(default=0)
-    consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
+    consola = models.ManyToManyField(Consoles)
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
