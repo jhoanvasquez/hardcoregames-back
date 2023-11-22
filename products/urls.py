@@ -3,7 +3,6 @@ from django.urls import path
 from products import views
 
 urlpatterns = [
-    path("createSale/", views.create_sale, name="create_sale"),
     path("getAllProducts/", views.get_all_products, name="get_all_products"),
     path("getFavProducts/", views.get_favorite_products, name="get_favorite_products"),
     path("getNewsProducts/", views.get_news_for_products, name="get_news_for_products"),
@@ -12,6 +11,7 @@ urlpatterns = [
     path("getProductByTypeConsole/<int:id_console>", views.get_products_by_type_console, name="get_products_by_id"),
     path("getCombinationPriceByGame/<int:id_product>", views.get_combination_price_by_game, name="get_combination_price_by_game"),
     path("confirmSale/", views.confirmSale, name="confirmSale"),
+    path("salesByUser/<int:id_user>", views.salesByUser, name="salesByUser"),
     path("getLicensces/", views.get_licences, name="get_products_by_id"),
     path("getConsoles/", views.get_consoles, name="get_products_by_id"),
     path("getTypeGames/", views.get_type_games, name="get_type_games"),

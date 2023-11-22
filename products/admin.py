@@ -14,7 +14,7 @@ from django.utils.text import Truncator
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
-from products.models import Products, ProductsType, Sales, SaleDetail, ProductAccounts, Files, GameDetail, Consoles
+from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles
 
 
 class CloseToExp(SimpleListFilter):
@@ -111,11 +111,6 @@ class SalesDetailAdmin(admin.ModelAdmin):
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.product_id.title)
 
-    def sale_id(obj):
-        url = reverse('admin:products_sales_change', args=[obj.fk_id_sale])
-        return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
-                           url, obj.fk_id_sale)
-
     def cuenta(obj):
         print(obj.cuenta.cuenta, "cuenta")
         url = reverse('admin:products_productaccounts_change', args=[obj.cuenta.id_product_accounts])
@@ -123,13 +118,10 @@ class SalesDetailAdmin(admin.ModelAdmin):
                            url, obj.cuenta.cuenta)
 
     product_id.short_description = 'Producto'
-    sale_id.short_description = 'ID Venta'
     list_display = [field.name for field in SaleDetail._meta.get_fields()]
 
-    list_display.remove("fk_id_sale")
     list_display.remove("cuenta")
     list_display += [cuenta]
-    list_display += [sale_id]
     list_filter = [CloseToExp]
 
     # list_display_links = ("id_sale", product_id)
@@ -147,7 +139,6 @@ admin.site.site_header = 'Administración HardCoreGames'
 # Register your models here.
 admin.site.register(Products, ProductsAdmin)
 admin.site.register(ProductsType, ProductsTypeAdmin)
-admin.site.register(Sales, SalesAdmin)
 admin.site.register(SaleDetail, SalesDetailAdmin)
 admin.site.register(ProductAccounts, ProductAccountsAdmin)
 admin.site.register(Consoles, ConsolesAdmin)

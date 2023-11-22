@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles
+from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles, SaleDetail
 
 
 class ProductsSerializer(serializers.ModelSerializer):
@@ -51,3 +51,11 @@ class SerializerGameDetail(serializers.ModelSerializer):
     class Meta:
         model = GameDetail
         fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence', 'stock', 'precio')
+
+
+class SerializerSales(serializers.ModelSerializer):
+    cuenta = serializers.CharField(source='cuenta.cuenta', read_only=True)
+    password = serializers.CharField(source='cuenta.password', read_only=True)
+    class Meta:
+        model = SaleDetail
+        fields = ('producto', 'cuenta', 'password', 'fecha_venta','fecha_vencimiento')

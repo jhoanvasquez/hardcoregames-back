@@ -6,51 +6,12 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from products.managePriceFile import ManegePricesFile
-from products.models import Products, ProductsType, Sales, PaymentType, SaleDetail, ShoppingCar, Licenses, Consoles, \
-    TypeGames, GameDetail, ProductAccounts
+from products.models import Products, ShoppingCar, Licenses, Consoles, \
+    TypeGames, GameDetail, ProductAccounts, SaleDetail
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
-    SerializerForTypes, SerializerGameDetail, SerializerForConsole
+    SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
-
-
-@csrf_exempt
-def create_sale(request, self=None):
-    if request.method == "POST":
-        today = date.today()
-        body = GetJsonFromRequest.__int__(self, request)
-        status_sale = body['status_sale']
-        date_sale = body['date_sale']
-        payment_id = body['payment_id']
-        user_id = body['user_id']
-        amount = body['amount']
-        payment_type_instance = PaymentType.objects.filter(pk=payment_id).first()
-        user_instance = User.objects.filter(pk=user_id).first()
-        sale = Sales(
-            status_sale=status_sale,
-            date_sale=date_sale,
-            payment_id=payment_type_instance,
-            user_id=user_instance,
-            amount=amount,
-        )
-        sale.save()
-        for product in body['products']:
-            product_instance = Products.objects.filter(pk=product['product_id']).first()
-            sale_instance = Sales.objects.filter(pk=sale.id_sale).first()
-            days_enabled_product = product_instance.days_enable
-            date_expiration = today + timedelta(
-                days=int(days_enabled_product)) if product_instance.days_enable > 0 else None
-            sale_detail = SaleDetail(
-                price=product['price'],
-                quantity=product['quantity'],
-                total_value=product['total_value'],
-                date_expiration=date_expiration,
-                product_id=product_instance,
-                fk_id_sale=sale_instance,
-            )
-            sale_detail.save()
-        return HttpResponse(JsonResponse({'message': 'venta registrada exitosamente', "status": 200, "code": "00"}),
-                            content_type="application/json")
 
 
 def get_all_products(request):
@@ -138,7 +99,7 @@ def get_type_games(request):
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
         xbox_id = Consoles.objects.filter(estado=False)
-        combination = GameDetail.objects.filter(producto=id_product, estado=True,)
+        combination = GameDetail.objects.filter(producto=id_product, estado=True, )
         if combination.first().consola == xbox_id.first():
             data_response = json.dumps(response_xbox_price(combination))
             payload = {'message': 'proceso exitoso', 'product_id': id_product,
@@ -192,30 +153,42 @@ def get_shopping_car(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
+def salesByUser(request, id_user):
+    if request.method == "GET":
+        sales_by_user = SaleDetail.objects.filter(usuario=id_user).order_by('-pk')
+        serializer = SerializerSales(sales_by_user, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 @csrf_exempt
 def confirmSale(request):
     if request.method == "POST":
-        # id_product = request.GET['id_product']
-        # id_licence = request.GET['id_licence']
-        # id_console = request.GET['id_console']
-        # account_avaible = GameDetail.objects.filter(
-        #                                                 producto__exact=id_product,
-        #                                                 licencia__exact=id_licence,
-        #                                                 consola__exact=id_console,
-        #                                                 stock__gt=0
-        #                                             )
-        # if account_avaible.exists():
-        #     product_selected = Products.objects.filter(id_product = id_product)
-        #     account_selected = ProductAccounts.objects.filter(producto_id=id_product, activa=True)
-        #     account_avaible.update(stock=account_avaible.values().get()['stock'] - 1)
-        #     Products.objects.filter(id_product = id_product).update(stock=product_selected.values().get()["stock"] - 1)
-        #     if product_selected.values().get()['stock'] == 0:
-        #         account_selected.update(activa=False)
-        #     data_response = json.dumps(response_account_for_sale(account_selected,
-        #                                               account_avaible.values().get()['id_game_detail']))
-        #     payload = {'message': 'proceso exitoso',
-        #                'data': json.loads(data_response), 'code': '00', 'status': 200}
-        #     return HttpResponse(JsonResponse(payload), content_type="application/json")
+        json_request = json.loads(request.body)
+        id_user = json_request['id_user']
+
+        for item in json_request['data']:
+
+            id_combination = item['id_combination']
+            combination = GameDetail.objects.filter(pk=id_combination, stock__gt=0)
+
+            if combination.exists():
+
+                product_id = combination.first().producto.id_product
+                product_selected = Products.objects.filter(id_product=product_id)
+                account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa=True).first()
+
+                combination.update(stock=combination.values().get()['stock'] - 1)
+                Products.objects.filter(id_product=product_id)\
+                    .update(stock=product_selected.values().get()["stock"] - 1)
+
+                if product_selected.values().get()['stock'] == 0:
+                    account_selected.update(activa=False)
+                create_sale(item, id_user, account_selected)
+
+                payload = {'message': 'proceso exitoso',
+                           'response': True, 'code': '00', 'status': 200}
+                return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -282,15 +255,19 @@ def response_xbox_price(queryset):
             'precio': item.precio
         })
 
-    return data
 
+def create_sale(sale, id_user, account):
+    user = User.objects.filter(pk=id_user).first()
+    combination = GameDetail.objects.filter(pk=sale['id_combination']).first()
+    today = date.today()
+    date_expiration = None
+    if sale['is_rentail']:
+        date_expiration = today + timedelta(days=int(sale['days_rentail']))
+    sale_detail = SaleDetail(
+        usuario=user,
+        producto=combination.producto,
+        cuenta=account,
+        fecha_vencimiento=date_expiration
 
-def response_account_for_sale(queryset, id_ref):
-    data = []
-    for item in queryset:
-        data.append({
-            'id_ref': id_ref,
-            'cuenta': item.cuenta,
-            'password': item.password
-        })
-    return data
+    )
+    sale_detail.save()
