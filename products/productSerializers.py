@@ -53,9 +53,18 @@ class SerializerGameDetail(serializers.ModelSerializer):
         fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence', 'stock', 'precio')
 
 
+class SerializerLicencesName(serializers.ModelSerializer):
+    desc_licence = serializers.CharField(source='licencia.descripcion', read_only=True)
+
+    class Meta:
+        model = GameDetail
+        fields = ('licencia', 'desc_licence', 'stock')
+
+
 class SerializerSales(serializers.ModelSerializer):
     cuenta = serializers.CharField(source='cuenta.cuenta', read_only=True)
     password = serializers.CharField(source='cuenta.password', read_only=True)
+
     class Meta:
         model = SaleDetail
-        fields = ('producto', 'cuenta', 'password', 'fecha_venta','fecha_vencimiento')
+        fields = ('producto', 'cuenta', 'password', 'fecha_venta', 'fecha_vencimiento')

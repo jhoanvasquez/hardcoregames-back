@@ -9,7 +9,7 @@ from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail, ProductAccounts, SaleDetail
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
-    SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales
+    SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -99,15 +99,28 @@ def get_type_games(request):
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
         xbox_id = Consoles.objects.filter(estado=False)
-        combination = GameDetail.objects.filter(producto=id_product, estado=True, )
-        if combination.first().consola == xbox_id.first():
-            data_response = json.dumps(response_xbox_price(combination))
-            payload = {'message': 'proceso exitoso', 'product_id': id_product,
-                       'data': json.loads(data_response),
-                       'code': '00',
+        combination = GameDetail.objects.filter(producto=id_product, estado=True,)
+        if combination.exists():
+            if combination.first().consola == xbox_id.first():
+                data_response = json.dumps(response_xbox_price(combination))
+                payload = {'message': 'proceso exitoso', 'product_id': id_product,
+                           'data': json.loads(data_response),
+                           'code': '00',
+                           'status': 200}
+                return HttpResponse(JsonResponse(payload), content_type="application/json")
+            serializer = SerializerGameDetail(combination, many=True)
+            payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                        'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        serializer = SerializerGameDetail(combination, many=True)
+        payload = {'message': 'proceso exitoso','data': {}, 'code': '00',
+                   'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def licence_by_product(request, id_product, id_console):
+    if request.method == "GET":
+        combination = GameDetail.objects.filter(producto=id_product, consola=id_console, stock__gt=0)
+        serializer = SerializerLicencesName(combination, many=True)
         payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                    'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -179,7 +192,7 @@ def confirmSale(request):
                 account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa=True).first()
 
                 combination.update(stock=combination.values().get()['stock'] - 1)
-                Products.objects.filter(id_product=product_id)\
+                Products.objects.filter(id_product=product_id) \
                     .update(stock=product_selected.values().get()["stock"] - 1)
 
                 if product_selected.values().get()['stock'] == 0:
