@@ -89,7 +89,7 @@ class ProductAccounts(models.Model):
 
 class SaleDetail(models.Model):
     id_sale_detail = models.AutoField(primary_key=True)
-    fecha_venta = models.DateField(default=now)
+    fecha_venta = models.DateField(auto_now_add=True)
     fecha_vencimiento = models.DateField(null=True)
     cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
@@ -101,16 +101,6 @@ class SaleDetail(models.Model):
 
     def __str__(self):
         return "Detalle de venta para la cuenta " + self.cuenta.cuenta
-
-
-class ShoppingCar(models.Model):
-    id_shopping_car = models.AutoField(primary_key=True)
-    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    estado = models.BooleanField()
-
-    # def __str__(self):
-    #     return "Detalle de venta para la cuenta " + self.cuenta.cuenta
 
 
 class Licenses(models.Model):
@@ -138,6 +128,16 @@ class GameDetail(models.Model):
         verbose_name_plural = 'Precios por consola y licencia'
 
 
+class ShoppingCar(models.Model):
+    id_shopping_car = models.AutoField(primary_key=True)
+    producto = models.ForeignKey(GameDetail, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    estado = models.BooleanField()
+
+    # def __str__(self):
+    #     return "Detalle de venta para la cuenta " + self.cuenta.cuenta
+
+
 class Files(models.Model):
     id_file = models.AutoField(primary_key=True)
     archivo = models.FileField(upload_to=settings.STATIC_URL_FILES)
@@ -155,6 +155,7 @@ class DaysForRentail(models.Model):
 
     def __str__(self):
         return self.numero_dias
+
     class Meta:
         verbose_name = 'valor descuento por mes'
         verbose_name_plural = 'Meses para alquiler'

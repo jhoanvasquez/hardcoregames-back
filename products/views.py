@@ -133,10 +133,10 @@ def shopping_car(request, self=None):
     if request.method == "POST":
         body = GetJsonFromRequest.__int__(self, request)
         user_id = body['user_id']
-        product_id = body['product_id']
+        combination_id = body['id_combination']
         state = body['state']
         user = User.objects.filter(pk=user_id)
-        product = Products.objects.filter(pk=product_id)
+        product = GameDetail.objects.filter(pk=combination_id)
         if product.count() > 0 and user.count() > 0:
             shopping_car = ShoppingCar(
                 usuario=user.get(),
