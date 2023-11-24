@@ -33,7 +33,7 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
     stock = serializers.IntegerField(source='producto.producto.stock', read_only=True)
     licence = serializers.CharField(source='producto.licencia.descripcion', read_only=True)
     console = serializers.CharField(source='producto.consola.descripcion', read_only=True)
-    price = serializers.IntegerField(source='producto.price', read_only=True)
+    price = serializers.IntegerField(source='producto.precio', read_only=True)
     type = serializers.IntegerField(source='producto.producto.type_id_id', read_only=True)
     image = serializers.CharField(source='producto.producto.image', read_only=True)
 
