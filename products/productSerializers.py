@@ -29,6 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ShoppingCarSerializer(serializers.ModelSerializer):
     id_product = serializers.IntegerField(source='producto.producto.id_product', read_only=True)
+    id_combination = serializers.IntegerField(source='producto.id_game_detail', read_only=True)
     title_product = serializers.CharField(source='producto.producto.title', read_only=True)
     stock = serializers.IntegerField(source='producto.producto.stock', read_only=True)
     licence = serializers.CharField(source='producto.licencia.descripcion', read_only=True)
@@ -39,7 +40,7 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCar
-        fields = ('pk', 'id_product', 'title_product', 'stock', 'price', 'licence','console',
+        fields = ('pk', 'id_product','id_combination', 'title_product', 'stock', 'price', 'licence','console',
                   'type', 'estado', 'image')
 
 
