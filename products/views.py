@@ -153,13 +153,13 @@ def shopping_car(request, self=None):
 def get_shopping_car(request):
     if request.method == "GET":
         user_id = request.GET['user_id']
-        user = ShoppingCar.objects.filter(usuario=user_id)
-        if user.count() > 0:
+        user = ShoppingCar.objects.filter(usuario=user_id, producto__stock__gt=0)
+        if user.exists():
             if request.GET['state']:
                 state = True if request.GET['state'] == "true" else False
-                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state).order_by('pk')
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state, producto__stock__gt=0).order_by('pk')
             else:
-                shopping_cars = ShoppingCar.objects.filter(usuario=user_id).order_by('pk')
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, producto__stock__gt=0).order_by('pk')
             shopping_cars_serialized = ShoppingCarSerializer(shopping_cars, many=True)
             payload = {'message': 'proceso exitoso', 'user_id': int(user_id),
                        'data': shopping_cars_serialized.data, 'code': '00', 'status': 200}
@@ -191,27 +191,22 @@ def confirmSale(request):
         id_user = json_request['id_user']
 
         for item in json_request['data']:
-
             id_combination = item['id_combination']
             combination = GameDetail.objects.filter(pk=id_combination, stock__gt=0)
-
             if combination.exists():
-
                 product_id = combination.first().producto.id_product
                 product_selected = Products.objects.filter(id_product=product_id)
-                account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa=True).first()
+                account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa=True)
 
                 combination.update(stock=combination.values().get()['stock'] - 1)
-                Products.objects.filter(id_product=product_id) \
-                    .update(stock=product_selected.values().get()["stock"] - 1)
+                product_selected.update(stock=product_selected.values().get()["stock"] - 1)
 
                 if product_selected.values().get()['stock'] == 0:
                     account_selected.update(activa=False)
-                create_sale(item, id_user, account_selected)
-
-                payload = {'message': 'proceso exitoso',
-                           'response': True, 'code': '00', 'status': 200}
-                return HttpResponse(JsonResponse(payload), content_type="application/json")
+                create_sale(item, id_user, account_selected.first())
+            payload = {'message': 'proceso exitoso',
+                       'response': True, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
