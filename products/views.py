@@ -2,14 +2,16 @@ import json
 from datetime import date, timedelta
 
 from django.contrib.auth.models import User
+from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
-    TypeGames, GameDetail, ProductAccounts, SaleDetail
+    TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
-    SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName
+    SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
+    SerializerDaysForRentail
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -99,7 +101,7 @@ def get_type_games(request):
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
         xbox_id = Consoles.objects.filter(estado=False)
-        combination = GameDetail.objects.filter(producto=id_product, estado=True,)
+        combination = GameDetail.objects.filter(producto=id_product, estado=True, )
         if combination.exists():
             if combination.first().consola == xbox_id.first():
                 data_response = json.dumps(response_xbox_price(combination))
@@ -112,7 +114,7 @@ def get_combination_price_by_game(request, id_product):
             payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                        'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'proceso exitoso','data': {}, 'code': '00',
+        payload = {'message': 'proceso exitoso', 'data': {}, 'code': '00',
                    'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -170,6 +172,14 @@ def salesByUser(request, id_user):
     if request.method == "GET":
         sales_by_user = SaleDetail.objects.filter(usuario=id_user).order_by('-pk')
         serializer = SerializerSales(sales_by_user, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def daysForRentail(request):
+    if request.method == "GET":
+        days_rentail = DaysForRentail.objects.all()
+        serializer = SerializerDaysForRentail(days_rentail, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -268,6 +278,7 @@ def response_xbox_price(queryset):
             'precio': item.precio
         })
     return data
+
 
 def create_sale(sale, id_user, account):
     user = User.objects.filter(pk=id_user).first()

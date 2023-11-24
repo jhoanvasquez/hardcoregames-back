@@ -14,7 +14,8 @@ from django.utils.text import Truncator
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
-from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles
+from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
+    DaysForRentail
 
 
 class CloseToExp(SimpleListFilter):
@@ -39,13 +40,14 @@ class ProductsAdmin(admin.ModelAdmin):
     }
 
     list_display = ['pk', 'title', 'stock', 'price', 'image',
-                    'get_type_product', 'tipo_juego', 'nombre_consola','calification']
+                    'get_type_product', 'tipo_juego', 'nombre_consola', 'calification']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
 
     def nombre_consola(self, obj):
         return [console.descripcion for console in obj.consola.all()]
+
     @admin.display(description='Tipo de producto')
     def get_type_product(self, obj):
         return obj.type_id.description
@@ -66,6 +68,10 @@ class ProductsTypeAdmin(admin.ModelAdmin):
 
 class ConsolesAdmin(admin.ModelAdmin):
     list_display = ['pk', 'descripcion', 'estado']
+
+
+class DaysForRentailAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'numero_dias', 'porcentaje_descuento']
 
 
 class GameDetailAdmin(admin.ModelAdmin):
@@ -144,3 +150,4 @@ admin.site.register(ProductAccounts, ProductAccountsAdmin)
 admin.site.register(Consoles, ConsolesAdmin)
 admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
+admin.site.register(DaysForRentail, DaysForRentailAdmin)

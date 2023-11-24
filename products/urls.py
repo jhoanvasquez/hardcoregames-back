@@ -11,6 +11,7 @@ urlpatterns = [
     path("getProductByTypeConsole/<int:id_console>", views.get_products_by_type_console, name="get_products_by_id"),
     path("getCombinationPriceByGame/<int:id_product>", views.get_combination_price_by_game, name="get_combination_price_by_game"),
     path("licenceByProduct/<int:id_product>/<int:id_console>", views.licence_by_product, name="licence_by_product"),
+    path("daysForRentail/", views.daysForRentail, name="daysForRentail"),
     path("confirmSale/", views.confirmSale, name="confirmSale"),
     path("salesByUser/<int:id_user>", views.salesByUser, name="salesByUser"),
     path("getLicensces/", views.get_licences, name="get_products_by_id"),

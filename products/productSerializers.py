@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles, SaleDetail
+from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles, SaleDetail, DaysForRentail
 
 
 class SerializerForConsole(serializers.ModelSerializer):
@@ -61,6 +61,12 @@ class SerializerLicencesName(serializers.ModelSerializer):
     class Meta:
         model = GameDetail
         fields = ('licencia', 'desc_licence', 'stock')
+
+
+class SerializerDaysForRentail(serializers.ModelSerializer):
+    class Meta:
+        model = DaysForRentail
+        fields = ('pk', 'numero_dias', 'porcentaje_descuento')
 
 
 class SerializerSales(serializers.ModelSerializer):

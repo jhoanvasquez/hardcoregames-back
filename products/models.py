@@ -146,3 +146,15 @@ class Files(models.Model):
     class Meta:
         verbose_name = 'un archivo para precios'
         verbose_name_plural = 'Archivos para precios'
+
+
+class DaysForRentail(models.Model):
+    id_day = models.AutoField(primary_key=True)
+    numero_dias = models.CharField(max_length=100)
+    porcentaje_descuento = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.numero_dias
+    class Meta:
+        verbose_name = 'valor descuento por mes'
+        verbose_name_plural = 'Meses para alquiler'
