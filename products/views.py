@@ -203,7 +203,7 @@ def confirmSale(request):
 
                 if product_selected.values().get()['stock'] == 0:
                     account_selected.update(activa=False)
-                create_sale(item, id_user, account_selected.first())
+                create_sale(item, id_user, account_selected)
             payload = {'message': 'proceso exitoso',
                        'response': True, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
