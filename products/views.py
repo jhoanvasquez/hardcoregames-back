@@ -1,11 +1,12 @@
 import json
 from datetime import date, timedelta
 
+from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
-from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from ecommerceHardcoregamesBack import settings
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail
@@ -190,6 +191,7 @@ def confirmSale(request):
     if request.method == "POST":
         json_request = json.loads(request.body)
         id_user = json_request['id_user']
+        message_html = "";
 
         for item in json_request['data']:
             id_combination = item['id_combination']
@@ -199,18 +201,24 @@ def confirmSale(request):
                 product_selected = Products.objects.filter(id_product=product_id)
                 account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa=True)
 
-                combination.update(stock=combination.values().get()['stock'] - 1)
-                product_selected.update(stock=product_selected.values().get()["stock"] - 1)
+                new_stock = product_selected.values().get()["stock"] - 1
+                if new_stock > 0:
+                    combination.update(stock=combination.values().get()['stock'] - 1)
+                    product_selected.update(stock=new_stock)
 
                 if product_selected.values().get()['stock'] == 0:
                     account_selected.first().update(activa=False)
                 create_sale(item, id_user, account_selected)
                 deleteShoppingProduct(id_combination, id_user)
-            payload = {'message': 'proceso exitoso',
-                       'response': True, 'code': '00', 'status': 200}
-            return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
+                message_html += buildDivHtml(product_selected, combination, account_selected)
+
+        if settings.SEND_EMAIL == "true":
+            sendEmailNotification(id_user, message_html)
+        payload = {'message': 'proceso exitoso',
+                   'response': True, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
+    payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
+    return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
 @csrf_exempt
@@ -294,5 +302,49 @@ def create_sale(sale, id_user, account):
     sale_detail.save()
 
 
-def deleteShoppingProduct(id_comination : str, id_user: str):
+def deleteShoppingProduct(id_comination: str, id_user: str):
     ShoppingCar.objects.filter(usuario=id_user, producto__exact=id_comination).delete()
+
+
+def sendEmailNotification(user_id, message_html):
+    email_to = User.objects.filter(pk=user_id).first().email
+    soup = BeautifulSoup(settings.EMAIL_FOR_SALE, features="html.parser")
+    extra_soup = BeautifulSoup(message_html, 'html.parser')
+    body = soup.find("div", {"id": "body"})
+    body.append(extra_soup)
+    SendEmail().__int__(str(soup), settings.SUBJECT_EMAIL_FOR_SALE, email_to)
+
+
+def buildDivHtml(product, combination, account):
+    string_pass = account.first().password
+    if string_pass is None:
+        string_pass = ""
+    return f'''<div style="margin-bottom: 20%;">
+               <h3>{product.first().title}</h3>
+               <div style="margin-bottom: auto;">
+                  <div style="float:right;font-weight:600;font-size:16px;">
+                     <img src="{product.first().image}" width="30" class="CToWUd" data-bit="iit">
+                  </div>
+                  <li style="margin-bottom: 10px;">
+                     <lu>
+                        <b>Usuario:</b><br> {account.first().cuenta}
+                     </lu>
+                  </li>
+                  <li>
+                     <lu>
+                        <b>Contraseña:</b> {string_pass}
+                     </lu>
+                  </li> 
+                  <li>
+                     <lu>
+                        <b>Licencia:</b> {combination.first().licencia}
+                     </lu>
+                  </li>
+                  <li>
+                     <lu>
+                        <b>Consola:</b> {combination.first().consola}
+                     </lu>
+                  </li>
+               </div>
+            </div>
+            <hr style="border-color:#e0e0e0;border-width:1px">'''
