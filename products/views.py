@@ -202,7 +202,7 @@ def confirmSale(request):
                 product_selected.update(stock=product_selected.values().get()["stock"] - 1)
 
                 if product_selected.values().get()['stock'] == 0:
-                    account_selected.update(activa=False)
+                    account_selected.first().update(activa=False)
                 create_sale(item, id_user, account_selected)
             payload = {'message': 'proceso exitoso',
                        'response': True, 'code': '00', 'status': 200}
