@@ -285,7 +285,7 @@ def create_sale(sale, id_user, account):
     sale_detail = SaleDetail(
         usuario=user,
         producto=combination.producto,
-        cuenta=account,
+        cuenta=account.first(),
         fecha_vencimiento=date_expiration
 
     )
