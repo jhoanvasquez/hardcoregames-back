@@ -270,7 +270,7 @@ def response_xbox_price(queryset):
             'desc_console': "Xbox one",
             'licencia': item.licencia.get_id_licence(),
             'desc_licence': item.licencia.__str__(),
-            'stock': 1,
+            'stock': item.stock,
             'precio': item.precio
         })
         data.append({
@@ -279,7 +279,7 @@ def response_xbox_price(queryset):
             'desc_console': "Xbox Series",
             'licencia': item.licencia.get_id_licence(),
             'desc_licence': item.licencia.__str__(),
-            'stock': 1,
+            'stock': item.stock,
             'precio': item.precio
         })
     return data
