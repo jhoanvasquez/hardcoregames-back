@@ -157,7 +157,8 @@ def get_shopping_car(request):
         if user.exists():
             if request.GET['state']:
                 state = True if request.GET['state'] == "true" else False
-                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state, producto__stock__gt=0).order_by('pk')
+                shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state,
+                                                           producto__stock__gt=0).order_by('pk')
             else:
                 shopping_cars = ShoppingCar.objects.filter(usuario=user_id, producto__stock__gt=0).order_by('pk')
             shopping_cars_serialized = ShoppingCarSerializer(shopping_cars, many=True)
@@ -204,6 +205,7 @@ def confirmSale(request):
                 if product_selected.values().get()['stock'] == 0:
                     account_selected.first().update(activa=False)
                 create_sale(item, id_user, account_selected)
+                deleteShoppingProduct(id_combination, id_user)
             payload = {'message': 'proceso exitoso',
                        'response': True, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -290,3 +292,7 @@ def create_sale(sale, id_user, account):
 
     )
     sale_detail.save()
+
+
+def deleteShoppingProduct(id_comination : str, id_user: str):
+    ShoppingCar.objects.filter(usuario=id_user, producto__exact=id_comination).delete()
