@@ -160,7 +160,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SEND_EMAIL="true"
+SEND_EMAIL=os.getenv("SEND_EMAIL")
 FROM_EMAIL="jhoan0498@gmail.com"
 PASS_SMTP="bbcg cluw zlia hhui "
 SUBJECT_EMAIL_FOR_TOKEN = "Código para cambio de contraseña HardCoreGames"
