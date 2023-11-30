@@ -73,6 +73,17 @@ def get_products_by_type_game(request, id_type_game):
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
+def get_products_by_range_price(request):
+    if request.method == "GET":
+        range_min = request.GET['range_min']
+        range_max = request.GET['range_max']
+        product = Products.objects.filter(price__gt=range_min, price__lte=range_max, stock__gt=0)
+        if product.exists():
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
 def get_licences(request):
