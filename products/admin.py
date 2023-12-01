@@ -39,8 +39,8 @@ class ProductsAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows': 4})},
     }
 
-    list_display = ['pk', 'title', 'stock', 'price', 'image',
-                    'get_type_product', 'tipo_juego', 'nombre_consola', 'calification']
+    list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola','image',
+                    'get_type_product', 'tipo_juego','calification']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
@@ -75,9 +75,14 @@ class DaysForRentailAdmin(admin.ModelAdmin):
 
 
 class GameDetailAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'consola', 'licencia', 'stock', 'precio']
-    list_filter = ["consola", 'licencia']
+    def product(obj):
+        url = reverse('admin:products_products_change', args=[obj.producto.id_product])
+        return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
+                           url, obj.producto.title)
 
+    product.short_description = 'Producto'
+    list_display = [product, 'consola', 'licencia', 'stock', 'precio']
+    list_filter = ["consola", 'licencia']
 
 class SalesAdmin(admin.ModelAdmin):
     list_display = ['id_sale', 'date_sale', 'status_sale', 'amount', 'status_sale', 'payment_id', 'user_id']
@@ -118,7 +123,6 @@ class SalesDetailAdmin(admin.ModelAdmin):
                            url, obj.product_id.title)
 
     def cuenta(obj):
-        print(obj.cuenta.cuenta, "cuenta")
         url = reverse('admin:products_productaccounts_change', args=[obj.cuenta.id_product_accounts])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.cuenta.cuenta)

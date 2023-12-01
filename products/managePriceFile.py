@@ -21,11 +21,11 @@ def readFilePs(sheetPs, id_primaria, id_secundaria):
         id_product = sheet.cell(row=i, column=3).value
         product_for_create = Products.objects.filter(id_product=id_product)
 
-        if not product_for_create.exists():
-            raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
-
         if account is None or id_product is None:
             continue
+
+        if not product_for_create.exists():
+            raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
 
         exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
                                                        producto=int(id_product)).exists()
@@ -38,18 +38,18 @@ def readFilePs(sheetPs, id_primaria, id_secundaria):
                 producto=product_for_create.first()
             ).save()
             is_new_account = True
-        sheet_price_ps4_1 = sheet.cell(row=i, column=4).value
-        sheet_price_ps4_2 = sheet.cell(row=i, column=5).value
-        sheet_price_ps5_1 = sheet.cell(row=i, column=6).value
-        sheet_price_ps5_2 = sheet.cell(row=i, column=7).value
+        sheet_price_ps4_1 = str(sheet.cell(row=i, column=4).value).strip()
+        sheet_price_ps4_2 = str(sheet.cell(row=i, column=5).value).strip()
+        sheet_price_ps5_1 = str(sheet.cell(row=i, column=6).value).strip()
+        sheet_price_ps5_2 = str(sheet.cell(row=i, column=7).value).strip()
 
-        if sheet_price_ps4_1 is not None:
+        if sheet_price_ps4_1 is not None or sheet_price_ps4_1 == "x":
             saveOrUpdateGameDetail(id_product, id_ps4, id_primaria, sheet_price_ps4_1, is_new_account)
-        if sheet_price_ps4_2 is not None:
+        if sheet_price_ps4_2 is not None or sheet_price_ps4_2 == "x":
             saveOrUpdateGameDetail(id_product, id_ps4, id_secundaria, sheet_price_ps4_2, is_new_account)
-        if sheet_price_ps5_1 is not None:
+        if sheet_price_ps5_1 is not None or sheet_price_ps5_1 == "x":
             saveOrUpdateGameDetail(id_product, id_ps5, id_primaria, sheet_price_ps5_1, is_new_account)
-        if sheet_price_ps5_2 is not None:
+        if sheet_price_ps5_2 is not None or sheet_price_ps5_2 == "x":
             saveOrUpdateGameDetail(id_product, id_ps5, id_secundaria, sheet_price_ps5_2, is_new_account)
 
     # except Exception as e:
@@ -59,45 +59,45 @@ def readFilePs(sheetPs, id_primaria, id_secundaria):
 def readFileXbx(sheetPs, id_primaria, id_secundaria):
     id_xbox = Consoles.objects.filter(descripcion__exact="xbox")
     is_new_account = False
-    try:
-        sheet = sheetPs
-        m_row = sheet.max_row
+    #try:
+    sheet = sheetPs
+    m_row = sheet.max_row
 
-        for i in range(2, m_row + 1):
-            account = sheet.cell(row=i, column=1).value
-            password = sheet.cell(row=i, column=2).value
-            id_product = sheet.cell(row=i, column=3).value
+    for i in range(2, m_row + 1):
+        account = sheet.cell(row=i, column=1).value
+        password = sheet.cell(row=i, column=2).value
+        id_product = sheet.cell(row=i, column=3).value
 
-            product_for_create = Products.objects.filter(id_product=id_product)
+        product_for_create = Products.objects.filter(id_product=id_product)
 
-            if not product_for_create.exists():
-                raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
+        if account is None or id_product is None:
+            continue
 
-            if account is None or id_product is None:
-                continue
+        if not product_for_create.exists():
+            raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
 
-            exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
-                                                           producto=int(id_product)).exists()
+        exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
+                                                       producto=int(id_product)).exists()
 
-            if not exist_account:
-                ProductAccounts(
-                    cuenta=account.lower(),
-                    password=password,
-                    activa=True,
-                    producto=product_for_create.first()
-                ).save()
-                is_new_account = True
+        if not exist_account:
+            ProductAccounts(
+                cuenta=account.lower(),
+                password=password,
+                activa=True,
+                producto=product_for_create.first()
+            ).save()
+            is_new_account = True
 
-            sheet_price_xbox_1 = sheet.cell(row=i, column=4).value
-            sheet_price_xbox_2 = sheet.cell(row=i, column=5).value
+        sheet_price_xbox_1 = str(sheet.cell(row=i, column=4).value).strip()
+        sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
 
-            if sheet_price_xbox_1 is not None:
-                saveOrUpdateGameDetail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account)
-            if sheet_price_xbox_2 is not None:
-                saveOrUpdateGameDetail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account)
+        if sheet_price_xbox_1 is not None or sheet_price_xbox_1 == "x":
+            saveOrUpdateGameDetail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account)
+        if sheet_price_xbox_2 is not None or sheet_price_xbox_2 == "x":
+            saveOrUpdateGameDetail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account)
 
-    except Exception as e:
-        print("problemas en el manejo del archivo cuentas xbox " + str(e))
+    #except Exception as e:
+     #   print("problemas en el manejo del archivo cuentas xbox " + str(e))
 
 
 class ManegePricesFile:
@@ -130,8 +130,10 @@ def saveOrUpdateGameDetail(id_product, id_console, id_license, sheet_price, is_n
         ).save()
         product_selected.update(stock = product_selected.values().get()['stock'] + 1)
 
-    elif is_new_account:
-        # row_game_detail.update(stock = row_game_detail.values().get()['stock'] + 1)
+    elif is_new_account and product_selected:
         product_selected.update(stock = product_selected.values().get()['stock'] + 1)
-    else:
+        row_game_detail.update(stock=row_game_detail.values().get()['stock'] + 1)
+    elif row_game_detail.exists():
+        if sheet_price == "x":
+            sheet_price = row_game_detail.values().get()['precio']
         row_game_detail.update(precio=sheet_price)
