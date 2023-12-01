@@ -9,6 +9,7 @@ urlpatterns = [
     path("getProductById/<int:id_product>", views.get_products_by_id, name="get_products_by_id"),
     path("getProductByTypeGame/<int:id_type_game>", views.get_products_by_type_game, name="get_products_by_type_game"),
     path("getProductByTypeConsole/<int:id_console>", views.get_products_by_type_console, name="get_products_by_id"),
+    path("getProductByRangePrice/", views.get_products_by_range_price, name="get_products_by_range_price"),
     path("getCombinationPriceByGame/<int:id_product>", views.get_combination_price_by_game, name="get_combination_price_by_game"),
     path("licenceByProduct/<int:id_product>/<int:id_console>", views.licence_by_product, name="licence_by_product"),
     path("daysForRentail/", views.daysForRentail, name="daysForRentail"),
