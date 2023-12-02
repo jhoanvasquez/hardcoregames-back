@@ -41,6 +41,9 @@ class TypeGames(models.Model):
 
     def __str__(self):
         return self.descripcion
+    class Meta:
+        verbose_name = 'una tipo de juego'
+        verbose_name_plural = 'Tipos de juegos'
 
 
 class Products(models.Model):
