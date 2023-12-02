@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
@@ -15,14 +17,6 @@ class ProductsType(models.Model):
     class Meta:
         verbose_name = 'un tipo de producto'
         verbose_name_plural = 'Tipos de producto'
-
-
-class PaymentType(models.Model):
-    id_payment_type = models.AutoField(primary_key=True)
-    description = models.CharField(max_length=200)
-
-    def __str__(self):
-        return self.description
 
 
 class Consoles(models.Model):
@@ -55,9 +49,8 @@ class Products(models.Model):
     description = models.TextField()
     stock = models.IntegerField(default=0)
     price = models.IntegerField()
-    days_enable = models.IntegerField(null=True)
-    date_register = models.DateField(default=now)
-    date_last_modified = models.DateField(default=now)
+    date_register = models.DateField(default=datetime.now)
+    date_last_modified = models.DateField(auto_now=True)
     image = models.CharField(max_length=500)
     type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE)
     calification = models.IntegerField(default=0)
@@ -89,7 +82,7 @@ class ProductAccounts(models.Model):
 
 class SaleDetail(models.Model):
     id_sale_detail = models.AutoField(primary_key=True)
-    fecha_venta = models.DateField(auto_now_add=True)
+    fecha_venta = models.DateField(default=datetime.now)
     fecha_vencimiento = models.DateField(null=True)
     cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
