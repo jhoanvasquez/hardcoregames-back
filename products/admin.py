@@ -15,7 +15,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail
+    DaysForRentail, TypeGames
 
 
 class CloseToExp(SimpleListFilter):
@@ -39,8 +39,8 @@ class ProductsAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows': 4})},
     }
 
-    list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola','image',
-                    'get_type_product', 'tipo_juego','calification']
+    list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola', 'image',
+                    'get_type_product', 'tipo_juego', 'calification']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
@@ -74,6 +74,10 @@ class DaysForRentailAdmin(admin.ModelAdmin):
     list_display = ['pk', 'numero_dias', 'porcentaje_descuento']
 
 
+class TypeGamesAdmin(admin.ModelAdmin):
+    list_display = ['descripcion']
+
+
 class GameDetailAdmin(admin.ModelAdmin):
     def product(obj):
         url = reverse('admin:products_products_change', args=[obj.producto.id_product])
@@ -83,6 +87,7 @@ class GameDetailAdmin(admin.ModelAdmin):
     product.short_description = 'Producto'
     list_display = [product, 'consola', 'licencia', 'stock', 'precio']
     list_filter = ["consola", 'licencia']
+
 
 class SalesAdmin(admin.ModelAdmin):
     list_display = ['id_sale', 'date_sale', 'status_sale', 'amount', 'status_sale', 'payment_id', 'user_id']
@@ -155,3 +160,4 @@ admin.site.register(Consoles, ConsolesAdmin)
 admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
 admin.site.register(DaysForRentail, DaysForRentailAdmin)
+admin.site.register(TypeGames, TypeGamesAdmin)

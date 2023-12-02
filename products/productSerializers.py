@@ -13,7 +13,7 @@ class ProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-            'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
+            'pk', 'title', 'description', 'stock', 'price', 'date_register', 'image',
             'date_last_modified', 'consola', 'type_id', 'calification')
 
 
@@ -23,7 +23,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-            'pk', 'title', 'description', 'stock', 'price', 'days_enable', 'date_register', 'image',
+            'pk', 'title', 'description', 'stock', 'price', 'date_register', 'image',
             'date_last_modified', 'consola', 'type_id', 'calification')
 
 
