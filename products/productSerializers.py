@@ -10,6 +10,7 @@ class SerializerForConsole(serializers.ModelSerializer):
 
 
 class ProductsSerializer(serializers.ModelSerializer):
+    consola = SerializerForConsole(read_only=True, many=True)
     class Meta:
         model = Products
         fields = (
