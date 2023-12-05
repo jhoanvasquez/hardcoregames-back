@@ -13,3 +13,4 @@ class User_Customized(models.Model):
     phone_number = models.CharField(max_length=20)
     avatar = models.CharField(max_length=500, default="")
     type_id_document = models.ForeignKey(TypeDocument, default=1, on_delete=models.CASCADE)
+    puntos = models.IntegerField(default=0)

@@ -41,6 +41,7 @@ class TypeGames(models.Model):
 
     def __str__(self):
         return self.descripcion
+
     class Meta:
         verbose_name = 'una tipo de juego'
         verbose_name_plural = 'Tipos de juegos'
@@ -59,6 +60,7 @@ class Products(models.Model):
     calification = models.IntegerField(default=0)
     consola = models.ManyToManyField(Consoles)
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
+    puntos_venta = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title

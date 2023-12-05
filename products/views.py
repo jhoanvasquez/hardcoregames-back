@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
+from django.db.models import F
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -13,6 +14,7 @@ from products.models import Products, ShoppingCar, Licenses, Consoles, \
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
     SerializerDaysForRentail
+from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 
@@ -204,7 +206,7 @@ def confirm_sale(request):
     if request.method == "POST":
         json_request = json.loads(request.body)
         id_user = json_request['id_user']
-        message_html = "";
+        message_html = ""
 
         for item in json_request['data']:
             if item['id_combination'] is None:
@@ -223,10 +225,10 @@ def confirm_sale(request):
                 if new_stock > 0:
                     combination.update(stock=combination.values().get()['stock'] - 1)
                     product_selected.update(stock=new_stock)
-
                 if product_selected.values().get()['stock'] == 0:
                     account_selected.first().update(activa=False)
                 create_sale(item, id_user, account_selected)
+                update_points_sale(id_user, product_selected.first().puntos_venta)
                 deleteShoppingProduct(id_combination, id_user)
                 message_html += build_div_Html(product_selected, combination, account_selected)
 
@@ -318,6 +320,13 @@ def create_sale(sale, id_user, account):
 
     )
     sale_detail.save()
+
+
+def update_points_sale(id_user, points):
+    instance_user = User.objects.filter(pk=id_user).first()
+    User_Customized.objects.filter(user=instance_user).update(
+        puntos=F("puntos") + points
+    )
 
 
 def deleteShoppingProduct(id_comination: str, id_user: str):

@@ -40,7 +40,7 @@ class ProductsAdmin(admin.ModelAdmin):
     }
 
     list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola', 'image',
-                    'get_type_product', 'tipo_juego', 'calification']
+                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
@@ -54,7 +54,7 @@ class ProductsAdmin(admin.ModelAdmin):
 
     get_type_product.short_description = 'Tipo de producto'
     search_fields = ['title', 'description', 'calification']
-    list_filter = ["calification", 'tipo_juego']
+    list_filter = ["calification", 'tipo_juego', 'consola']
     form = ProductsFormCreate
 
 

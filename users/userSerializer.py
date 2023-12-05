@@ -20,4 +20,4 @@ class UserResponseSerializer(serializers.ModelSerializer):
 class UserCustomSerializer(serializers.ModelSerializer):
     class Meta:
         model = User_Customized
-        fields = ('phone_number', 'avatar', 'id_document', 'type_id_document')
+        fields = ('phone_number', 'avatar', 'id_document', 'type_id_document', 'puntos')
