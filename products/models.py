@@ -61,9 +61,10 @@ class Products(models.Model):
     consola = models.ManyToManyField(Consoles)
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
     puntos_venta = models.IntegerField(default=0)
+    puede_rentarse = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.title
+        return str(self.id_product) + " " + self.title
 
     class Meta:
         verbose_name = 'un producto'

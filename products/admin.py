@@ -40,7 +40,7 @@ class ProductsAdmin(admin.ModelAdmin):
     }
 
     list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola', 'image',
-                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta']
+                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta', 'puede_rentarse']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
@@ -86,6 +86,7 @@ class GameDetailAdmin(admin.ModelAdmin):
 
     product.short_description = 'Producto'
     list_display = [product, 'consola', 'licencia', 'stock', 'precio']
+    search_fields = ['producto__id_product',]
     list_filter = ["consola", 'licencia']
 
 
