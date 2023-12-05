@@ -73,6 +73,8 @@ def get_products_by_type_game(request, id_type_game):
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 def get_products_by_range_price(request):
     if request.method == "GET":
         range_min = request.GET['range_min']
@@ -181,7 +183,7 @@ def get_shopping_car(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
-def salesByUser(request, id_user):
+def sales_by_user(request, id_user):
     if request.method == "GET":
         sales_by_user = SaleDetail.objects.filter(usuario=id_user).order_by('-pk')
         serializer = SerializerSales(sales_by_user, many=True)
@@ -189,7 +191,7 @@ def salesByUser(request, id_user):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
-def daysForRentail(request):
+def days_for_rentail(request):
     if request.method == "GET":
         days_rentail = DaysForRentail.objects.all()
         serializer = SerializerDaysForRentail(days_rentail, many=True)
@@ -198,15 +200,20 @@ def daysForRentail(request):
 
 
 @csrf_exempt
-def confirmSale(request):
+def confirm_sale(request):
     if request.method == "POST":
         json_request = json.loads(request.body)
         id_user = json_request['id_user']
         message_html = "";
 
         for item in json_request['data']:
-            id_combination = item['id_combination']
-            combination = GameDetail.objects.filter(pk=id_combination, stock__gt=0)
+            if item['id_combination'] is None:
+                id_product = item['id_product']
+                combination = search_combination(id_product)
+            else:
+                id_combination = item['id_combination']
+                combination = GameDetail.objects.filter(pk=id_combination, stock__gt=0)
+
             if combination.exists():
                 product_id = combination.first().producto.id_product
                 product_selected = Products.objects.filter(id_product=product_id)
@@ -221,10 +228,10 @@ def confirmSale(request):
                     account_selected.first().update(activa=False)
                 create_sale(item, id_user, account_selected)
                 deleteShoppingProduct(id_combination, id_user)
-                message_html += buildDivHtml(product_selected, combination, account_selected)
+                message_html += build_div_Html(product_selected, combination, account_selected)
 
         if settings.SEND_EMAIL == "true":
-            sendEmailNotification(id_user, message_html)
+            send_email_notification(id_user, message_html)
         payload = {'message': 'proceso exitoso',
                    'response': True, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -317,7 +324,11 @@ def deleteShoppingProduct(id_comination: str, id_user: str):
     ShoppingCar.objects.filter(usuario=id_user, producto__exact=id_comination).delete()
 
 
-def sendEmailNotification(user_id, message_html):
+def search_combination(id_product):
+    return GameDetail.objects.filter(producto=id_product, stock__gt=0).first()
+
+
+def send_email_notification(user_id, message_html):
     email_to = User.objects.filter(pk=user_id).first().email
     soup = BeautifulSoup(settings.EMAIL_FOR_SALE, features="html.parser")
     extra_soup = BeautifulSoup(message_html, 'html.parser')
@@ -326,7 +337,7 @@ def sendEmailNotification(user_id, message_html):
     SendEmail().__int__(str(soup), settings.SUBJECT_EMAIL_FOR_SALE, email_to)
 
 
-def buildDivHtml(product, combination, account):
+def build_div_Html(product, combination, account):
     string_pass = account.first().password
     if string_pass is None:
         string_pass = ""
