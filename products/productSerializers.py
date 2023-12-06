@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles, SaleDetail, DaysForRentail
+from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles, SaleDetail, DaysForRentail, \
+    PriceForSuscription
 
 
 class SerializerForConsole(serializers.ModelSerializer):
@@ -11,11 +12,12 @@ class SerializerForConsole(serializers.ModelSerializer):
 
 class ProductsSerializer(serializers.ModelSerializer):
     consola = SerializerForConsole(read_only=True, many=True)
+
     class Meta:
         model = Products
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'date_register', 'image',
-            'date_last_modified', 'consola', 'type_id', 'calification','tipo_juego', 'puntos_venta', 'puede_rentarse')
+            'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego', 'puntos_venta', 'puede_rentarse')
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -41,7 +43,7 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCar
-        fields = ('pk', 'id_product','id_combination', 'title_product', 'stock', 'price', 'licence','console',
+        fields = ('pk', 'id_product', 'id_combination', 'title_product', 'stock', 'price', 'licence', 'console',
                   'type', 'estado', 'image')
 
 
@@ -66,6 +68,12 @@ class SerializerLicencesName(serializers.ModelSerializer):
     class Meta:
         model = GameDetail
         fields = ('licencia', 'desc_licence', 'stock')
+
+
+class SerializerPriceSuscriptionProduct(serializers.ModelSerializer):
+    class Meta:
+        model = PriceForSuscription
+        fields = ('tiempo_alquiler', 'precio')
 
 
 class SerializerDaysForRentail(serializers.ModelSerializer):

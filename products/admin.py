@@ -9,13 +9,12 @@ from django.db import models
 from django.forms import Textarea
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.text import Truncator
 
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames
+    DaysForRentail, TypeGames, PriceForSuscription
 
 
 class CloseToExp(SimpleListFilter):
@@ -74,6 +73,10 @@ class DaysForRentailAdmin(admin.ModelAdmin):
     list_display = ['pk', 'numero_dias', 'porcentaje_descuento']
 
 
+class PriceForSuscriptionAdmin(admin.ModelAdmin):
+    list_display = ['producto', 'tiempo_alquiler', 'precio', 'estado']
+
+
 class TypeGamesAdmin(admin.ModelAdmin):
     list_display = ['descripcion']
 
@@ -86,7 +89,7 @@ class GameDetailAdmin(admin.ModelAdmin):
 
     product.short_description = 'Producto'
     list_display = [product, 'consola', 'licencia', 'stock', 'precio']
-    search_fields = ['producto__id_product',]
+    search_fields = ['producto__id_product', ]
     list_filter = ["consola", 'licencia']
 
 
@@ -162,3 +165,4 @@ admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
 admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
+admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)

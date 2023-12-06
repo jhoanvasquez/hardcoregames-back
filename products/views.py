@@ -10,10 +10,10 @@ from django.views.decorators.csrf import csrf_exempt
 from ecommerceHardcoregamesBack import settings
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
-    TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail
+    TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
-    SerializerDaysForRentail
+    SerializerDaysForRentail, SerializerPriceSuscriptionProduct
 from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
@@ -84,6 +84,17 @@ def get_products_by_range_price(request):
         product = Products.objects.filter(price__gt=range_min, price__lte=range_max, stock__gt=0)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def price_suscription_product(request, id_product):
+    if request.method == "GET":
+        product = PriceForSuscription.objects.filter(producto=id_product, estado=True)
+        if product.exists():
+            serializer = SerializerPriceSuscriptionProduct(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}

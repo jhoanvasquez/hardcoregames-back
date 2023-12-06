@@ -3,7 +3,6 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils.timezone import now
 
 
 # Create your models here.
@@ -64,7 +63,7 @@ class Products(models.Model):
     puede_rentarse = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.id_product) + " " + self.title
+        return str(self.id_product) + " " + str(self.title)
 
     class Meta:
         verbose_name = 'un producto'
@@ -158,3 +157,18 @@ class DaysForRentail(models.Model):
     class Meta:
         verbose_name = 'valor descuento por mes'
         verbose_name_plural = 'Meses para alquiler'
+
+
+class PriceForSuscription(models.Model):
+    id_price_suscription = models.AutoField(primary_key=True)
+    producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
+    tiempo_alquiler = models.CharField(max_length=100, default="")
+    precio = models.IntegerField()
+    estado = models.BooleanField(default=True)
+
+    def __str__(self):
+        return str(self.producto.id_product) + " " + str(self.producto.title)
+
+    class Meta:
+        verbose_name = 'precio producto suscripción'
+        verbose_name_plural = 'Precio producto suscripción'
