@@ -214,6 +214,7 @@ def days_for_rentail(request):
 
 @csrf_exempt
 def confirm_sale(request):
+
     if request.method == "POST":
         json_request = json.loads(request.body)
         id_user = json_request['id_user']
@@ -230,19 +231,24 @@ def confirm_sale(request):
             if combination.exists():
                 product_id = combination.first().producto.id_product
                 product_selected = Products.objects.filter(id_product=product_id)
-                account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa=True)
+                account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa__exact=True)
 
                 new_stock = product_selected.values().get()["stock"] - 1
-                if new_stock > 0:
-                    combination.update(stock=combination.values().get()['stock'] - 1)
-                    product_selected.update(stock=new_stock)
-                if product_selected.values().get()['stock'] == 0:
-                    account_selected.first().update(activa=False)
                 create_sale(item, id_user, account_selected)
                 update_points_sale(id_user, product_selected.first().puntos_venta)
                 deleteShoppingProduct(id_combination, id_user)
-                message_html += build_div_Html(product_selected, combination, account_selected)
 
+                message_html += build_div_html(product_selected, combination, account_selected)
+
+                if new_stock >= 0:
+                    combination.update(stock=F('stock') - 1)
+                    product_selected.update(stock=new_stock)
+                if product_selected.values().get()['stock'] == 0:
+                    account_selected.update(activa=False)
+            else:
+                payload = {'message': 'Ha ocurrido un error, intente mas tarde o contactese con el administrador',
+                           'response': True, 'code': '00', 'status': 200}
+                return HttpResponse(JsonResponse(payload), content_type="application/json")
         if settings.SEND_EMAIL == "true":
             send_email_notification(id_user, message_html)
         payload = {'message': 'proceso exitoso',
@@ -328,7 +334,6 @@ def create_sale(sale, id_user, account):
         producto=combination.producto,
         cuenta=account.first(),
         fecha_vencimiento=date_expiration
-
     )
     sale_detail.save()
 
@@ -340,8 +345,10 @@ def update_points_sale(id_user, points):
     )
 
 
-def deleteShoppingProduct(id_comination: str, id_user: str):
-    ShoppingCar.objects.filter(usuario=id_user, producto__exact=id_comination).delete()
+def deleteShoppingProduct(id_combination: str, id_user: str):
+    product_shoping_car = ShoppingCar.objects.filter(usuario=id_user, producto__exact=id_combination)
+    if product_shoping_car.exists():
+        product_shoping_car.delete()
 
 
 def search_combination(id_product):
@@ -357,7 +364,7 @@ def send_email_notification(user_id, message_html):
     SendEmail().__int__(str(soup), settings.SUBJECT_EMAIL_FOR_SALE, email_to)
 
 
-def build_div_Html(product, combination, account):
+def build_div_html(product, combination, account):
     string_pass = account.first().password
     if string_pass is None:
         string_pass = ""
