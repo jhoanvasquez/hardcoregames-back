@@ -85,22 +85,6 @@ class ProductAccounts(models.Model):
         return self.cuenta
 
 
-class SaleDetail(models.Model):
-    id_sale_detail = models.AutoField(primary_key=True)
-    fecha_venta = models.DateTimeField(default=datetime.now, blank=True)
-    fecha_vencimiento = models.DateField(null=True)
-    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
-
-    class Meta:
-        verbose_name = 'un detalle de venta'
-        verbose_name_plural = 'Detalle de ventas'
-
-    def __str__(self):
-        return "Detalle de venta para la cuenta " + self.cuenta.cuenta
-
-
 class Licenses(models.Model):
     id_license = models.AutoField(primary_key=True)
     descripcion = models.CharField(max_length=100)
@@ -124,6 +108,23 @@ class GameDetail(models.Model):
     class Meta:
         verbose_name = 'Precio por consola y licencia'
         verbose_name_plural = 'Precios por consola y licencia'
+
+
+class SaleDetail(models.Model):
+    id_sale_detail = models.AutoField(primary_key=True)
+    fecha_venta = models.DateTimeField(default=datetime.now, blank=True)
+    fecha_vencimiento = models.DateField(null=True)
+    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
+    combinacion = models.ForeignKey(GameDetail, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        verbose_name = 'un detalle de venta'
+        verbose_name_plural = 'Detalle de ventas'
+
+    def __str__(self):
+        return "Detalle de venta para la cuenta " + self.cuenta.cuenta
 
 
 class ShoppingCar(models.Model):

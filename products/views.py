@@ -290,8 +290,8 @@ def delete_product_shopping_car(request, shooping_car_id):
 
 
 def sendEmail(request):
-    SendEmail().__int__()
-    return HttpResponse(JsonResponse({'message': 'Email enviado', "status": 200, "code": "00"}),
+    check_products_expired()
+    return HttpResponse(JsonResponse({'message': 'Chequeo de cuentas vencias terminado', "status": 200, "code": "00"}),
                         content_type="application/json")
 
 
@@ -336,7 +336,8 @@ def create_sale(sale, id_user, account_selected):
         usuario=user,
         producto=combination.producto,
         cuenta=account_selected,
-        fecha_vencimiento=date_expiration
+        fecha_vencimiento=date_expiration,
+        combinacion=combination
     )
     sale_detail.save()
 
@@ -403,3 +404,15 @@ def build_div_html(product, combination, account_selected):
                </div>
             </div>
             <hr style="border-color:#e0e0e0;border-width:1px">'''
+
+
+def check_products_expired():
+    products_expired = SaleDetail.objects.filter(fecha_vencimiento__lt=date.today())
+    for product in products_expired:
+        SaleDetail.objects.filter(pk=product.id_sale_detail).update(fecha_vencimiento=None)
+        Products.objects.filter(pk=product.producto.id_product).update(stock=F('stock') + 1)
+        GameDetail.objects.filter(pk=product.combinacion.id_game_detail).update(stock=F('stock') + 1)
+
+        account = ProductAccounts.objects.filter(pk=product.cuenta.id_product_accounts)
+        if not account.first().activa:
+            account.update(activa=True)
