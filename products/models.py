@@ -87,7 +87,7 @@ class ProductAccounts(models.Model):
 
 class SaleDetail(models.Model):
     id_sale_detail = models.AutoField(primary_key=True)
-    fecha_venta = models.DateField(default=datetime.now)
+    fecha_venta = models.DateTimeField(default=datetime.now, blank=True)
     fecha_vencimiento = models.DateField(null=True)
     cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)

@@ -158,8 +158,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 SEND_EMAIL=os.getenv("SEND_EMAIL")
 FROM_EMAIL="jhoan0498@gmail.com"
 PASS_SMTP="bbcg cluw zlia hhui "

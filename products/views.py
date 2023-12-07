@@ -214,7 +214,6 @@ def days_for_rentail(request):
 
 @csrf_exempt
 def confirm_sale(request):
-
     if request.method == "POST":
         json_request = json.loads(request.body)
         id_user = json_request['id_user']
@@ -223,34 +222,36 @@ def confirm_sale(request):
         for item in json_request['data']:
             if item['id_combination'] is None:
                 id_product = item['id_product']
-                combination = search_combination(id_product)
-                id_combination = combination.first().id_game_detail
-                item['id_combination'] = combination.first().id_game_detail
+                combination_id = search_combination(id_product)
+                combination_selected = GameDetail.objects.filter(pk=combination_id)
             else:
-                id_combination = item['id_combination']
-                combination = GameDetail.objects.filter(pk=id_combination, stock__gt=0)
+                combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
-            if combination.exists():
-                product_id = combination.first().producto.id_product
-                product_selected = Products.objects.filter(id_product=product_id)
-                account_selected = ProductAccounts.objects.filter(producto_id=product_id, activa__exact=True)
+            if combination_selected.exists():
+                id_combination = combination_selected.first().id_game_detail
+                item['id_combination'] = id_combination
+                product_selected = Products.objects.filter(id_product=item['id_product'])
+                account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
+                                                                  activa__exact=True).first()
 
                 new_stock = product_selected.values().get()["stock"] - 1
                 create_sale(item, id_user, account_selected)
                 update_points_sale(id_user, product_selected.first().puntos_venta)
                 deleteShoppingProduct(id_combination, id_user)
 
-                message_html += build_div_html(product_selected, combination, account_selected)
+                message_html += build_div_html(product_selected, combination_selected, account_selected)
 
                 if new_stock >= 0:
-                    combination.update(stock=F('stock') - 1)
+                    combination_selected.update(stock=F('stock') - 1)
                     product_selected.update(stock=new_stock)
                 if product_selected.values().get()['stock'] == 0:
-                    account_selected.update(activa=False)
+                    (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
+                     .update(activa=False))
             else:
                 payload = {'message': 'Ha ocurrido un error, intente mas tarde o contactese con el administrador',
                            'response': True, 'code': '00', 'status': 200}
                 return HttpResponse(JsonResponse(payload), content_type="application/json")
+
         if settings.SEND_EMAIL == "true":
             send_email_notification(id_user, message_html)
         payload = {'message': 'proceso exitoso',
@@ -324,7 +325,7 @@ def response_xbox_price(queryset):
     return data
 
 
-def create_sale(sale, id_user, account):
+def create_sale(sale, id_user, account_selected):
     user = User.objects.filter(pk=id_user).first()
     combination = GameDetail.objects.filter(pk=sale['id_combination']).first()
     today = date.today()
@@ -334,7 +335,7 @@ def create_sale(sale, id_user, account):
     sale_detail = SaleDetail(
         usuario=user,
         producto=combination.producto,
-        cuenta=account.first(),
+        cuenta=account_selected,
         fecha_vencimiento=date_expiration
     )
     sale_detail.save()
@@ -354,7 +355,10 @@ def deleteShoppingProduct(id_combination: str, id_user: str):
 
 
 def search_combination(id_product):
-    return GameDetail.objects.filter(producto=id_product, stock__gt=0)
+    combination = GameDetail.objects.filter(producto=id_product, stock__gt=0)
+    if combination.exists():
+        return combination.first().id_game_detail
+    return 0
 
 
 def send_email_notification(user_id, message_html):
@@ -366,8 +370,8 @@ def send_email_notification(user_id, message_html):
     SendEmail().__int__(str(soup), settings.SUBJECT_EMAIL_FOR_SALE, email_to)
 
 
-def build_div_html(product, combination, account):
-    string_pass = account.first().password
+def build_div_html(product, combination, account_selected):
+    string_pass = account_selected.password
     if string_pass is None:
         string_pass = ""
     return f'''<div style="margin-bottom: 20%;">
@@ -378,7 +382,7 @@ def build_div_html(product, combination, account):
                   </div>
                   <li style="margin-bottom: 10px;">
                      <lu>
-                        <b>Usuario:</b><br> {account.first().cuenta}
+                        <b>Usuario:</b><br> {account_selected.cuenta}
                      </lu>
                   </li>
                   <li>
