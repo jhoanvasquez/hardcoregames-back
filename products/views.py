@@ -224,6 +224,8 @@ def confirm_sale(request):
             if item['id_combination'] is None:
                 id_product = item['id_product']
                 combination = search_combination(id_product)
+                id_combination = combination.first().id_game_detail
+                item['id_combination'] = combination.first().id_game_detail
             else:
                 id_combination = item['id_combination']
                 combination = GameDetail.objects.filter(pk=id_combination, stock__gt=0)
@@ -352,7 +354,7 @@ def deleteShoppingProduct(id_combination: str, id_user: str):
 
 
 def search_combination(id_product):
-    return GameDetail.objects.filter(producto=id_product, stock__gt=0).first()
+    return GameDetail.objects.filter(producto=id_product, stock__gt=0)
 
 
 def send_email_notification(user_id, message_html):
