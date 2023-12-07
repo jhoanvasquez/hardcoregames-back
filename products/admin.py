@@ -30,7 +30,7 @@ class CloseToExp(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             today = date.today()
-            return queryset.filter(date_expiration__range=(today, today + timedelta(days=int(self.value()))))
+            return queryset.filter(fecha_vencimiento__range=(today, today + timedelta(days=int(self.value()))))
 
 
 class ProductsAdmin(admin.ModelAdmin):
