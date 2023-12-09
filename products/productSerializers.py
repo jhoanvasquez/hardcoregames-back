@@ -37,8 +37,8 @@ class ProductsSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     consola = SerializerForConsole(read_only=True, many=True)
-    tipo_juego = SerializerForTypes(read_only=True, many=True)
-    type_id = SerializerForTypes(read_only=True, many=True)
+    tipo_juego = SerializerForTypes(read_only=True, many=False)
+    type_id = SerializerForTypeProduct(read_only=True, many=False)
 
     class Meta:
         model = Products
