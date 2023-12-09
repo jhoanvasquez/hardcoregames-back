@@ -141,8 +141,7 @@ def get_combination_price_by_game(request, id_product):
             payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                        'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'proceso exitoso', 'data': {}, 'code': '00',
-                   'status': 200}
+        payload = {'message': 'proceso exitoso', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -150,8 +149,8 @@ def licence_by_product(request, id_product, id_console):
     if request.method == "GET":
         combination = GameDetail.objects.filter(producto=id_product, consola=id_console, stock__gt=0).order_by('-pk')
         serializer = SerializerLicencesName(combination, many=True)
-        payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
-                   'status': 200}
+        payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data,
+                   'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
