@@ -236,7 +236,7 @@ def confirm_sale(request):
                 new_stock = product_selected.values().get()["stock"] - 1
                 create_sale(item, id_user, account_selected)
                 update_points_sale(id_user, product_selected.first().puntos_venta)
-                deleteShoppingProduct(id_combination, id_user)
+                delete_shopping_product(id_combination, id_user)
 
                 message_html += build_div_html(product_selected, combination_selected, account_selected)
 
@@ -348,7 +348,7 @@ def update_points_sale(id_user, points):
     )
 
 
-def deleteShoppingProduct(id_combination: str, id_user: str):
+def delete_shopping_product(id_combination: str, id_user: str):
     product_shoping_car = ShoppingCar.objects.filter(usuario=id_user, producto__exact=id_combination)
     if product_shoping_car.exists():
         product_shoping_car.delete()
