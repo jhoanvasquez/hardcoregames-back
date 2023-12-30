@@ -50,7 +50,7 @@ class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
     description = models.TextField()
-    stock = models.IntegerField(default=0)
+    stock = models.IntegerField(null=True)
     price = models.IntegerField()
     date_register = models.DateField(default=datetime.now)
     date_last_modified = models.DateField(auto_now=True)
@@ -76,6 +76,7 @@ class ProductAccounts(models.Model):
     password = models.CharField(max_length=100, null=True)
     activa = models.BooleanField()
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
+    dias_duracion = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'una cuenta para producto'
@@ -173,3 +174,10 @@ class PriceForSuscription(models.Model):
     class Meta:
         verbose_name = 'precio producto suscripción'
         verbose_name_plural = 'Precio producto suscripción'
+
+
+class VariablesSistema(models.Model):
+    id_vairables_sistema = models.AutoField(primary_key=True)
+    nombre_variable = models.CharField(max_length=100)
+    valor = models.CharField(max_length=100)
+    estado = models.BooleanField(default=True)

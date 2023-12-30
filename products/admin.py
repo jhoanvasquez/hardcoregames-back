@@ -14,7 +14,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames, PriceForSuscription
+    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema
 
 
 class CloseToExp(SimpleListFilter):
@@ -109,8 +109,12 @@ class FilesAdmin(admin.ModelAdmin):
         ManegePricesFile()
 
 
+class SystemVariablesAdmin(admin.ModelAdmin):
+    list_display = ['nombre_variable', 'valor', 'estado']
+
+
 class ProductAccountsAdmin(admin.ModelAdmin):
-    list_display = ['cuenta', 'password', 'activa', 'producto']
+    list_display = ['cuenta', 'password', 'activa', 'producto', 'dias_duracion']
     form = AccountProductForm
 
     def save_model(self, request, obj, form, change):
@@ -166,3 +170,4 @@ admin.site.register(Files, FilesAdmin)
 admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)
+admin.site.register(VariablesSistema, SystemVariablesAdmin)
