@@ -55,7 +55,7 @@ class Products(models.Model):
     date_register = models.DateField(default=datetime.now)
     date_last_modified = models.DateField(auto_now=True)
     image = models.CharField(max_length=500)
-    type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE)
+    type_id = models.ForeignKey(ProductsType, on_delete=models.CASCADE, null=True)
     calification = models.IntegerField(default=0)
     consola = models.ManyToManyField(Consoles)
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True)
