@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.db import models
+from django.db.models import F
 from django.forms import Textarea
 from django.urls import reverse
 from django.utils.html import format_html
@@ -14,7 +15,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema
+    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses
 
 
 class CloseToExp(SimpleListFilter):
@@ -81,11 +82,21 @@ class TypeGamesAdmin(admin.ModelAdmin):
     list_display = ['descripcion']
 
 
+class LicencesAdmin(admin.ModelAdmin):
+    list_display = ['descripcion']
+
+
 class GameDetailAdmin(admin.ModelAdmin):
     def product(obj):
         url = reverse('admin:products_products_change', args=[obj.producto.id_product])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.producto.title)
+
+    def save_model(self, request, obj, form, change):
+        product = form.cleaned_data.get('producto')
+        product_selected = Products.objects.filter(pk=product.id_product)
+        product_selected.update(stock=F('stock') + 1)
+        super(GameDetailAdmin, self).save_model(request, obj, form, change)
 
     product.short_description = 'Producto'
     list_display = [product, 'consola', 'licencia', 'stock', 'precio']
@@ -117,7 +128,7 @@ class ProductAccountsAdmin(admin.ModelAdmin):
     list_display = ['cuenta', 'password', 'activa', 'producto', 'dias_duracion']
     form = AccountProductForm
 
-    def save_model(self, request, obj, form, change):
+    """"def save_model(self, request, obj, form, change):
         email_form = form.cleaned_data.get('cuenta')
         title_product = form.cleaned_data.get('producto')
         count_account_product = ProductAccounts.objects.filter(cuenta=email_form).count()
@@ -126,7 +137,7 @@ class ProductAccountsAdmin(admin.ModelAdmin):
             super(ProductAccountsAdmin, self).save_model(request, obj, form, change)
         else:
             messages.set_level(request, messages.ERROR)
-            messages.error(request, "El número de cuentas para este producto ha excedido el stock")
+            messages.error(request, "El número de cuentas para este producto ha excedido el stock")"""
 
 
 class SalesDetailAdmin(admin.ModelAdmin):
@@ -171,3 +182,4 @@ admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
+admin.site.register(Licenses, LicencesAdmin)

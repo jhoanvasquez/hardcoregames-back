@@ -104,15 +104,15 @@ WSGI_APPLICATION = 'ecommerceHardcoregamesBack.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'hardcoregames',
-        'USER': 'fl0user',
-        'PASSWORD': 'KisSWYJ5kb4r',
-        'HOST': 'ep-delicate-mountain-73350267.us-east-2.aws.neon.fl0.io',
+        'NAME': 'hardcoregames_ueh3',
+        'USER': 'hardcoregames_ueh3_user',
+        'PASSWORD': 'Ezihj89hXDqDv0WHpROBO9dD3o2CGhNt',
+        'HOST': 'dpg-cmct4pv109ks739390dg-a.oregon-postgres.render.com',
         'DATABASE_PORT': '5432',
     }
 }
 
-DATABASES["default"] = dj_database_url.parse("postgres://hardcoregames_user:2q8EyqLkflfpSjtMfAkAphoThSmkDy1V@dpg-ckhfi94ldqrs73a4kc3g-a.oregon-postgres.render.com/hardcoregames")
+#DATABASES["default"] = dj_database_url.parse("postgres://hardcoregames_user:2q8EyqLkflfpSjtMfAkAphoThSmkDy1V@dpg-ckhfi94ldqrs73a4kc3g-a.oregon-postgres.render.com/hardcoregames")
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

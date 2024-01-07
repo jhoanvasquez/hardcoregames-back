@@ -226,12 +226,14 @@ def confirm_sale(request):
             else:
                 combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
-            if combination_selected.exists():
+            account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
+                                                              dias_duracion=item['days_rentail'],
+                                                              activa__exact=True).first()
+
+            if combination_selected.exists() and account_selected is not None:
                 id_combination = combination_selected.first().id_game_detail
                 item['id_combination'] = id_combination
                 product_selected = Products.objects.filter(id_product=item['id_product'])
-                account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
-                                                                  activa__exact=True).first()
 
                 new_stock = product_selected.values().get()["stock"] - 1
                 create_sale(item, id_user, account_selected)

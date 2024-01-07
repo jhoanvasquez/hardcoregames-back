@@ -50,7 +50,7 @@ class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
     description = models.TextField()
-    stock = models.IntegerField(null=True)
+    stock = models.IntegerField(null=True, blank=True)
     price = models.IntegerField()
     date_register = models.DateField(default=datetime.now)
     date_last_modified = models.DateField(auto_now=True)
@@ -61,6 +61,7 @@ class Products(models.Model):
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True, blank=True)
     puntos_venta = models.IntegerField(default=0)
     puede_rentarse = models.BooleanField(default=True)
+    codigo_seguridad = models.CharField(max_length=500, null=True, blank=True)
 
     def __str__(self):
         return str(self.id_product) + " " + str(self.title)
@@ -96,6 +97,9 @@ class Licenses(models.Model):
     def get_id_licence(self):
         return self.id_license
 
+    class Meta:
+        verbose_name = 'Licencia'
+        verbose_name_plural = 'Licencias'
 
 class GameDetail(models.Model):
     id_game_detail = models.AutoField(primary_key=True)
