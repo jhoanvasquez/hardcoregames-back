@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from ecommerceHardcoregamesBack import settings
-from users.models import User_Customized, TypeDocument
+from users.models import User_Customized
 from users.userSerializer import UserSerializer, UserResponseSerializer, UserCustomSerializer
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
