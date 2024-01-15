@@ -71,8 +71,6 @@ def register(request, self=None):
         email = body['email']
         password = body['password']
         phone_number = body['phone_number']
-        id_document = body['id_document']
-        type_id_document = body['type_id_document']
         avatar = body['avatar']
 
         exist_user = User.objects.filter(username=email).exists()
@@ -90,11 +88,8 @@ def register(request, self=None):
 
         user.save()
         last_user_id = User.objects.last().id
-        type_id_selected = TypeDocument.objects.get(type_id=type_id_document)
         user_customized = User_Customized(user_id=last_user_id,
                                           phone_number=phone_number,
-                                          id_document=id_document,
-                                          type_id_document=type_id_selected,
                                           avatar=avatar
                                           )
         user_customized.save()
@@ -112,7 +107,7 @@ def login_request(request, self=None):
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
-            user_loged = User.objects.filter(username = username)
+            user_loged = User.objects.filter(username=username)
             serializer = UserSerializer(user_loged, many=True)
             payload = {"fields": serializer.data[0], 'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse({'data': payload}), content_type='application/json')
@@ -128,19 +123,6 @@ def logout_request(request):
         return HttpResponse(JsonResponse({'message': 'usuario logout'}), content_type="application/json")
     return HttpResponse(JsonResponse({'message': 'no hay usuario', 'status': 200, 'code': '01'}),
                         content_type="application/json")
-
-
-def get_all_document_types(request):
-    all_document_types = TypeDocument.objects.all()
-    response = serializers.serialize("json", all_document_types)
-    response_json = json.loads(response)
-    payload = {"data": response_json,
-               'message': 'proceso exitoso',
-               'code': '00',
-               'status': 200
-               }
-
-    return HttpResponse(JsonResponse(payload), content_type='application/json')
 
 
 @csrf_exempt
@@ -199,7 +181,7 @@ def token_pass(request, self=None):
         text_email = settings.EMAIL_FOR_TOKEN
         if exist_user:
             token = str(uuid.uuid4())[0:5]
-            text_email += "<center><b>"+token+"</b><center>"
+            text_email += "<center><b>" + token + "</b><center>"
             SendEmail.__int__(self, text_email, subject_email, username)
             return HttpResponse(
                 JsonResponse({'token': token, "status": 200, "code": "00"}),
@@ -207,6 +189,8 @@ def token_pass(request, self=None):
 
         return HttpResponse(JsonResponse({'message': 'usuario no existe', "status": 200, "code": "01"}),
                             content_type="application/json")
+
+
 @csrf_exempt
 def set_password(request, self=None):
     if request.method == "POST":
