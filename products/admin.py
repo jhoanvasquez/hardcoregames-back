@@ -15,7 +15,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses
+    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses, TypeAccounts
 
 
 class CloseToExp(SimpleListFilter):
@@ -40,7 +40,7 @@ class ProductsAdmin(admin.ModelAdmin):
     }
 
     list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola', 'image',
-                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta', 'puede_rentarse', 'codigo_seguridad']
+                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta', 'puede_rentarse']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
@@ -79,11 +79,15 @@ class PriceForSuscriptionAdmin(admin.ModelAdmin):
 
 
 class TypeGamesAdmin(admin.ModelAdmin):
-    list_display = ['descripcion']
+    list_display = ['id_type_game','descripcion']
+
+
+class TypeAccountsAdmin(admin.ModelAdmin):
+    list_display = ['id_type_account','descripcion']
 
 
 class LicencesAdmin(admin.ModelAdmin):
-    list_display = ['descripcion']
+    list_display = ['id_license','descripcion']
 
 
 class GameDetailAdmin(admin.ModelAdmin):
@@ -98,9 +102,9 @@ class GameDetailAdmin(admin.ModelAdmin):
         product_selected.update(stock=F('stock') + 1)
         super(GameDetailAdmin, self).save_model(request, obj, form, change)
 
-    product.short_description = 'Producto'
+    product.short_description = 'Producto1'
     list_display = [product, 'consola', 'licencia', 'stock', 'precio']
-    search_fields = ['producto__id_product', ]
+    search_fields = ['producto__title', 'producto__id_product', ]
     list_filter = ["consola", 'licencia']
 
 
@@ -125,7 +129,7 @@ class SystemVariablesAdmin(admin.ModelAdmin):
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
-    list_display = ['cuenta', 'password', 'activa', 'producto', 'dias_duracion']
+    list_display = ['cuenta', 'password', 'activa', 'producto', 'dias_duracion', 'codigo_seguridad', 'tipo_cuenta']
     form = AccountProductForm
 
     """"def save_model(self, request, obj, form, change):
@@ -180,6 +184,7 @@ admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
 admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
+admin.site.register(TypeAccounts, TypeAccountsAdmin)
 admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
 admin.site.register(Licenses, LicencesAdmin)

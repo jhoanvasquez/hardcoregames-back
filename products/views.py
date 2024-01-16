@@ -226,8 +226,9 @@ def confirm_sale(request):
             else:
                 combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
+            days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
             account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
-                                                              dias_duracion=item['days_rentail'],
+                                                              dias_duracion=days_rentail,
                                                               activa__exact=True).first()
 
             if combination_selected.exists() and account_selected is not None:

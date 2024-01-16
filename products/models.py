@@ -61,7 +61,6 @@ class Products(models.Model):
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True, blank=True)
     puntos_venta = models.IntegerField(default=0)
     puede_rentarse = models.BooleanField(default=True)
-    codigo_seguridad = models.CharField(max_length=500, null=True, blank=True)
 
     def __str__(self):
         return str(self.id_product) + " " + str(self.title)
@@ -71,13 +70,27 @@ class Products(models.Model):
         verbose_name_plural = 'Productos'
 
 
+class TypeAccounts(models.Model):
+    id_type_account = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.descripcion
+
+    class Meta:
+        verbose_name = 'Tipo cuenta'
+        verbose_name_plural = 'Tipos de cuentas'
+
+
 class ProductAccounts(models.Model):
     id_product_accounts = models.AutoField(primary_key=True)
     cuenta = models.CharField(max_length=200)
     password = models.CharField(max_length=100, null=True)
     activa = models.BooleanField()
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
+    tipo_cuenta = models.ForeignKey(TypeAccounts, on_delete=models.CASCADE, default=1)
     dias_duracion = models.IntegerField(default=0)
+    codigo_seguridad = models.CharField(max_length=500, null=True, blank=True)
 
     class Meta:
         verbose_name = 'una cuenta para producto'
@@ -100,6 +113,7 @@ class Licenses(models.Model):
     class Meta:
         verbose_name = 'Licencia'
         verbose_name_plural = 'Licencias'
+
 
 class GameDetail(models.Model):
     id_game_detail = models.AutoField(primary_key=True)

@@ -148,4 +148,4 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
 
 
 def check_sheet_price(sheet):
-    return sheet is not None or "x" in sheet
+    return sheet.strip() != "None" or "x" in sheet
