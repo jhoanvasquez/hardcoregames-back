@@ -129,7 +129,7 @@ class SystemVariablesAdmin(admin.ModelAdmin):
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
-    list_display = ['cuenta', 'password', 'activa', 'producto', 'dias_duracion', 'codigo_seguridad', 'tipo_cuenta']
+    list_display = ['cuenta', 'password', 'activa', 'producto', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad',]
     form = AccountProductForm
 
     """"def save_model(self, request, obj, form, change):

@@ -23,6 +23,8 @@ urlpatterns = [
     path("updateShoppingCar/<int:shooping_car_id>", views.update_shopping_car, name="update_shopping_car"),
     path("deleteShoppingCar/<int:shooping_car_id>", views.delete_product_shopping_car, name="delete_shopping_car"),
     path("shoppingCar/", views.shopping_car, name="shopping_car"),
+    path("typeAccounts/", views.type_accounts, name="type_accounts"),
+    path("systemVariables/<str:variable>", views.system_variables, name="system_variables"),
     path("sendEmail/", views.sendEmail, name="sendEmail"),
     path("manageFile/", views.manageFile, name="manageFile"),
 ]

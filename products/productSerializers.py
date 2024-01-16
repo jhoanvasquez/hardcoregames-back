@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from products.models import Products, ShoppingCar, Licenses, GameDetail, Consoles, SaleDetail, DaysForRentail, \
-    PriceForSuscription, ProductsType
+    PriceForSuscription, ProductsType, VariablesSistema
 
 
 class SerializerForConsole(serializers.ModelSerializer):
@@ -20,6 +20,12 @@ class SerializerForTypes(serializers.ModelSerializer):
     class Meta:
         model = Licenses
         fields = ('pk', 'descripcion',)
+
+
+class SerializerForVariables(serializers.ModelSerializer):
+    class Meta:
+        model = VariablesSistema
+        fields = ('nombre_variable', 'valor',)
 
 
 class ProductsSerializer(serializers.ModelSerializer):

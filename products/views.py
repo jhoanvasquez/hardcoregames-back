@@ -10,10 +10,11 @@ from django.views.decorators.csrf import csrf_exempt
 from ecommerceHardcoregamesBack import settings
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
-    TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription
+    TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription, TypeAccounts, \
+    VariablesSistema
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
-    SerializerDaysForRentail, SerializerPriceSuscriptionProduct
+    SerializerDaysForRentail, SerializerPriceSuscriptionProduct, SerializerForVariables
 from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
@@ -211,6 +212,22 @@ def days_for_rentail(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
+def type_accounts(request):
+    if request.method == "GET":
+        type_accounts = TypeAccounts.objects.all()
+        serializer = SerializerForTypes(type_accounts, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def system_variables(request, variable):
+    if request.method == "GET":
+        system_variables = VariablesSistema.objects.filter(nombre_variable=variable, estado=True)
+        serializer = SerializerForVariables(system_variables, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 @csrf_exempt
 def confirm_sale(request):
     if request.method == "POST":
@@ -227,9 +244,12 @@ def confirm_sale(request):
                 combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
             days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
+            type_account = 1 if item['type_account'] is None else item['type_account']
             account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
                                                               dias_duracion=days_rentail,
-                                                              activa__exact=True).first()
+                                                              activa__exact=True,
+                                                              tipo_cuenta__exact=type_account
+                                                              ).first()
 
             if combination_selected.exists() and account_selected is not None:
                 id_combination = combination_selected.first().id_game_detail
