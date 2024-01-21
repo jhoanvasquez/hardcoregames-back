@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
 from django.db.models import F
 from django.http import HttpResponse, JsonResponse
+from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
 from ecommerceHardcoregamesBack import settings
@@ -91,9 +92,13 @@ def get_products_by_range_price(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
-def price_suscription_product(request, id_product):
+def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
-        product = PriceForSuscription.objects.filter(producto=id_product, estado=True)
+        product_accounts = ProductAccounts.objects.filter(producto=id_product, tipo_cuenta=type_account)
+        duration_account = get_duration_account(product_accounts)
+        product = PriceForSuscription.objects.filter(producto=id_product,
+                                                     estado=True,
+                                                     duracion_dias_alquiler__in=duration_account)
         if product.exists():
             serializer = SerializerPriceSuscriptionProduct(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
@@ -198,7 +203,9 @@ def get_shopping_car(request):
 
 def sales_by_user(request, id_user):
     if request.method == "GET":
-        sales_by_user = SaleDetail.objects.filter(usuario=id_user).order_by('-pk')
+        sales_by_user = SaleDetail.objects.filter(usuario=id_user,
+                                                  fecha_vencimiento__gt=now()
+                                                  ).order_by('-pk')
         serializer = SerializerSales(sales_by_user, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -438,3 +445,12 @@ def check_products_expired():
         account = ProductAccounts.objects.filter(pk=product.cuenta.id_product_accounts)
         if not account.first().activa:
             account.update(activa=True)
+
+
+def get_duration_account(product_account):
+    durations = []
+    for i in product_account.values("dias_duracion"):
+        item = i["dias_duracion"]
+        durations += [item]
+    #breakpoint()
+    return durations

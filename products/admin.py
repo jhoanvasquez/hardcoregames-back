@@ -75,7 +75,7 @@ class DaysForRentailAdmin(admin.ModelAdmin):
 
 
 class PriceForSuscriptionAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'tiempo_alquiler', 'precio', 'estado']
+    list_display = ['producto', 'tiempo_alquiler','duracion_dias_alquiler', 'precio', 'estado']
 
 
 class TypeGamesAdmin(admin.ModelAdmin):

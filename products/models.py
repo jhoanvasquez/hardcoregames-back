@@ -85,7 +85,7 @@ class TypeAccounts(models.Model):
 class ProductAccounts(models.Model):
     id_product_accounts = models.AutoField(primary_key=True)
     cuenta = models.CharField(max_length=200)
-    password = models.CharField(max_length=100, null=True)
+    password = models.CharField(max_length=100, null=True, blank=True)
     activa = models.BooleanField()
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
     tipo_cuenta = models.ForeignKey(TypeAccounts, on_delete=models.CASCADE, default=1)
@@ -183,6 +183,7 @@ class PriceForSuscription(models.Model):
     id_price_suscription = models.AutoField(primary_key=True)
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
     tiempo_alquiler = models.CharField(max_length=100, default="")
+    duracion_dias_alquiler = models.IntegerField(default=0)
     precio = models.IntegerField()
     estado = models.BooleanField(default=True)
 
