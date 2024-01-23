@@ -128,6 +128,8 @@ class GameDetail(models.Model):
         verbose_name = 'Precio por consola y licencia'
         verbose_name_plural = 'Precios por consola y licencia'
 
+    def __str__(self):
+        return str(self.consola) + " " + str(self.licencia)
 
 class SaleDetail(models.Model):
     id_sale_detail = models.AutoField(primary_key=True)
