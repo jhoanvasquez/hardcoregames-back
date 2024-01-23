@@ -203,9 +203,12 @@ def get_shopping_car(request):
 
 def sales_by_user(request, id_user):
     if request.method == "GET":
-        sales_by_user = SaleDetail.objects.filter(usuario=id_user,
+        sales_by_user = (SaleDetail.objects.filter(usuario=id_user,
                                                   fecha_vencimiento__gt=now()
-                                                  ).order_by('-pk')
+                                                  ).order_by('-pk') |
+                         SaleDetail.objects.filter(usuario=id_user,
+                                                  fecha_vencimiento=None
+                                                  ).order_by('-pk'))
         serializer = SerializerSales(sales_by_user, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
