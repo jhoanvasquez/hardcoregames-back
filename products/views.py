@@ -261,6 +261,7 @@ def confirm_sale(request):
             if combination_selected.exists() and account_selected is not None:
                 id_combination = combination_selected.first().id_game_detail
                 item['id_combination'] = id_combination
+                item['days_rentail'] = days_rentail
                 product_selected = Products.objects.filter(id_product=item['id_product'])
 
                 new_stock = product_selected.values().get()["stock"] - 1

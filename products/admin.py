@@ -103,7 +103,7 @@ class GameDetailAdmin(admin.ModelAdmin):
         super(GameDetailAdmin, self).save_model(request, obj, form, change)
 
     product.short_description = 'Producto1'
-    list_display = [product, 'consola', 'licencia', 'stock', 'precio']
+    list_display = ['pk',product, 'consola', 'licencia', 'stock', 'precio']
     search_fields = ['producto__title', 'producto__id_product', ]
     list_filter = ["consola", 'licencia']
 

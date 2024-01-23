@@ -89,7 +89,7 @@ class ProductAccounts(models.Model):
     activa = models.BooleanField()
     producto = models.ForeignKey(Products, on_delete=models.CASCADE)
     tipo_cuenta = models.ForeignKey(TypeAccounts, on_delete=models.CASCADE, default=1)
-    dias_duracion = models.IntegerField(default=0)
+    dias_duracion = models.IntegerField(default=0, null=True, blank=True)
     codigo_seguridad = models.CharField(max_length=500, null=True, blank=True)
 
     class Meta:
