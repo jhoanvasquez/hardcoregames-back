@@ -50,6 +50,8 @@ def get_products_by_id(request, id_product):
         product = Products.objects.filter(pk=id_product, stock__gt=0)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
+            serializer.data[0]['stock'] = GameDetail.objects.filter(producto=id_product,
+                                                                    stock__gt=0).count()
             payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
@@ -64,6 +66,68 @@ def get_products_by_type_console(request, id_console):
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+@csrf_exempt
+def filter_product(request, ):
+    if request.method == "POST":
+        json_request = json.loads(request.body)
+        #breakpoint()
+        id_console = json_request['id_console']
+        id_category = json_request['id_category']
+        range_min = json_request['range_min']
+        range_max = json_request['range_max']
+
+        if id_console is not None and id_category is None and range_min is None and range_max is None:
+            product = Products.objects.filter(consola=id_console)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+        elif id_console is not None and id_category is not None and range_min is None and range_max is None:
+            #breakpoint()
+            product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+        elif id_console is not None and id_category is not None and range_min is not None and range_max is not None:
+            #breakpoint()
+            product = Products.objects.filter(consola=id_console,
+                                              tipo_juego=id_category,
+                                              price__gte=range_min,
+                                              price__lt=range_max)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+        elif id_console is not None and id_category is None and range_min is not None and range_max is not None:
+            #breakpoint()
+            product = Products.objects.filter(consola=id_console,
+                                              tipo_juego=id_category,
+                                              price__gte=range_min,
+                                              price__lt=range_max)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+        elif id_console is None and id_category is not None and range_min is not None and range_max is not None:
+            product = Products.objects.filter(tipo_juego=id_category,
+                                              price__gte=range_min,
+                                              price__lt=range_max)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+        elif id_console is None and id_category is None and range_min is not None and range_max is not None:
+            product = Products.objects.filter(price__gte=range_min,
+                                              price__lt=range_max)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -94,7 +158,9 @@ def get_products_by_range_price(request):
 
 def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
-        product_accounts = ProductAccounts.objects.filter(producto=id_product, tipo_cuenta=type_account)
+        product_accounts = ProductAccounts.objects.filter(producto=id_product,
+                                                          tipo_cuenta=type_account,
+                                                          activa=True)
         duration_account = get_duration_account(product_accounts)
         product = PriceForSuscription.objects.filter(producto=id_product,
                                                      estado=True,
@@ -204,11 +270,11 @@ def get_shopping_car(request):
 def sales_by_user(request, id_user):
     if request.method == "GET":
         sales_by_user = (SaleDetail.objects.filter(usuario=id_user,
-                                                  fecha_vencimiento__gt=now()
-                                                  ).order_by('-pk') |
+                                                   fecha_vencimiento__gt=now()
+                                                   ).order_by('-pk') |
                          SaleDetail.objects.filter(usuario=id_user,
-                                                  fecha_vencimiento=None
-                                                  ).order_by('-pk'))
+                                                   fecha_vencimiento=None
+                                                   ).order_by('-pk'))
         serializer = SerializerSales(sales_by_user, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -303,6 +369,22 @@ def update_shopping_car(request, shooping_car_id, self=None):
         if shooping_car.count() > 0:
             ShoppingCar.objects.filter(pk=shooping_car_id).update(
                 estado=state
+            )
+            payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+@csrf_exempt
+def update_points_by_user(request, user_id, self=None):
+    if request.method == "PUT":
+        body = GetJsonFromRequest.__int__(self, request)
+        points = body['points']
+        user_selected = User.objects.filter(pk=user_id)
+        if user_selected.count() > 0:
+            User_Customized.objects.filter(user=user_id).update(
+                puntos=points
             )
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -456,5 +538,5 @@ def get_duration_account(product_account):
     for i in product_account.values("dias_duracion"):
         item = i["dias_duracion"]
         durations += [item]
-    #breakpoint()
+    # breakpoint()
     return durations

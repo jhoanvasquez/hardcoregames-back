@@ -131,6 +131,7 @@ class GameDetail(models.Model):
     def __str__(self):
         return str(self.consola) + " " + str(self.licencia)
 
+
 class SaleDetail(models.Model):
     id_sale_detail = models.AutoField(primary_key=True)
     fecha_venta = models.DateTimeField(default=datetime.now, blank=True)
