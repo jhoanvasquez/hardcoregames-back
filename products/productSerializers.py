@@ -105,7 +105,9 @@ class SerializerSales(serializers.ModelSerializer):
     password = serializers.CharField(source='cuenta.password', read_only=True)
     productName = serializers.CharField(source='producto.title', read_only=True)
     productImage = serializers.CharField(source='producto.image', read_only=True)
+    license = serializers.CharField(source='combinacion.licencia', read_only=True)
 
     class Meta:
         model = SaleDetail
-        fields = ('producto', 'cuenta', 'productName', 'productImage', 'password', 'fecha_venta', 'fecha_vencimiento')
+        fields = ('producto', 'cuenta', 'productName', 'productImage', 'password',
+                  'fecha_venta', 'fecha_vencimiento', 'license')

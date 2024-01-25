@@ -86,8 +86,13 @@ def filter_product(request, ):
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
+        elif id_console is None and id_category is not None and range_min is None and range_max is None:
+            product = Products.objects.filter(tipo_juego=id_category)
+            serializer = ProductSerializer(product, many=True)
+            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+
         elif id_console is not None and id_category is not None and range_min is None and range_max is None:
-            #breakpoint()
             product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
