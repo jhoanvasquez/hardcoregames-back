@@ -93,8 +93,8 @@ def register(request, self=None):
                                           avatar=avatar
                                           )
         user_customized.save()
-        return HttpResponse(JsonResponse({'message': 'usuario registrado exitosamente', "status": 200, "code": "00"}),
-                            content_type="application/json")
+        return HttpResponse(JsonResponse({'message': 'usuario registrado exitosamente', "status": 200,
+                                          "code": "00", "user_id": last_user_id}), content_type="application/json")
 
 
 @csrf_exempt

@@ -74,7 +74,6 @@ def get_products_by_type_console(request, id_console):
 def filter_product(request, ):
     if request.method == "POST":
         json_request = json.loads(request.body)
-        #breakpoint()
         id_console = json_request['id_console']
         id_category = json_request['id_category']
         range_min = json_request['range_min']
@@ -92,14 +91,15 @@ def filter_product(request, ):
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        elif id_console is not None and id_category is not None and range_min is None and range_max is None:
+        elif (id_console is not None and id_category is not None and range_min is None and
+              range_max is None):
             product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        elif id_console is not None and id_category is not None and range_min is not None and range_max is not None:
-            #breakpoint()
+        elif (id_console is not None and id_category is not None and range_min is not None and
+              range_max is not None):
             product = Products.objects.filter(consola=id_console,
                                               tipo_juego=id_category,
                                               price__gte=range_min,
@@ -108,8 +108,9 @@ def filter_product(request, ):
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        elif id_console is not None and id_category is None and range_min is not None and range_max is not None:
-            #breakpoint()
+        elif (id_console is not None and id_category is None and range_min is not None and
+              range_max is not None):
+
             product = Products.objects.filter(consola=id_console,
                                               tipo_juego=id_category,
                                               price__gte=range_min,
@@ -118,7 +119,8 @@ def filter_product(request, ):
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        elif id_console is None and id_category is not None and range_min is not None and range_max is not None:
+        elif (id_console is None and id_category is not None and range_min is not None and
+              range_max is not None):
             product = Products.objects.filter(tipo_juego=id_category,
                                               price__gte=range_min,
                                               price__lt=range_max)
@@ -126,7 +128,8 @@ def filter_product(request, ):
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        elif id_console is None and id_category is None and range_min is not None and range_max is not None:
+        elif (id_console is None and id_category is None and range_min is not None and
+              range_max is not None):
             product = Products.objects.filter(price__gte=range_min,
                                               price__lt=range_max)
             serializer = ProductSerializer(product, many=True)
@@ -306,6 +309,14 @@ def system_variables(request, variable):
         system_variables = VariablesSistema.objects.filter(nombre_variable=variable, estado=True)
         serializer = SerializerForVariables(system_variables, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
+def system_variables_group(request, variable):
+    if request.method == "GET":
+        system_variables = VariablesSistema.objects.filter(nombre_variable__icontains=variable, estado=True)
+        serializer = SerializerForVariables(system_variables, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
