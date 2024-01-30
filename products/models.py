@@ -201,5 +201,5 @@ class PriceForSuscription(models.Model):
 class VariablesSistema(models.Model):
     id_vairables_sistema = models.AutoField(primary_key=True)
     nombre_variable = models.CharField(max_length=100)
-    valor = models.CharField(max_length=100)
+    valor = models.CharField(max_length=500)
     estado = models.BooleanField(default=True)

@@ -110,9 +110,8 @@ def filter_product(request, ):
 
         elif (id_console is not None and id_category is None and range_min is not None and
               range_max is not None):
-
+            
             product = Products.objects.filter(consola=id_console,
-                                              tipo_juego=id_category,
                                               price__gte=range_min,
                                               price__lt=range_max)
             serializer = ProductSerializer(product, many=True)
