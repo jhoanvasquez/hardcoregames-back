@@ -125,7 +125,7 @@ class FilesAdmin(admin.ModelAdmin):
 
 
 class SystemVariablesAdmin(admin.ModelAdmin):
-    list_display = ['nombre_variable', 'valor', 'estado']
+    list_display = ['nombre_variable','descripcion','valor', 'estado']
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):

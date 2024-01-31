@@ -201,5 +201,13 @@ class PriceForSuscription(models.Model):
 class VariablesSistema(models.Model):
     id_vairables_sistema = models.AutoField(primary_key=True)
     nombre_variable = models.CharField(max_length=100)
+    descripcion = models.TextField(null=True, default=None, blank=True)
     valor = models.CharField(max_length=500)
     estado = models.BooleanField(default=True)
+
+    def __str__(self):
+        return str(self.nombre_variable)
+
+    class Meta:
+        verbose_name = 'variable de sistema'
+        verbose_name_plural = 'Variables de sistema'

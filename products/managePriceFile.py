@@ -21,6 +21,8 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
         product_for_create = Products.objects.filter(id_product=id_product)
+        duration_days = sheet.cell(row=i, column=7).value
+        type_account = sheet.cell(row=i, column=8).value
 
         if account is None or id_product is None:
             continue
@@ -31,12 +33,17 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
         exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
                                                        producto=int(id_product)).exists()
 
+        type_account = 1 if type_account is None else type_account
+        type_account_selected = TypeAccounts.objects.filter(pk=type_account)
+
         if not exist_account:
             ProductAccounts(
                 cuenta=account.lower(),
                 password=password,
                 activa=True,
-                producto=product_for_create.first()
+                producto=product_for_create.first(),
+                tipo_cuenta=type_account_selected.first(),
+                dias_duracion=0 if duration_days is None else duration_days
             ).save()
             is_new_account = True
         sheet_price_ps4_1 = str(sheet.cell(row=i, column=4).value).strip()
