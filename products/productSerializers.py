@@ -36,8 +36,8 @@ class ProductsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-            'pk', 'title', 'description', 'stock', 'price', 'date_register', 'image',
-            'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
+            'pk', 'title', 'description', 'stock', 'price', 'precio_descuento', 'date_register',
+            'image', 'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
             'puntos_venta', 'puede_rentarse')
 
 
@@ -49,8 +49,8 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-            'pk', 'title', 'description', 'stock', 'price', 'date_register', 'image',
-            'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
+            'pk', 'title', 'description', 'stock', 'price', 'precio_descuento', 'date_register',
+            'image', 'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
             'puntos_venta', 'puede_rentarse')
 
 

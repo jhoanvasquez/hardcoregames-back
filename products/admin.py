@@ -39,8 +39,9 @@ class ProductsAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows': 4})},
     }
 
-    list_display = ['pk', 'title', 'stock', 'price', 'nombre_consola', 'image',
-                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta', 'puede_rentarse']
+    list_display = ['pk', 'title', 'stock', 'price','precio_descuento','nombre_consola', 'image',
+                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta',
+                    'puede_rentarse']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
