@@ -52,6 +52,7 @@ class Products(models.Model):
     description = models.TextField()
     stock = models.IntegerField(null=True, blank=True)
     price = models.IntegerField()
+    precio_descuento = models.IntegerField(null=True, blank=True, default=None)
     date_register = models.DateField(default=datetime.now)
     date_last_modified = models.DateField(auto_now=True)
     image = models.CharField(max_length=500)
