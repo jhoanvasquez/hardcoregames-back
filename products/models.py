@@ -62,6 +62,7 @@ class Products(models.Model):
     tipo_juego = models.ForeignKey(TypeGames, on_delete=models.CASCADE, null=True, blank=True)
     puntos_venta = models.IntegerField(default=0)
     puede_rentarse = models.BooleanField(default=True)
+    destacado = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.id_product) + " " + str(self.title)

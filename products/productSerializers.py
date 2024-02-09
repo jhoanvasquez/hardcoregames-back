@@ -38,7 +38,7 @@ class ProductsSerializer(serializers.ModelSerializer):
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'precio_descuento', 'date_register',
             'image', 'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
-            'puntos_venta', 'puede_rentarse')
+            'puntos_venta', 'puede_rentarse', 'destacado')
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -51,7 +51,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'pk', 'title', 'description', 'stock', 'price', 'precio_descuento', 'date_register',
             'image', 'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
-            'puntos_venta', 'puede_rentarse')
+            'puntos_venta', 'puede_rentarse', 'destacado')
 
 
 class ShoppingCarSerializer(serializers.ModelSerializer):

@@ -41,7 +41,7 @@ class ProductsAdmin(admin.ModelAdmin):
 
     list_display = ['pk', 'title', 'stock', 'price','precio_descuento','nombre_consola', 'image',
                     'get_type_product', 'tipo_juego', 'calification', 'puntos_venta',
-                    'puede_rentarse']
+                    'puede_rentarse', 'destacado']
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)

@@ -37,6 +37,14 @@ def get_favorite_products(request):
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
+def get_featured_products(request):
+    if request.method == "GET":
+        all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
+        serializer = ProductsSerializer(all_products, many=True)
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+
 def get_news_for_products(request):
     if request.method == "GET":
         all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
@@ -110,7 +118,7 @@ def filter_product(request, ):
 
         elif (id_console is not None and id_category is None and range_min is not None and
               range_max is not None):
-            
+
             product = Products.objects.filter(consola=id_console,
                                               price__gte=range_min,
                                               price__lt=range_max)
