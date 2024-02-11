@@ -146,24 +146,20 @@ class ProductAccountsAdmin(admin.ModelAdmin):
 
 
 class SalesDetailAdmin(admin.ModelAdmin):
-    def product_id(obj):
-        url = reverse('admin:products_products_change', args=[obj.product_id.id_product])
+    def producto(obj):
+        url = reverse('admin:products_products_change', args=[obj.producto.id_product])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
-                           url, obj.product_id.title)
-
+                           url, obj.producto.title)
     def cuenta(obj):
         url = reverse('admin:products_productaccounts_change', args=[obj.cuenta.id_product_accounts])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.cuenta.cuenta)
+    def password(self, obj):
+        return obj.cuenta.password
 
-    product_id.short_description = 'Producto'
-    list_display = [field.name for field in SaleDetail._meta.get_fields()]
-
-    list_display.remove("cuenta")
-    list_display += [cuenta]
+    list_display = ["pk", producto, "combinacion", "fecha_venta", "fecha_vencimiento", cuenta,
+                    "password", "usuario"]
     list_filter = [CloseToExp]
-
-    # list_display_links = ("id_sale", product_id)
 
     @admin.action(description='Enviar mensaje de renovación')
     def send_email_renovation(self, request, queryset):
