@@ -168,7 +168,7 @@ class SalesDetailAdmin(admin.ModelAdmin):
         messages.add_message(request, messages.INFO, 'Mensaje enviado exitosamente')
 
     actions = [send_email_renovation]
-
+    search_fields = ["usuario__email",]
 
 admin.site.site_header = 'Administración HardCoreGames'
 # Register your models here.
