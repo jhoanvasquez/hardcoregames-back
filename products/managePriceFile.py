@@ -21,8 +21,8 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
         product_for_create = Products.objects.filter(id_product=id_product)
-        duration_days = sheet.cell(row=i, column=7).value
-        type_account = sheet.cell(row=i, column=8).value
+        duration_days = sheet.cell(row=i, column=8).value
+        type_account = sheet.cell(row=i, column=9).value
 
         if account is None or id_product is None:
             continue
@@ -35,7 +35,6 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
 
         type_account = 1 if type_account is None else type_account
         type_account_selected = TypeAccounts.objects.filter(pk=type_account)
-
         if not exist_account:
             ProductAccounts(
                 cuenta=account.lower(),
@@ -66,18 +65,18 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
 
 def read_file_xbx(sheetPs, id_primaria, id_secundaria):
     id_xbox = Consoles.objects.filter(descripcion__exact="xbox")
+    id_code = Licenses.objects.filter(descripcion__icontains="codigo")
     id_pc = Consoles.objects.filter(descripcion__exact="Pc")
     is_new_account = False
     # try:
     sheet = sheetPs
     m_row = sheet.max_row
-
     for i in range(2, m_row + 1):
         account = sheet.cell(row=i, column=1).value
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
-        duration_days = sheet.cell(row=i, column=7).value
-        type_account = sheet.cell(row=i, column=8).value
+        duration_days = sheet.cell(row=i, column=8).value
+        type_account = sheet.cell(row=i, column=9).value
 
         product_for_create = Products.objects.filter(id_product=id_product)
 
@@ -85,14 +84,13 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             continue
 
         if not product_for_create.exists():
-            raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
+            raise forms.ValidationError(u"el producto para xbox con id " + str(id_product) + " no existe")
 
         exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
                                                        producto=int(id_product)).exists()
 
         type_account = 1 if type_account is None else type_account
         type_account_selected = TypeAccounts.objects.filter(pk=type_account)
-
         if not exist_account:
             ProductAccounts(
                 cuenta=account.lower(),
@@ -107,6 +105,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         sheet_price_xbox_1 = str(sheet.cell(row=i, column=4).value).strip()
         sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
         sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
+        sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
 
         if check_sheet_price(sheet_price_xbox_1):
             save_or_update_game_detail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account)
@@ -116,6 +115,8 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             save_or_update_game_detail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account)
             if check_sheet_price(sheet_price_pc):
                 save_or_update_game_detail(id_product, id_pc, id_secundaria, sheet_price_pc, is_new_account)
+        if check_sheet_price(sheet_price_code):
+            save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account)
 
     # except Exception as e:
     #   print("problemas en el manejo del archivo cuentas xbox " + str(e))
