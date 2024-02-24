@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
-from django.db.models import F
+from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
@@ -25,6 +25,10 @@ def get_all_products(request):
     if request.method == "GET":
         all_products = Products.objects.filter(stock__gt=0)
         serializer = ProductsSerializer(all_products, many=True)
+        for i in serializer.data:
+            i['stock'] = GameDetail.objects.filter(producto=i['pk'],
+                                                   stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            print(i['stock'])
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -59,7 +63,7 @@ def get_products_by_id(request, id_product):
         if product.exists():
             serializer = ProductSerializer(product, many=True)
             serializer.data[0]['stock'] = GameDetail.objects.filter(producto=id_product,
-                                                                    stock__gt=0).count()
+                                                                    stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
