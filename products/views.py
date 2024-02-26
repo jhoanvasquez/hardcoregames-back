@@ -26,8 +26,9 @@ def get_all_products(request):
         all_products = Products.objects.filter(stock__gt=0)
         serializer = ProductsSerializer(all_products, many=True)
         for i in serializer.data:
-            i['stock'] = GameDetail.objects.filter(producto=i['pk'],
-                                                   stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            stock = GameDetail.objects.filter(producto=i['pk'],
+                                              stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -37,8 +38,9 @@ def get_favorite_products(request):
         all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
         serializer = ProductsSerializer(all_products, many=True)
         for i in serializer.data:
-            i['stock'] = GameDetail.objects.filter(producto=i['pk'],
+            stock = GameDetail.objects.filter(producto=i['pk'],
                                                    stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -48,8 +50,9 @@ def get_featured_products(request):
         all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
         serializer = ProductsSerializer(all_products, many=True)
         for i in serializer.data:
-            i['stock'] = GameDetail.objects.filter(producto=i['pk'],
-                                                   stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            stock = GameDetail.objects.filter(producto=i['pk'],
+                                              stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -59,8 +62,9 @@ def get_news_for_products(request):
         all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
         serializer = ProductsSerializer(all_products, many=True)
         for i in serializer.data:
-            i['stock'] = GameDetail.objects.filter(producto=i['pk'],
-                                                   stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            stock = GameDetail.objects.filter(producto=i['pk'],
+                                              stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
