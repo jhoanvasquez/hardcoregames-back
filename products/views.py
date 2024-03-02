@@ -189,6 +189,11 @@ def get_products_by_range_price(request):
 
 def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
+        id_type_account_req = TypeAccounts.objects.filter(pk=type_account).first()
+
+        if "Cuenta" in id_type_account_req.__str__():
+            type_account = 1
+
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
                                                           tipo_cuenta=type_account,
                                                           activa=True)
