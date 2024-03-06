@@ -198,6 +198,9 @@ def price_suscription_product(request, id_product, type_account):
         if "Consola" in id_type_account_req.__str__():
             type_product = "consola"
 
+        if "Código" in id_type_account_req.__str__() or "Codigo" in id_type_account_req.__str__():
+            type_product = "codigo"
+
         if "Cuenta" in id_type_account_req.__str__():
             type_account = 1
 

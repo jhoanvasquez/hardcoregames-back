@@ -116,12 +116,21 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
                 price = sheet_price_pc
             elif sheet_price_xbox_1 != 'None':
                 price = sheet_price_xbox_1
-            else:
+            elif sheet_price_xbox_2 != 'None':
                 price = sheet_price_xbox_2
+            else:
+                price = sheet_price_code
+
+            if sheet_price_code != 'None':
+                product_name = "codigo"
+            elif sheet_price_pc != 'None':
+                product_name="pc"
+            else:
+                product_name="consola"
 
             PriceForSuscription(
                 producto=product_for_create.first(),
-                tipo_producto="pc" if sheet_price_pc != 'None' else "consola",
+                tipo_producto=product_name,
                 tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration)+" meses",
                 duracion_dias_alquiler=duration_days,
                 precio=price,
