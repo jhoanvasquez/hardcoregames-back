@@ -5,7 +5,7 @@ import openpyxl
 from django import forms
 from django.conf import settings
 
-from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts
+from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, PriceForSuscription
 
 
 def read_file_ps(sheetPs, id_primaria, id_secundaria):
@@ -75,8 +75,10 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         account = sheet.cell(row=i, column=1).value
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
-        duration_days = sheet.cell(row=i, column=8).value
+        duration_days = 0 if sheet.cell(row=i, column=8).value is None else sheet.cell(row=i, column=8).value
         type_account = sheet.cell(row=i, column=9).value
+        month_duration = int(duration_days / 30) if duration_days >= 30 else duration_days
+
 
         product_for_create = Products.objects.filter(id_product=id_product)
 
@@ -91,6 +93,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
 
         type_account = 1 if type_account is None else type_account
         type_account_selected = TypeAccounts.objects.filter(pk=type_account)
+
         if not exist_account:
             ProductAccounts(
                 cuenta=account.lower(),
@@ -98,7 +101,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
                 activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
-                dias_duracion=0 if duration_days is None else duration_days
+                dias_duracion=duration_days
             ).save()
             is_new_account = True
 
@@ -106,6 +109,24 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
         sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
         sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
+
+        if type_account_selected.values().first().get("id_type_account") == 2:
+
+            if sheet_price_pc != 'None':
+                price = sheet_price_pc
+            elif sheet_price_xbox_1 != 'None':
+                price = sheet_price_xbox_1
+            else:
+                price = sheet_price_xbox_2
+
+            PriceForSuscription(
+                producto=product_for_create.first(),
+                tipo_producto="pc" if sheet_price_pc != 'None' else "consola",
+                tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration)+" meses",
+                duracion_dias_alquiler=duration_days,
+                precio=price,
+                estado=True if duration_days > 0 else False
+            ).save()
 
         if check_sheet_price(sheet_price_xbox_1):
             save_or_update_game_detail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account)

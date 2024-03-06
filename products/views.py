@@ -39,7 +39,7 @@ def get_favorite_products(request):
         serializer = ProductsSerializer(all_products, many=True)
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
-                                                   stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+                                              stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -190,6 +190,13 @@ def get_products_by_range_price(request):
 def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
         id_type_account_req = TypeAccounts.objects.filter(pk=type_account).first()
+        type_product = ""
+
+        if "Pc" in id_type_account_req.__str__():
+            type_product = "pc"
+
+        if "Consola" in id_type_account_req.__str__():
+            type_product = "consola"
 
         if "Cuenta" in id_type_account_req.__str__():
             type_account = 1
@@ -198,9 +205,18 @@ def price_suscription_product(request, id_product, type_account):
                                                           tipo_cuenta=type_account,
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
-        product = PriceForSuscription.objects.filter(producto=id_product,
-                                                     estado=True,
-                                                     duracion_dias_alquiler__in=duration_account)
+
+        if type_product is not '':
+            product = PriceForSuscription.objects.filter(producto=id_product,
+                                                         estado=True,
+                                                         duracion_dias_alquiler__in=duration_account,
+                                                         tipo_producto__exact=type_product
+                                                         )
+        else:
+            product = PriceForSuscription.objects.filter(producto=id_product,
+                                                         estado=True,
+                                                         duracion_dias_alquiler__in=duration_account
+                                                         )
         if product.exists():
             serializer = SerializerPriceSuscriptionProduct(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
@@ -582,5 +598,4 @@ def get_duration_account(product_account):
     for i in product_account.values("dias_duracion"):
         item = i["dias_duracion"]
         durations += [item]
-    # breakpoint()
     return durations

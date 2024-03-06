@@ -187,6 +187,7 @@ class DaysForRentail(models.Model):
 class PriceForSuscription(models.Model):
     id_price_suscription = models.AutoField(primary_key=True)
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
+    tipo_producto = models.CharField(max_length=10, default="")
     tiempo_alquiler = models.CharField(max_length=100, default="")
     duracion_dias_alquiler = models.IntegerField(default=0)
     precio = models.IntegerField()
