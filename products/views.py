@@ -195,15 +195,15 @@ def price_suscription_product(request, id_product, type_account):
         if "Cuenta" in id_type_account_req.__str__():
             type_product = [1, 3]
             type_account = 1
-
-        if "Código" in id_type_account_req.__str__() or "Codigo" in id_type_account_req.__str__():
-            type_product = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
-            type_account = [2]
+        else:
+            type_product = [2]
+            type_account = 2
 
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
                                                           tipo_cuenta=type_account,
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
+        #breakpoint()
         if type_product is not None:
             product = PriceForSuscription.objects.filter(producto=id_product,
                                                          estado=True,
