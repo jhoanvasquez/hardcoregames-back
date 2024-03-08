@@ -114,19 +114,16 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
 
             if sheet_price_pc != 'None':
                 price = sheet_price_pc
+                product_name = TypeAccounts.objects.filter(pk=1).first()
             elif sheet_price_xbox_1 != 'None':
                 price = sheet_price_xbox_1
+                product_name = TypeAccounts.objects.filter(pk=1).first()
             elif sheet_price_xbox_2 != 'None':
                 price = sheet_price_xbox_2
+                product_name = TypeAccounts.objects.filter(pk=1).first()
             else:
                 price = sheet_price_code
-
-            if sheet_price_code != 'None':
-                product_name = "codigo"
-            elif sheet_price_pc != 'None':
-                product_name="pc"
-            else:
-                product_name="consola"
+                product_name = TypeAccounts.objects.filter(pk=2).first()
 
             PriceForSuscription(
                 producto=product_for_create.first(),
