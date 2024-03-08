@@ -193,12 +193,12 @@ def price_suscription_product(request, id_product, type_account):
         type_product = None
 
         if "Cuenta" in id_type_account_req.__str__():
-            type_product = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
+            type_product = [1, 3]
             type_account = 1
 
         if "Código" in id_type_account_req.__str__() or "Codigo" in id_type_account_req.__str__():
             type_product = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
-            type_account = 2
+            type_account = [2]
 
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
                                                           tipo_cuenta=type_account,
@@ -208,7 +208,7 @@ def price_suscription_product(request, id_product, type_account):
             product = PriceForSuscription.objects.filter(producto=id_product,
                                                          estado=True,
                                                          duracion_dias_alquiler__in=duration_account,
-                                                         tipo_producto__exact=type_product
+                                                         tipo_producto__in=type_product
                                                          )
         else:
             product = PriceForSuscription.objects.filter(producto=id_product,
