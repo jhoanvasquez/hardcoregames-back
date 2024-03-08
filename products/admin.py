@@ -15,7 +15,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses, TypeAccounts
+    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses, TypeAccounts, TypeSuscriptionAccounts
 
 
 class CloseToExp(SimpleListFilter):
@@ -39,7 +39,7 @@ class ProductsAdmin(admin.ModelAdmin):
         models.TextField: {'widget': Textarea(attrs={'rows': 4})},
     }
 
-    list_display = ['pk', 'title', 'stock', 'price','precio_descuento','nombre_consola', 'image',
+    list_display = ['pk', 'title', 'stock', 'price', 'precio_descuento', 'nombre_consola', 'image',
                     'get_type_product', 'tipo_juego', 'calification', 'puntos_venta',
                     'puede_rentarse', 'destacado']
 
@@ -76,20 +76,24 @@ class DaysForRentailAdmin(admin.ModelAdmin):
 
 
 class PriceForSuscriptionAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'tipo_producto','tiempo_alquiler',
+    list_display = ['producto', 'tipo_producto', 'tiempo_alquiler',
                     'duracion_dias_alquiler', 'precio', 'estado']
 
 
 class TypeGamesAdmin(admin.ModelAdmin):
-    list_display = ['id_type_game','descripcion']
+    list_display = ['id_type_game', 'descripcion']
 
 
 class TypeAccountsAdmin(admin.ModelAdmin):
-    list_display = ['id_type_account','descripcion']
+    list_display = ['id_type_account', 'descripcion']
+
+
+class TypeSuscriptionAccountsAdmin(admin.ModelAdmin):
+    list_display = ['id_type_suscription_account', 'descripcion']
 
 
 class LicencesAdmin(admin.ModelAdmin):
-    list_display = ['id_license','descripcion']
+    list_display = ['id_license', 'descripcion']
 
 
 class GameDetailAdmin(admin.ModelAdmin):
@@ -105,7 +109,7 @@ class GameDetailAdmin(admin.ModelAdmin):
         super(GameDetailAdmin, self).save_model(request, obj, form, change)
 
     product.short_description = 'Producto1'
-    list_display = ['pk',product, 'consola', 'licencia', 'stock', 'precio']
+    list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio']
     search_fields = ['producto__title', 'producto__id_product', ]
     list_filter = ["consola", 'licencia']
 
@@ -127,11 +131,11 @@ class FilesAdmin(admin.ModelAdmin):
 
 
 class SystemVariablesAdmin(admin.ModelAdmin):
-    list_display = ['nombre_variable','descripcion','valor', 'estado']
+    list_display = ['nombre_variable', 'descripcion', 'valor', 'estado']
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
-    list_display = ['cuenta', 'password', 'activa', 'producto', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad',]
+    list_display = ['cuenta', 'password', 'activa', 'producto', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad', ]
     form = AccountProductForm
 
     """"def save_model(self, request, obj, form, change):
@@ -151,10 +155,12 @@ class SalesDetailAdmin(admin.ModelAdmin):
         url = reverse('admin:products_products_change', args=[obj.producto.id_product])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.producto.title)
+
     def cuenta(obj):
         url = reverse('admin:products_productaccounts_change', args=[obj.cuenta.id_product_accounts])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.cuenta.cuenta)
+
     def password(self, obj):
         return obj.cuenta.password
 
@@ -169,7 +175,8 @@ class SalesDetailAdmin(admin.ModelAdmin):
         messages.add_message(request, messages.INFO, 'Mensaje enviado exitosamente')
 
     actions = [send_email_renovation]
-    search_fields = ["usuario__email",]
+    search_fields = ["usuario__email", ]
+
 
 admin.site.site_header = 'Administración HardCoreGames'
 # Register your models here.
@@ -183,6 +190,7 @@ admin.site.register(Files, FilesAdmin)
 admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(TypeAccounts, TypeAccountsAdmin)
+admin.site.register(TypeSuscriptionAccounts, TypeSuscriptionAccountsAdmin)
 admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
 admin.site.register(Licenses, LicencesAdmin)

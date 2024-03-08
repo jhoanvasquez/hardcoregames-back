@@ -84,6 +84,18 @@ class TypeAccounts(models.Model):
         verbose_name_plural = 'Tipos de cuentas'
 
 
+class TypeSuscriptionAccounts(models.Model):
+    id_type_suscription_account = models.AutoField(primary_key=True)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.descripcion
+
+    class Meta:
+        verbose_name = 'Tipo cuenta suscripcion'
+        verbose_name_plural = 'Tipos de cuentas suscripcion'
+
+
 class ProductAccounts(models.Model):
     id_product_accounts = models.AutoField(primary_key=True)
     cuenta = models.CharField(max_length=200)
@@ -187,7 +199,7 @@ class DaysForRentail(models.Model):
 class PriceForSuscription(models.Model):
     id_price_suscription = models.AutoField(primary_key=True)
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
-    tipo_producto = models.CharField(max_length=10, default="")
+    tipo_producto = models.ForeignKey(TypeSuscriptionAccounts, on_delete=models.CASCADE)
     tiempo_alquiler = models.CharField(max_length=100, default="")
     duracion_dias_alquiler = models.IntegerField(default=0)
     precio = models.IntegerField()

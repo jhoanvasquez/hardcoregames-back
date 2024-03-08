@@ -12,7 +12,7 @@ from ecommerceHardcoregamesBack import settings
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription, TypeAccounts, \
-    VariablesSistema
+    VariablesSistema, TypeSuscriptionAccounts
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
     SerializerDaysForRentail, SerializerPriceSuscriptionProduct, SerializerForVariables
@@ -189,27 +189,22 @@ def get_products_by_range_price(request):
 
 def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
-        id_type_account_req = TypeAccounts.objects.filter(pk=type_account).first()
-        type_product = ""
-
-        if "Pc" in id_type_account_req.__str__():
-            type_product = "pc"
-
-        if "Consola" in id_type_account_req.__str__():
-            type_product = "consola"
-
-        if "Código" in id_type_account_req.__str__() or "Codigo" in id_type_account_req.__str__():
-            type_product = "codigo"
+        id_type_account_req = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
+        type_product = None
 
         if "Cuenta" in id_type_account_req.__str__():
+            type_product = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
             type_account = 1
+
+        if "Código" in id_type_account_req.__str__() or "Codigo" in id_type_account_req.__str__():
+            type_product = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
+            type_account = 2
 
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
                                                           tipo_cuenta=type_account,
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
-
-        if type_product is not '':
+        if type_product is not None:
             product = PriceForSuscription.objects.filter(producto=id_product,
                                                          estado=True,
                                                          duracion_dias_alquiler__in=duration_account,
@@ -345,7 +340,7 @@ def days_for_rentail(request):
 
 def type_accounts(request):
     if request.method == "GET":
-        type_accounts = TypeAccounts.objects.all()
+        type_accounts = TypeSuscriptionAccounts.objects.all()
         serializer = SerializerForTypes(type_accounts, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -383,7 +378,12 @@ def confirm_sale(request):
                 combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
             days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
-            type_account = 1 if item['type_account'] is None else item['type_account']
+
+            if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
+                type_account = 1 if item['type_account'] is None else item['type_account']
+            else:
+                type_account = get_type_account_suscription(item['type_account'])
+
             account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
                                                               dias_duracion=days_rentail,
                                                               activa__exact=True,
@@ -602,3 +602,14 @@ def get_duration_account(product_account):
         item = i["dias_duracion"]
         durations += [item]
     return durations
+
+
+def get_type_account_suscription(type_account):
+    type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
+    if "Cuenta" in type_account_suscription.get("descripcion"):
+        type_account_result = 1
+    else:
+        type_account_result = 2
+
+    return type_account_result
+
