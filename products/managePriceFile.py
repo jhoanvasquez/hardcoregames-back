@@ -110,8 +110,8 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
         sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
         sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
-
-        if type_account_selected.values().first().get("id_type_account") == 2:
+        #breakpoint()
+        if product_for_create.values().first().get("type_id_id") == 2:
             if sheet_price_xbox_1 != 'None':
                 price = sheet_price_xbox_1
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
@@ -124,7 +124,6 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             else:
                 price = sheet_price_code
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=2).first()
-            #breakpoint()
             PriceForSuscription(
                 producto=product_for_create.first(),
                 tipo_producto=product_name,

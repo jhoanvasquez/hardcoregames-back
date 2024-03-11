@@ -208,12 +208,13 @@ def price_suscription_product(request, id_product, type_account):
                                                          estado=True,
                                                          duracion_dias_alquiler__in=duration_account,
                                                          tipo_producto__in=type_product
-                                                         )
+                                                         ).distinct('tiempo_alquiler')
         else:
             product = PriceForSuscription.objects.filter(producto=id_product,
                                                          estado=True,
                                                          duracion_dias_alquiler__in=duration_account
-                                                         )
+                                                         ).distinct('tiempo_alquiler')
+
         if product.exists():
             serializer = SerializerPriceSuscriptionProduct(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
