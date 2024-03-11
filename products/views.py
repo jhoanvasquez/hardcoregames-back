@@ -192,7 +192,7 @@ def price_suscription_product(request, id_product, type_account):
         id_type_account_req = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
 
         if "Cuenta" in id_type_account_req.__str__():
-            type_product = [1, 3]
+            type_product = [type_account]
             type_account = 1
         else:
             type_product = [2]
