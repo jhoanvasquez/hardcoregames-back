@@ -5,7 +5,8 @@ import openpyxl
 from django import forms
 from django.conf import settings
 
-from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, PriceForSuscription
+from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, \
+    PriceForSuscription, TypeSuscriptionAccounts
 
 
 def read_file_ps(sheetPs, id_primaria, id_secundaria):
@@ -111,20 +112,19 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
 
         if type_account_selected.values().first().get("id_type_account") == 2:
-
-            if sheet_price_pc != 'None':
-                price = sheet_price_pc
-                product_name = TypeAccounts.objects.filter(pk=1).first()
-            elif sheet_price_xbox_1 != 'None':
+            if sheet_price_xbox_1 != 'None':
                 price = sheet_price_xbox_1
-                product_name = TypeAccounts.objects.filter(pk=1).first()
+                product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
             elif sheet_price_xbox_2 != 'None':
                 price = sheet_price_xbox_2
-                product_name = TypeAccounts.objects.filter(pk=1).first()
+                product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
+            elif sheet_price_pc != 'None':
+                price = sheet_price_pc
+                product_name = TypeSuscriptionAccounts.objects.filter(pk=1).first()
             else:
                 price = sheet_price_code
-                product_name = TypeAccounts.objects.filter(pk=2).first()
-
+                product_name = TypeSuscriptionAccounts.objects.filter(pk=2).first()
+            #breakpoint()
             PriceForSuscription(
                 producto=product_for_create.first(),
                 tipo_producto=product_name,
