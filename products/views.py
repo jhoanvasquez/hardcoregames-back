@@ -202,7 +202,7 @@ def price_suscription_product(request, id_product, type_account):
                                                           tipo_cuenta=type_account,
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
-        #breakpoint()
+
         if type_product is not None:
             product = PriceForSuscription.objects.filter(producto=id_product,
                                                          estado=True,
@@ -372,17 +372,17 @@ def confirm_sale(request):
         for item in json_request['data']:
             if item['id_combination'] is None:
                 id_product = item['id_product']
-                combination_id = search_combination(id_product)
+                combination_id = search_combination(id_product, item['type_account'])
                 combination_selected = GameDetail.objects.filter(pk=combination_id)
             else:
                 combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
-
-            days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
 
             if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
                 type_account = 1 if item['type_account'] is None else item['type_account']
             else:
                 type_account = get_type_account_suscription(item['type_account'])
+
+            days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
 
             account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
                                                               dias_duracion=days_rentail,
@@ -533,8 +533,11 @@ def delete_shopping_product(id_combination: str, id_user: str):
         product_shoping_car.delete()
 
 
-def search_combination(id_product):
-    combination = GameDetail.objects.filter(producto=id_product, stock__gt=0)
+def search_combination(id_product, type_account):
+    type_account_suscription = get_name_console_suscription(type_account)
+    combination = GameDetail.objects.filter(producto=id_product,
+                                            consola=type_account_suscription,
+                                            stock__gt=0)
     if combination.exists():
         return combination.first().id_game_detail
     return 0
@@ -613,3 +616,9 @@ def get_type_account_suscription(type_account):
 
     return type_account_result
 
+
+def get_name_console_suscription(type_account):
+    type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
+    if "Pc" in type_account_suscription.get("descripcion"):
+        return Consoles.objects.filter(descripcion__contains="Pc").first()
+    return Consoles.objects.filter(descripcion__contains="xbox").first()
