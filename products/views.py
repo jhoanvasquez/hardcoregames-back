@@ -200,7 +200,7 @@ def price_suscription_product(request, id_product, type_account):
             stock__gt=0
         )
         if not stock_for_product.exists():
-            payload = {'message': 'proceso exitoso', 'data': {}, 'code': '00', 'status': 200}
+            payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         if "Cuenta" in id_type_account_req.__str__():
@@ -229,7 +229,7 @@ def price_suscription_product(request, id_product, type_account):
             serializer = SerializerPriceSuscriptionProduct(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
