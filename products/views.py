@@ -190,12 +190,22 @@ def get_products_by_range_price(request):
 def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
         id_type_account_req = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
+        console_name = get_name_console_suscription(type_account)
+
+        license_name = get_name_licencia_suscription(type_account)
+        stock_for_product = GameDetail.objects.filter(
+            producto=id_product,
+            consola=console_name,
+            licencia__in=license_name,
+            stock__gt=0
+        )
+        if not stock_for_product.exists():
+            payload = {'message': 'proceso exitoso', 'data': {}, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         if "Cuenta" in id_type_account_req.__str__():
-            type_product = [type_account]
             type_account = 1
         else:
-            type_product = [2]
             type_account = 2
 
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
@@ -203,17 +213,17 @@ def price_suscription_product(request, id_product, type_account):
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
 
-        if type_product is not None:
-            product = PriceForSuscription.objects.filter(producto=id_product,
-                                                         estado=True,
-                                                         duracion_dias_alquiler__in=duration_account,
-                                                         tipo_producto__in=type_product
-                                                         ).distinct('tiempo_alquiler')
-        else:
-            product = PriceForSuscription.objects.filter(producto=id_product,
-                                                         estado=True,
-                                                         duracion_dias_alquiler__in=duration_account
-                                                         ).distinct('tiempo_alquiler')
+        # if type_product is not None:
+        product = PriceForSuscription.objects.filter(producto=id_product,
+                                                     estado=True,
+                                                     duracion_dias_alquiler__in=duration_account,
+                                                     tipo_producto__in=[type_account]
+                                                     ).distinct('tiempo_alquiler')
+        # else:
+        #    product = PriceForSuscription.objects.filter(producto=id_product,
+        #                                                 estado=True,
+        #                                                 duracion_dias_alquiler__in=duration_account
+        #                                                 ).distinct('tiempo_alquiler')
 
         if product.exists():
             serializer = SerializerPriceSuscriptionProduct(product, many=True)
@@ -622,3 +632,11 @@ def get_name_console_suscription(type_account):
     if "Pc" in type_account_suscription.get("descripcion"):
         return Consoles.objects.filter(descripcion__contains="Pc").first()
     return Consoles.objects.filter(descripcion__contains="xbox").first()
+
+
+def get_name_licencia_suscription(type_account):
+    type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
+    if "Cuenta" in type_account_suscription.get("descripcion"):
+        return [Licenses.objects.filter(descripcion="Primaria").values().first().get("id_license"),
+                Licenses.objects.filter(descripcion="Secundaria").values().first().get("id_license")]
+    return [Licenses.objects.filter(descripcion__contains="digo").values().first().get("id_license")]

@@ -80,7 +80,6 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         type_account = sheet.cell(row=i, column=9).value
         month_duration = int(duration_days / 30) if duration_days >= 30 else duration_days
 
-
         product_for_create = Products.objects.filter(id_product=id_product)
 
         if account is None or id_product is None:
@@ -110,37 +109,33 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
         sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
         sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
-        #breakpoint()
+        # breakpoint()
         if product_for_create.values().first().get("type_id_id") == 2:
             if sheet_price_xbox_1 != 'None':
                 price = sheet_price_xbox_1
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
+                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
             elif sheet_price_xbox_2 != 'None':
                 price = sheet_price_xbox_2
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
-            elif sheet_price_pc != 'None':
+                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
+
+            if sheet_price_pc != 'None':
                 price = sheet_price_pc
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=1).first()
-            else:
+                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
+
+            if sheet_price_code != 'None':
                 price = sheet_price_code
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=2).first()
-            PriceForSuscription(
-                producto=product_for_create.first(),
-                tipo_producto=product_name,
-                tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration)+" meses",
-                duracion_dias_alquiler=duration_days,
-                precio=price,
-                estado=True if duration_days > 0 else False
-            ).save()
+                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
 
         if check_sheet_price(sheet_price_xbox_1):
             save_or_update_game_detail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account)
-            if check_sheet_price(sheet_price_pc):
-                save_or_update_game_detail(id_product, id_pc, id_primaria, sheet_price_pc, is_new_account)
         if check_sheet_price(sheet_price_xbox_2):
             save_or_update_game_detail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account)
-            if check_sheet_price(sheet_price_pc):
-                save_or_update_game_detail(id_product, id_pc, id_secundaria, sheet_price_pc, is_new_account)
+        if check_sheet_price(sheet_price_pc):
+            save_or_update_game_detail(id_product, id_pc, id_primaria, sheet_price_pc, is_new_account)
         if check_sheet_price(sheet_price_code):
             save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account)
 
@@ -186,6 +181,22 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
         if sheet_price == "x":
             sheet_price = row_game_detail.values().get()['precio']
         row_game_detail.update(precio=sheet_price)
+
+
+def save_price_suscription(product_for_create, product_name, month_duration, duration_days, price):
+    PriceForSuscription.objects.get_or_create(
+        producto=product_for_create,
+        tipo_producto=product_name,
+        tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration) + " meses",
+        duracion_dias_alquiler=duration_days,
+        precio=price,
+        estado=True if duration_days > 0 else False
+    )
+
+    #if not row_price_suscription.exists():
+    #    row_price_suscription.get_or_create()
+    #else:
+    #    row_price_suscription.update(price=price)
 
 
 def check_sheet_price(sheet):
