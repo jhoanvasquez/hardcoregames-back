@@ -159,8 +159,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SEND_EMAIL=os.getenv("SEND_EMAIL")
-FROM_EMAIL="jhoan0498@gmail.com"
-PASS_SMTP="bbcg cluw zlia hhui "
+FROM_EMAIL="ventas@hardcoregames.co"
+# FROM_EMAIL="jhoan0498@gmail.com"
+PASS_SMTP="udeu fewe jbof sckp "
+# PASS_SMTP="bbcg cluw zlia hhui "
 SUBJECT_EMAIL_FOR_TOKEN = "Código para cambio de contraseña HardCoreGames"
 SUBJECT_EMAIL_FOR_SALE = "Confirmación de compra en HardCoreGames"
 EMAIL_FOR_TOKEN = "<html>" \
