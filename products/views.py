@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse
 from django.utils.timezone import now
@@ -102,23 +103,47 @@ def filter_product(request, ):
         id_category = json_request['id_category']
         range_min = json_request['range_min']
         range_max = json_request['range_max']
+        size = json_request['size']
+        page = json_request['page']
 
         if id_console is not None and id_category is None and range_min is None and range_max is None:
             product = Products.objects.filter(consola=id_console)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif id_console is None and id_category is not None and range_min is None and range_max is None:
             product = Products.objects.filter(tipo_juego=id_category)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif (id_console is not None and id_category is not None and range_min is None and
               range_max is None):
             product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -128,7 +153,14 @@ def filter_product(request, ):
                                               tipo_juego=id_category,
                                               price__gte=range_min,
                                               price__lt=range_max)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -138,7 +170,14 @@ def filter_product(request, ):
             product = Products.objects.filter(consola=id_console,
                                               price__gte=range_min,
                                               price__lt=range_max)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -147,7 +186,14 @@ def filter_product(request, ):
             product = Products.objects.filter(tipo_juego=id_category,
                                               price__gte=range_min,
                                               price__lt=range_max)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -155,7 +201,14 @@ def filter_product(request, ):
               range_max is not None):
             product = Products.objects.filter(price__gte=range_min,
                                               price__lt=range_max)
-            serializer = ProductSerializer(product, many=True)
+            paginator = Paginator(product, size)
+            try:
+                response = paginator.page(page)
+            except PageNotAnInteger:
+                response = paginator.page(1)
+            except EmptyPage:
+                response = paginator.page(paginator.num_pages)
+            serializer = ProductSerializer(response, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
