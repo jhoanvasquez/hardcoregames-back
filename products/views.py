@@ -27,6 +27,7 @@ def get_all_products(request):
         size = request.GET.get('size')
         page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0)
+        count_rows = all_products.count()
         paginator = Paginator(all_products, size)
 
         try:
@@ -41,7 +42,8 @@ def get_all_products(request):
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             i['stock'] = 0 if stock is None else stock
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
+                   'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -50,6 +52,7 @@ def get_favorite_products(request):
         size = request.GET.get('size')
         page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
+        count_rows = all_products.count()
         paginator = Paginator(all_products, size)
 
         try:
@@ -64,7 +67,8 @@ def get_favorite_products(request):
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             i['stock'] = 0 if stock is None else stock
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
+                   'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -73,8 +77,9 @@ def get_featured_products(request):
         size = request.GET.get('size')
         page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
+        count_rows = all_products.count()
         paginator = Paginator(all_products, size)
-        
+
         try:
             response = paginator.page(page)
         except PageNotAnInteger:
@@ -87,7 +92,8 @@ def get_featured_products(request):
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             i['stock'] = 0 if stock is None else stock
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
+                   'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -96,6 +102,7 @@ def get_news_for_products(request):
         size = request.GET.get('size')
         page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
+        count_rows = all_products.count()
         paginator = Paginator(all_products, size)
         try:
             response = paginator.page(page)
@@ -109,7 +116,8 @@ def get_news_for_products(request):
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             i['stock'] = 0 if stock is None else stock
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
+                   'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
