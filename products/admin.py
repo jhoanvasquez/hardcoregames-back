@@ -45,6 +45,7 @@ class ProductsAdmin(admin.ModelAdmin):
 
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
+    list_per_page = 10
 
     def nombre_consola(self, obj):
         return [console.descripcion for console in obj.consola.all()]
@@ -112,7 +113,7 @@ class GameDetailAdmin(admin.ModelAdmin):
     list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio']
     search_fields = ['producto__title', 'producto__id_product', ]
     list_filter = ["consola", 'licencia']
-
+    list_per_page = 10
 
 class SalesAdmin(admin.ModelAdmin):
     list_display = ['id_sale', 'date_sale', 'status_sale', 'amount', 'status_sale', 'payment_id', 'user_id']
