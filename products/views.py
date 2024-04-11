@@ -24,8 +24,19 @@ from utils.getJsonFromRequest import GetJsonFromRequest
 
 def get_all_products(request):
     if request.method == "GET":
+        size = request.GET.get('size')
+        page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0)
-        serializer = ProductsSerializer(all_products, many=True)
+        paginator = Paginator(all_products, size)
+
+        try:
+            response = paginator.page(page)
+        except PageNotAnInteger:
+            response = paginator.page(1)
+        except EmptyPage:
+            response = paginator.page(paginator.num_pages)
+
+        serializer = ProductSerializer(response, many=True)
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
@@ -36,8 +47,19 @@ def get_all_products(request):
 
 def get_favorite_products(request):
     if request.method == "GET":
+        size = request.GET.get('size')
+        page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
-        serializer = ProductsSerializer(all_products, many=True)
+        paginator = Paginator(all_products, size)
+
+        try:
+            response = paginator.page(page)
+        except PageNotAnInteger:
+            response = paginator.page(1)
+        except EmptyPage:
+            response = paginator.page(paginator.num_pages)
+
+        serializer = ProductSerializer(response, many=True)
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
@@ -48,8 +70,19 @@ def get_favorite_products(request):
 
 def get_featured_products(request):
     if request.method == "GET":
+        size = request.GET.get('size')
+        page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
-        serializer = ProductsSerializer(all_products, many=True)
+        paginator = Paginator(all_products, size)
+        
+        try:
+            response = paginator.page(page)
+        except PageNotAnInteger:
+            response = paginator.page(1)
+        except EmptyPage:
+            response = paginator.page(paginator.num_pages)
+
+        serializer = ProductSerializer(response, many=True)
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
@@ -60,8 +93,18 @@ def get_featured_products(request):
 
 def get_news_for_products(request):
     if request.method == "GET":
+        size = request.GET.get('size')
+        page = request.GET.get('page')
         all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
-        serializer = ProductsSerializer(all_products, many=True)
+        paginator = Paginator(all_products, size)
+        try:
+            response = paginator.page(page)
+        except PageNotAnInteger:
+            response = paginator.page(1)
+        except EmptyPage:
+            response = paginator.page(paginator.num_pages)
+
+        serializer = ProductSerializer(response, many=True)
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
