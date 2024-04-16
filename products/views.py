@@ -29,7 +29,7 @@ def get_all_products(request):
         all_products = Products.objects.filter(stock__gt=0)
         count_rows = all_products.count()
         if size == "all":
-            paginator = Paginator(all_products, count_rows)
+            paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
         else:
             paginator = Paginator(all_products, size)
         try:
@@ -56,7 +56,7 @@ def get_favorite_products(request):
         all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
         count_rows = all_products.count()
         if size == "all":
-            paginator = Paginator(all_products, count_rows)
+            paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
         else:
             paginator = Paginator(all_products, size)
         try:
@@ -83,7 +83,7 @@ def get_featured_products(request):
         all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
         count_rows = all_products.count()
         if size == "all":
-            paginator = Paginator(all_products, count_rows)
+            paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
         else:
             paginator = Paginator(all_products, size)
         try:
@@ -110,7 +110,7 @@ def get_news_for_products(request):
         all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
         count_rows = all_products.count()
         if size == "all":
-            paginator = Paginator(all_products, count_rows)
+            paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
         else:
             paginator = Paginator(all_products, size)
         try:
@@ -170,7 +170,7 @@ def filter_product(request, ):
             product = Products.objects.filter(consola=id_console)
             count_rows = product.count()
             if size == "all":
-                paginator = Paginator(product, count_rows)
+                paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
             else:
                 paginator = Paginator(product, size)
             try:
@@ -189,7 +189,7 @@ def filter_product(request, ):
             product = Products.objects.filter(tipo_juego=id_category)
             count_rows = product.count()
             if size == "all":
-                paginator = Paginator(product, count_rows)
+                paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
             else:
                 paginator = Paginator(product, size)
             try:
@@ -208,7 +208,7 @@ def filter_product(request, ):
             product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
             count_rows = product.count()
             if size == "all":
-                paginator = Paginator(product, count_rows)
+                paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
             else:
                 paginator = Paginator(product, size)
             try:
@@ -230,7 +230,7 @@ def filter_product(request, ):
                                               price__lt=range_max)
             count_rows = product.count()
             if size == "all":
-                paginator = Paginator(product, count_rows)
+                paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
             else:
                 paginator = Paginator(product, size)
             try:
@@ -252,7 +252,7 @@ def filter_product(request, ):
                                               price__lt=range_max)
             count_rows = product.count()
             if size == "all":
-                paginator = Paginator(product, count_rows)
+                paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
             else:
                 paginator = Paginator(product, size)
             try:
@@ -273,7 +273,7 @@ def filter_product(request, ):
                                               price__lt=range_max)
             count_rows = product.count()
             if size == "all":
-                paginator = Paginator(product, count_rows)
+                paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
             else:
                 paginator = Paginator(product, size)
             try:
