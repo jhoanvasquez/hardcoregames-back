@@ -8,6 +8,7 @@ urlpatterns = [
     path("getFeaturedProducts/", views.get_featured_products, name="get_featured_products"),
     path("getNewsProducts/", views.get_news_for_products, name="get_news_for_products"),
     path("getProductById/<int:id_product>", views.get_products_by_id, name="get_products_by_id"),
+    path("findProductByName/<str:name_product>", views.find_product_by_name, name="find_product_by_name"),
     path("getProductByTypeGame/<int:id_type_game>", views.get_products_by_type_game, name="get_products_by_type_game"),
     path("getProductByTypeConsole/<int:id_console>", views.get_products_by_type_console, name="get_products_by_id"),
     path("filterProduct/", views.filter_product, name="filter_product"),
