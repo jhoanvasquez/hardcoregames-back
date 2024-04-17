@@ -144,7 +144,7 @@ def get_products_by_id(request, id_product):
 
 def find_product_by_name(request, name_product):
     if request.method == "GET":
-        if name_product == "null":
+        if name_product != "null":
             product = (Products.objects.filter(title__icontains=name_product,
                                               stock__gt=0)|
                        Products.objects.filter(title__icontains=name_product.replace(" ", ""),
