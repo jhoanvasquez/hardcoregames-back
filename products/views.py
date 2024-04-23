@@ -3,6 +3,7 @@ from datetime import date, timedelta
 
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse
@@ -26,6 +27,12 @@ def get_all_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
         page = request.GET.get('page')
+        cache_key = f"all_products_{size}_{page}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return JsonResponse(cached_data)
+
         all_products = Products.objects.filter(stock__gt=0)
         count_rows = all_products.count()
         if size == "all":
@@ -46,6 +53,8 @@ def get_all_products(request):
             i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
+        # Cache the result
+        cache.set(cache_key, payload)
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -53,7 +62,15 @@ def get_favorite_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
         page = request.GET.get('page')
+        # Check if the result is already cached
+        cache_key = f"favorite_products_{size}_{page}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return JsonResponse(cached_data)
         all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
+        # [10:20]
+
         count_rows = all_products.count()
         if size == "all":
             paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
@@ -71,15 +88,29 @@ def get_favorite_products(request):
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             i['stock'] = 0 if stock is None else stock
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
-                   'code': '00', 'status': 200}
-        return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {
+            'message': 'Proceso exitoso',
+            'data': serializer.data,
+            'total_items': count_rows,
+            'code': '00',
+            'status': 200
+        }
+
+        # Cache the result
+        cache.set(cache_key, payload)
+
+        return JsonResponse(payload)
 
 
 def get_featured_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
         page = request.GET.get('page')
+        cache_key = f"featured_products_{size}_{page}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return JsonResponse(cached_data)
         all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
         count_rows = all_products.count()
         if size == "all":
@@ -100,6 +131,8 @@ def get_featured_products(request):
             i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
+        # Cache the result
+        cache.set(cache_key, payload)
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -107,6 +140,12 @@ def get_news_for_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
         page = request.GET.get('page')
+        cache_key = f"news_products_{size}_{page}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
+            return JsonResponse(cached_data)
+
         all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
         count_rows = all_products.count()
         if size == "all":
@@ -127,6 +166,8 @@ def get_news_for_products(request):
             i['stock'] = 0 if stock is None else stock
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
+        # Cache the result
+        cache.set(cache_key, payload)
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -183,6 +224,12 @@ def filter_product(request, ):
         page = json_request['page']
 
         if id_console is not None and id_category is None and range_min is None and range_max is None:
+            cache_key = f"filter_console_{size}_{page}_{id_console}"
+            cached_data = cache.get(cache_key)
+
+            if cached_data:
+                return JsonResponse(cached_data)
+
             product = Products.objects.filter(consola=id_console)
             count_rows = product.count()
             if size == "all":
@@ -197,11 +244,21 @@ def filter_product(request, ):
                 response = paginator.page(paginator.num_pages)
 
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00',
-                       'total_items': count_rows, 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'total_items': count_rows,
+                       'status': 200}
+
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif id_console is None and id_category is not None and range_min is None and range_max is None:
+            cache_key = f"filter_category_{size}_{page}_{id_category}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return JsonResponse(cached_data)
+
             product = Products.objects.filter(tipo_juego=id_category)
             count_rows = product.count()
             if size == "all":
@@ -215,12 +272,22 @@ def filter_product(request, ):
             except EmptyPage:
                 response = paginator.page(paginator.num_pages)
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data,
-                       'total_items': count_rows, 'code': '00', 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'total_items': count_rows,
+                       'code': '00',
+                       'status': 200}
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif (id_console is not None and id_category is not None and range_min is None and
               range_max is None):
+
+            cache_key = f"filter_console_category_{size}_{page}_{id_console}_{id_category}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return JsonResponse(cached_data)
+
             product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
             count_rows = product.count()
             if size == "all":
@@ -234,12 +301,22 @@ def filter_product(request, ):
             except EmptyPage:
                 response = paginator.page(paginator.num_pages)
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00',
-                       'total_items': count_rows, 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'total_items': count_rows,
+                       'status': 200}
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif (id_console is not None and id_category is not None and range_min is not None and
               range_max is not None):
+
+            cache_key = f"filter_console_category_range_{size}_{page}_{id_console}_{id_category}_{range_min}_{range_max}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return JsonResponse(cached_data)
+
             product = Products.objects.filter(consola=id_console,
                                               tipo_juego=id_category,
                                               price__gte=range_min,
@@ -256,12 +333,22 @@ def filter_product(request, ):
             except EmptyPage:
                 response = paginator.page(paginator.num_pages)
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00',
-                       'total_items': count_rows, 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'total_items': count_rows,
+                       'status': 200}
+
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif (id_console is not None and id_category is None and range_min is not None and
               range_max is not None):
+
+            cache_key = f"filter_console_range_{size}_{page}_{id_console}_{range_min}_{range_max}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return JsonResponse(cached_data)
 
             product = Products.objects.filter(consola=id_console,
                                               price__gte=range_min,
@@ -278,12 +365,22 @@ def filter_product(request, ):
             except EmptyPage:
                 response = paginator.page(paginator.num_pages)
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00',
-                       'total_items': count_rows, 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'total_items': count_rows,
+                       'status': 200}
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif (id_console is None and id_category is not None and range_min is not None and
               range_max is not None):
+
+            cache_key = f"filter_category_range_{size}_{page}_{id_category}_{range_min}_{range_max}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return JsonResponse(cached_data)
+
             product = Products.objects.filter(tipo_juego=id_category,
                                               price__gte=range_min,
                                               price__lt=range_max)
@@ -299,12 +396,22 @@ def filter_product(request, ):
             except EmptyPage:
                 response = paginator.page(paginator.num_pages)
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00',
-                       'total_items': count_rows, 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'total_items': count_rows,
+                       'status': 200}
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         elif (id_console is None and id_category is None and range_min is not None and
               range_max is not None):
+
+            cache_key = f"filter_range_{size}_{page}_{range_min}_{range_max}"
+            cached_data = cache.get(cache_key)
+            if cached_data:
+                return JsonResponse(cached_data)
+
             product = Products.objects.filter(price__gte=range_min,
                                               price__lt=range_max)
             count_rows = product.count()
@@ -319,8 +426,12 @@ def filter_product(request, ):
             except EmptyPage:
                 response = paginator.page(paginator.num_pages)
             serializer = ProductSerializer(response, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00',
-                       'total_items': count_rows, 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'total_items': count_rows,
+                       'status': 200}
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
@@ -329,10 +440,19 @@ def filter_product(request, ):
 
 def get_products_by_type_game(request, id_type_game):
     if request.method == "GET":
+        cache_key = "products_by_type_game"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return JsonResponse(cached_data)
+
         product = Products.objects.filter(tipo_juego=id_type_game, stock__gt=0)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
-            payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+            payload = {'message': 'proceso exitoso',
+                       'data': serializer.data,
+                       'code': '00',
+                       'status': 200}
+            cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -399,17 +519,34 @@ def price_suscription_product(request, id_product, type_account):
 
 def get_licences(request):
     if request.method == "GET":
+        cache_key = "licences"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return JsonResponse(cached_data)
+
         all_licenses = Licenses.objects.all()
         serializer = SerializerForTypes(all_licenses, many=True)
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso',
+                   'data': serializer.data,
+                   'code': '00',
+                   'status': 200}
+        cache.set(cache_key, payload)
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
 def get_consoles(request):
     if request.method == "GET":
+        cache_key = "consoles"
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return JsonResponse(cached_data)
         all_consoles = Consoles.objects.all()
         serializer = SerializerForConsole(all_consoles, many=True)
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso',
+                   'data': serializer.data,
+                   'code': '00',
+                   'status': 200}
+        cache.set(cache_key, payload, timeout=259200)
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 

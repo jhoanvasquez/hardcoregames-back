@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
+from django.core.cache import cache
 from django.db import models
 from django.db.models import F
 from django.forms import Textarea
@@ -46,6 +47,10 @@ class ProductsAdmin(admin.ModelAdmin):
     list_display_links = ("title",)
     filter_horizontal = ('consola',)
     list_per_page = 10
+
+    def save_model(self, request, obj, form, change):
+        cache.clear()
+        super(ProductsAdmin, self).save_model(request, obj, form, change)
 
     def nombre_consola(self, obj):
         return [console.descripcion for console in obj.consola.all()]
