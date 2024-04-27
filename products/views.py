@@ -488,12 +488,12 @@ def price_suscription_product(request, id_product, type_account):
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
         if "Cuenta" in id_type_account_req.__str__():
-            type_account = 1
+            type_account_sale = 1
         else:
-            type_account = 2
+            type_account_sale = 2
 
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
-                                                          tipo_cuenta=type_account,
+                                                          tipo_cuenta=type_account_sale,
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
 
