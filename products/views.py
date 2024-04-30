@@ -780,8 +780,8 @@ def delete_product_shopping_car(request, shooping_car_id):
 
 def sendEmail(request):
     # check_products_expired()
-    # send_email_notification(2, "<html><head>prueba</head><body>prueba</body></html>")
-    return HttpResponse(JsonResponse({'message': settings.SERVER_VARIABLE, "status": 200, "code": "00"}),
+    send_email_notification(2, "<html><head>prueba</head><body>prueba</body></html>")
+    return HttpResponse(JsonResponse({'message': "prueba email", "status": 200, "code": "00"}),
                         content_type="application/json")
 
 
@@ -896,7 +896,10 @@ def build_div_html(product, combination, account_selected):
                   </li>
                </div>
             </div>
-            <hr style="border-color:#e0e0e0;border-width:1px">'''
+            <hr style="border-color:#e0e0e0;border-width:1px">
+            <b>{settings.INFO_TEXT}</b>
+            <hr style="border-color:#e0e0e0;border-width:1px">
+            '''
 
 
 def check_products_expired():
