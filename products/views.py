@@ -896,10 +896,7 @@ def build_div_html(product, combination, account_selected):
                   </li>
                </div>
             </div>
-            <hr style="border-color:#e0e0e0;border-width:1px">
-            <b>{settings.INFO_TEXT}</b>
-            <hr style="border-color:#e0e0e0;border-width:1px">
-            '''
+            <hr style="border-color:#e0e0e0;border-width:1px">'''
 
 
 def check_products_expired():
