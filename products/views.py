@@ -779,8 +779,9 @@ def delete_product_shopping_car(request, shooping_car_id):
 
 
 def sendEmail(request):
-    check_products_expired()
-    return HttpResponse(JsonResponse({'message': 'Chequeo de cuentas vencias terminado', "status": 200, "code": "00"}),
+    # check_products_expired()
+    # send_email_notification(2, "<html><head>prueba</head><body>prueba</body></html>")
+    return HttpResponse(JsonResponse({'message': settings.SERVER_VARIABLE, "status": 200, "code": "00"}),
                         content_type="application/json")
 
 
