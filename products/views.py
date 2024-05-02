@@ -725,8 +725,7 @@ def confirm_sale(request):
                            'response': True, 'code': '00', 'status': 200}
                 return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        if settings.SEND_EMAIL == "true":
-            send_email_notification(id_user, message_html)
+        send_email_notification(id_user, message_html)
         payload = {'message': 'proceso exitoso',
                    'response': True, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")

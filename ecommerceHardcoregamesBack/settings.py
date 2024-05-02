@@ -162,8 +162,6 @@ STATIC_URL_FILES = 'static/files/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SERVER_VARIABLE=os.getenv("SERVER_VARIABLE")
-SEND_EMAIL=True
 FROM_EMAIL=os.getenv("FROM_EMAIL")
 # FROM_EMAIL="jhoan0498@gmail.com"
 PASS_SMTP=os.getenv("PASS_SMTP")
