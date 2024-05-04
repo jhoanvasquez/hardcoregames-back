@@ -82,9 +82,11 @@ class DaysForRentailAdmin(admin.ModelAdmin):
 
 
 class PriceForSuscriptionAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'tipo_producto', 'tiempo_alquiler',
+    list_display = ['producto', 'tipo_producto', 'stock','tiempo_alquiler',
                     'duracion_dias_alquiler', 'precio', 'estado']
 
+    list_filter = ["tipo_producto", 'tiempo_alquiler']
+    search_fields = ['producto__title',]
 
 class TypeGamesAdmin(admin.ModelAdmin):
     list_display = ['id_type_game', 'descripcion']
@@ -143,6 +145,9 @@ class SystemVariablesAdmin(admin.ModelAdmin):
 class ProductAccountsAdmin(admin.ModelAdmin):
     list_display = ['cuenta', 'password', 'activa', 'producto', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad', ]
     form = AccountProductForm
+    search_fields = ['cuenta','producto__title', 'producto__id_product']
+    list_filter = ["tipo_cuenta",]
+    list_per_page = 10
 
     """"def save_model(self, request, obj, form, change):
         email_form = form.cleaned_data.get('cuenta')
@@ -182,7 +187,7 @@ class SalesDetailAdmin(admin.ModelAdmin):
 
     actions = [send_email_renovation]
     search_fields = ["usuario__email", ]
-
+    list_per_page = 10
 
 admin.site.site_header = 'Administración HardCoreGames'
 # Register your models here.

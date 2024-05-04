@@ -501,7 +501,8 @@ def price_suscription_product(request, id_product, type_account):
         product = PriceForSuscription.objects.filter(producto=id_product,
                                                      estado=True,
                                                      duracion_dias_alquiler__in=duration_account,
-                                                     tipo_producto__in=[type_account]
+                                                     tipo_producto__in=[type_account],
+                                                     stock__gt = 0,
                                                      ).distinct('tiempo_alquiler')
         # else:
         #    product = PriceForSuscription.objects.filter(producto=id_product,
@@ -717,6 +718,12 @@ def confirm_sale(request):
                 if new_stock >= 0:
                     combination_selected.update(stock=F('stock') - 1)
                     product_selected.update(stock=new_stock)
+                    # breakpoint()
+                    PriceForSuscription.objects.filter(
+                        producto = product_selected.first(),
+                        duracion_dias_alquiler = days_rentail,
+                        tipo_producto = item['type_account']
+                    ).update(stock=F('stock') - 1)
                 if product_selected.values().get()['stock'] == 0:
                     (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
                      .update(activa=False))

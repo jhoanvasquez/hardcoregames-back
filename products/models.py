@@ -201,6 +201,7 @@ class PriceForSuscription(models.Model):
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
     tipo_producto = models.ForeignKey(TypeSuscriptionAccounts, on_delete=models.CASCADE)
     tiempo_alquiler = models.CharField(max_length=100, default="")
+    stock = models.IntegerField(default=0)
     duracion_dias_alquiler = models.IntegerField(default=0)
     precio = models.IntegerField()
     estado = models.BooleanField(default=True)

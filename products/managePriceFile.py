@@ -4,6 +4,7 @@ import os
 import openpyxl
 from django import forms
 from django.conf import settings
+from django.db.models import F
 
 from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, \
     PriceForSuscription, TypeSuscriptionAccounts
@@ -184,7 +185,7 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
 
 
 def save_price_suscription(product_for_create, product_name, month_duration, duration_days, price):
-    PriceForSuscription.objects.get_or_create(
+    product_subscription, created = PriceForSuscription.objects.get_or_create(
         producto=product_for_create,
         tipo_producto=product_name,
         tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration) + " meses",
@@ -192,7 +193,13 @@ def save_price_suscription(product_for_create, product_name, month_duration, dur
         precio=price,
         estado=True if duration_days > 0 else False
     )
+    # breakpoint()
+    if not created:
+        product_subscription.stock = F('stock') + 1
+    else:
+        product_subscription.stock = 1
 
+    product_subscription.save()
     #if not row_price_suscription.exists():
     #    row_price_suscription.get_or_create()
     #else:
