@@ -684,7 +684,7 @@ def confirm_sale(request):
         for item in json_request['data']:
             if item['id_combination'] is None:
                 id_product = item['id_product']
-                combination_id = search_combination(id_product, item['type_account'])
+                combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
                 combination_selected = GameDetail.objects.filter(pk=combination_id)
             else:
                 combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
@@ -851,10 +851,11 @@ def delete_shopping_product(id_combination: str, id_user: str):
         product_shoping_car.delete()
 
 
-def search_combination(id_product, type_account):
+def search_combination(id_product, type_account, days_rentail):
     type_account_suscription = get_name_console_suscription(type_account)
     combination = GameDetail.objects.filter(producto=id_product,
                                             consola=type_account_suscription,
+                                            duracion_dias_alquiler = days_rentail,
                                             stock__gt=0)
     if combination.exists():
         return combination.first().id_game_detail

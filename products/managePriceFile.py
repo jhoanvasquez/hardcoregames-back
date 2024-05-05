@@ -37,6 +37,7 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
 
         type_account = 1 if type_account is None else type_account
         type_account_selected = TypeAccounts.objects.filter(pk=type_account)
+        duration_days = 0 if duration_days is None else duration_days
         if not exist_account:
             ProductAccounts(
                 cuenta=account.lower(),
@@ -44,7 +45,7 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
                 activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
-                dias_duracion=0 if duration_days is None else duration_days
+                dias_duracion=duration_days
             ).save()
             is_new_account = True
         sheet_price_ps4_1 = str(sheet.cell(row=i, column=4).value).strip()
@@ -53,13 +54,13 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
         sheet_price_ps5_2 = str(sheet.cell(row=i, column=7).value).strip()
 
         if check_sheet_price(sheet_price_ps4_1):
-            save_or_update_game_detail(id_product, id_ps4, id_primaria, sheet_price_ps4_1, is_new_account)
+            save_or_update_game_detail(id_product, id_ps4, id_primaria, sheet_price_ps4_1, is_new_account, duration_days)
         if check_sheet_price(sheet_price_ps4_2):
-            save_or_update_game_detail(id_product, id_ps4, id_secundaria, sheet_price_ps4_2, is_new_account)
+            save_or_update_game_detail(id_product, id_ps4, id_secundaria, sheet_price_ps4_2, is_new_account, duration_days)
         if check_sheet_price(sheet_price_ps5_1):
-            save_or_update_game_detail(id_product, id_ps5, id_primaria, sheet_price_ps5_1, is_new_account)
+            save_or_update_game_detail(id_product, id_ps5, id_primaria, sheet_price_ps5_1, is_new_account, duration_days)
         if check_sheet_price(sheet_price_ps5_2):
-            save_or_update_game_detail(id_product, id_ps5, id_secundaria, sheet_price_ps5_2, is_new_account)
+            save_or_update_game_detail(id_product, id_ps5, id_secundaria, sheet_price_ps5_2, is_new_account, duration_days)
 
     # except Exception as e:
     #     print("problemas en el manejo del archivo cuentas play station " + str(e))
@@ -116,7 +117,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
                 price = sheet_price_xbox_1
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
                 save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
-            elif sheet_price_xbox_2 != 'None':
+            if sheet_price_xbox_2 != 'None':
                 price = sheet_price_xbox_2
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
                 save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
@@ -132,11 +133,11 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
                 save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
 
         if check_sheet_price(sheet_price_xbox_1):
-            save_or_update_game_detail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account)
+            save_or_update_game_detail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account, duration_days)
         if check_sheet_price(sheet_price_xbox_2):
-            save_or_update_game_detail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account)
+            save_or_update_game_detail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account, duration_days)
         if check_sheet_price(sheet_price_pc):
-            save_or_update_game_detail(id_product, id_pc, id_primaria, sheet_price_pc, is_new_account)
+            save_or_update_game_detail(id_product, id_pc, id_primaria, sheet_price_pc, is_new_account, duration_days)
         if check_sheet_price(sheet_price_code):
             save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account)
 
@@ -157,10 +158,11 @@ class ManegePricesFile:
         read_file_xbx(sheet_xbox, id_primaria, id_secundaria)
 
 
-def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, is_new_account):
+def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, is_new_account, duration_days):
     row_game_detail = GameDetail.objects.filter(producto=id_product,
                                                 licencia__exact=id_license[0].id_license,
-                                                consola__exact=id_console[0].id_console
+                                                consola__exact=id_console[0].id_console,
+                                                duracion_dias_alquiler=duration_days
                                                 )
 
     product_selected = Products.objects.filter(id_product=id_product)
@@ -171,7 +173,8 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
             licencia=id_license.first(),
             stock=1,
             precio=sheet_price,
-            estado=True
+            estado=True,
+            duracion_dias_alquiler=duration_days
         ).save()
         product_selected.update(stock=product_selected.values().get()['stock'] + 1)
 
@@ -194,10 +197,11 @@ def save_price_suscription(product_for_create, product_name, month_duration, dur
         estado=True if duration_days > 0 else False
     )
     # breakpoint()
-    if not created:
-        product_subscription.stock = F('stock') + 1
-    else:
-        product_subscription.stock = 1
+    product_subscription.stock = F('stock') + 1
+    # if not created:
+    #     product_subscription.stock = F('stock') + 1
+    # else:
+    #     product_subscription.stock = 1
 
     product_subscription.save()
     #if not row_price_suscription.exists():
