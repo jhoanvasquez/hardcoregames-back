@@ -1,6 +1,7 @@
 import json
 from datetime import date, timedelta
 
+import requests
 from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -949,3 +950,66 @@ def get_name_licencia_suscription(type_account):
         return [Licenses.objects.filter(descripcion="Primaria").values().first().get("id_license"),
                 Licenses.objects.filter(descripcion="Secundaria").values().first().get("id_license")]
     return [Licenses.objects.filter(descripcion__contains="digo").values().first().get("id_license")]
+
+def confirm_sale_get(request):
+    if request.method == "GET":
+        token = request.GET.get('token')
+        if validate_token(token):
+            console_id = convert_console_name(request.GET.get('console').lower())
+            product_selected = Products.objects.filter(pk=request.GET.get('id_product'))
+            license = Licenses.objects.filter(pk=request.GET.get('id_licencia'))
+            console = Consoles.objects.filter(pk=console_id)
+            combination_selected = GameDetail.objects.filter(producto=product_selected.first(),
+                                                             consola=console.first(),
+                                                             licencia=license.first(),
+                                                             #stock__gt=0
+                                                             )
+            sale = {}
+            if combination_selected.count() > 0:
+                combination_selected.update(stock=F('stock') - 1)
+                product_selected.update(stock=F('stock') - 1)
+                sale['id_combination'] = combination_selected.first().pk
+
+            else:
+                payload = {'message': 'no se ha podido actualizar la compra, producto sin stock', 'data': {}, 'code': '00',
+                           'status': 200}
+                return HttpResponse(JsonResponse(payload), content_type="application/json")
+            if product_selected.first().type_id.id_product_type == 2:
+                type_account = convert_name_type_suscription_account(
+                    request.GET.get('console')
+                )
+                PriceForSuscription.objects.filter(
+                    producto=product_selected.first(),
+                    duracion_dias_alquiler=request.GET.get('days_rentail'),
+                    tipo_producto=type_account
+                ).update(stock=F('stock') - 1)
+            sale['is_rentail'] = request.GET.get('is_rentail')
+            account =  ProductAccounts.objects.filter(cuenta="venta-externa")
+            sale['days_rentail'] = request.GET.get('days_rentail')
+            create_sale(sale, 1, account.first())
+            payload = {'message': 'se ha actualizado el stock satisfactoriamente!!!', 'data': {}, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'token invalido', 'data': {}, 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
+def validate_token(token):
+    return token == settings.TOKEN_CONFIRM_SALE
+
+def convert_console_name(console_name):
+    console_name = console_name.replace(" ", "").lower()
+    if console_name == "ps4":
+        return 1
+    elif console_name == "ps5":
+        return 2
+    elif console_name == "xbox":
+        return 5
+    else:
+        return 6
+
+def convert_name_type_suscription_account(type_name):
+    type_name = type_name.replace(" ", "").lower()
+    if type_name == "xbox":
+        return 3
+    if type_name == "codigo":
+        return 2
+    if type_name == "pc":
+        return 1

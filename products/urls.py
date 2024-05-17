@@ -23,6 +23,7 @@ urlpatterns = [
     path("getConsoles/", views.get_consoles, name="get_products_by_id"),
     path("getTypeGames/", views.get_type_games, name="get_type_games"),
     path("getShoppingCar/", views.get_shopping_car, name="get_shopping_car"),
+    path("confirmSaleGet/", views.confirm_sale_get, name="confirm_sale_get"),
     path("updateShoppingCar/<int:shooping_car_id>", views.update_shopping_car, name="update_shopping_car"),
     path("pointsByUser/<int:user_id>", views.update_points_by_user, name="update_points_by_user"),
     path("deleteShoppingCar/<int:shooping_car_id>", views.delete_product_shopping_car, name="delete_shopping_car"),
