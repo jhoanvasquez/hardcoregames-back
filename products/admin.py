@@ -7,11 +7,12 @@ from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.core.cache import cache
 from django.db import models
-from django.db.models import F
+from django.db.models import F, Sum
 from django.forms import Textarea
 from django.urls import reverse
 from django.utils.html import format_html
 
+from products.UpdateStock import UpdateStock
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
@@ -111,10 +112,10 @@ class GameDetailAdmin(admin.ModelAdmin):
                            url, obj.producto.title)
 
     def save_model(self, request, obj, form, change):
+        super(GameDetailAdmin, self).save_model(request, obj, form, change)
         product = form.cleaned_data.get('producto')
         product_selected = Products.objects.filter(pk=product.id_product)
-        product_selected.update(stock=F('stock') + 1)
-        super(GameDetailAdmin, self).save_model(request, obj, form, change)
+        UpdateStock(product_selected)
 
     product.short_description = 'Producto1'
     list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio', 'duracion_dias_alquiler']

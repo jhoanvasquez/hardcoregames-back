@@ -6,6 +6,7 @@ from django import forms
 from django.conf import settings
 from django.db.models import F
 
+from products.UpdateStock import UpdateStock
 from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, \
     PriceForSuscription, TypeSuscriptionAccounts
 
@@ -186,6 +187,7 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
             sheet_price = row_game_detail.values().get()['precio']
         row_game_detail.update(precio=sheet_price)
 
+    UpdateStock(product_selected)
 
 def save_price_suscription(product_for_create, product_name, month_duration, duration_days, price):
     product_subscription, created = PriceForSuscription.objects.get_or_create(

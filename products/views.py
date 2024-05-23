@@ -958,6 +958,7 @@ def confirm_sale_get(request):
             console_id = convert_console_name(request.GET.get('console').lower())
             product_selected = Products.objects.filter(pk=request.GET.get('id_product'))
             license = Licenses.objects.filter(pk=request.GET.get('id_licencia'))
+            account = ProductAccounts.objects.filter(cuenta=request.GET.get('account'))
             console = Consoles.objects.filter(pk=console_id)
             combination_selected = GameDetail.objects.filter(producto=product_selected.first(),
                                                              consola=console.first(),
@@ -974,6 +975,8 @@ def confirm_sale_get(request):
                 payload = {'message': 'no se ha podido actualizar la compra, producto sin stock', 'data': {}, 'code': '00',
                            'status': 200}
                 return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+            check_account_stock(combination_selected, account)
             if product_selected.first().type_id.id_product_type == 2:
                 type_account = convert_name_type_suscription_account(
                     request.GET.get('console')
@@ -984,7 +987,7 @@ def confirm_sale_get(request):
                     tipo_producto=type_account
                 ).update(stock=F('stock') - 1)
             sale['is_rentail'] = request.GET.get('is_rentail')
-            account =  ProductAccounts.objects.filter(cuenta="venta-externa")
+            account =  ProductAccounts.objects.filter(cuenta=request.GET.get('account'))
             sale['days_rentail'] = request.GET.get('days_rentail')
             create_sale(sale, 1, account.first())
             payload = {'message': 'se ha actualizado el stock satisfactoriamente!!!', 'data': {}, 'code': '00', 'status': 200}
@@ -1013,3 +1016,14 @@ def convert_name_type_suscription_account(type_name):
         return 2
     if type_name == "pc":
         return 1
+
+def check_account_stock(product_selected, account):
+    count_stock = GameDetail.objects.filter(pk=product_selected.first().pk,
+                                            stock__gt=1).count()
+    if count_stock < 1:
+        account.update(activa=False)
+
+def update_stock(product_selected):
+    sum_stocks = GameDetail.objects.filter(producto=product_selected.first().pk,
+                                           stock__gt=0).aggregate(Sum('stock'))
+    product_selected.update(stock=sum_stocks['stock__sum'])
