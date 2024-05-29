@@ -25,7 +25,7 @@ class SerializerForTypes(serializers.ModelSerializer):
 class SerializerForVariables(serializers.ModelSerializer):
     class Meta:
         model = VariablesSistema
-        fields = ('nombre_variable', 'valor',)
+        fields = ('nombre_variable', 'valor', 'url')
 
 
 class ProductsSerializer(serializers.ModelSerializer):
