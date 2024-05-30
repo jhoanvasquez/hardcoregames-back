@@ -181,7 +181,7 @@ def get_products_by_id(request, id_product):
                                                                     stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 def find_product_by_name(request, name_product):
@@ -209,7 +209,7 @@ def get_products_by_type_console(request, id_console):
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -435,7 +435,7 @@ def filter_product(request, ):
             cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -455,7 +455,7 @@ def get_products_by_type_game(request, id_type_game):
                        'status': 200}
             cache.set(cache_key, payload, timeout=259200)
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -468,7 +468,7 @@ def get_products_by_range_price(request):
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -576,7 +576,7 @@ def get_combination_price_by_game(request, id_product):
             payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                        'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'proceso exitoso', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'proceso exitoso', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -607,7 +607,7 @@ def shopping_car(request, self=None):
             shopping_car.save()
             payload = {'message': 'proceso exitoso', 'data': True, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente o usuario no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -626,7 +626,7 @@ def get_shopping_car(request):
             payload = {'message': 'proceso exitoso', 'user_id': int(user_id),
                        'data': shopping_cars_serialized.data, 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente o usuario no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -737,7 +737,7 @@ def confirm_sale(request):
         payload = {'message': 'proceso exitoso',
                    'response': True, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
-    payload = {'message': 'no se encuentran productos existentes', 'data': {}, 'code': '00', 'status': 200}
+    payload = {'message': 'no se encuentran productos existentes', 'data': [], 'code': '00', 'status': 200}
     return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -753,7 +753,7 @@ def update_shopping_car(request, shooping_car_id, self=None):
             )
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente o usuario no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -769,7 +769,7 @@ def update_points_by_user(request, user_id, self=None):
             )
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente o usuario no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente o usuario no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -781,7 +781,7 @@ def delete_product_shopping_car(request, shooping_car_id):
             ShoppingCar.objects.filter(pk=shooping_car_id).delete()
             payload = {'message': 'proceso exitoso', 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'producto no existente', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
 
@@ -965,14 +965,14 @@ def confirm_sale_get(request):
                                                              licencia=license.first(),
                                                              #stock__gt=0
                                                              )
-            sale = {}
+            sale = []
             if combination_selected.count() > 0:
                 combination_selected.update(stock=F('stock') - 1)
                 product_selected.update(stock=F('stock') - 1)
                 sale['id_combination'] = combination_selected.first().pk
 
             else:
-                payload = {'message': 'no se ha podido actualizar la compra, producto sin stock', 'data': {}, 'code': '00',
+                payload = {'message': 'no se ha podido actualizar la compra, producto sin stock', 'data': [], 'code': '00',
                            'status': 200}
                 return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -990,9 +990,9 @@ def confirm_sale_get(request):
             account =  ProductAccounts.objects.filter(cuenta=request.GET.get('account'))
             sale['days_rentail'] = request.GET.get('days_rentail')
             create_sale(sale, 1, account.first())
-            payload = {'message': 'se ha actualizado el stock satisfactoriamente!!!', 'data': {}, 'code': '00', 'status': 200}
+            payload = {'message': 'se ha actualizado el stock satisfactoriamente!!!', 'data': [], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'token invalido', 'data': {}, 'code': '00', 'status': 200}
+        payload = {'message': 'token invalido', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 def validate_token(token):
     return token == settings.TOKEN_CONFIRM_SALE
