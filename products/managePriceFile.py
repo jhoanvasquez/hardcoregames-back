@@ -140,7 +140,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         if check_sheet_price(sheet_price_pc):
             save_or_update_game_detail(id_product, id_pc, id_primaria, sheet_price_pc, is_new_account, duration_days)
         if check_sheet_price(sheet_price_code):
-            save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account)
+            save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account, duration_days)
 
     # except Exception as e:
     #   print("problemas en el manejo del archivo cuentas xbox " + str(e))
