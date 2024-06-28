@@ -80,7 +80,6 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
         duration_days = 0 if sheet.cell(row=i, column=8).value is None else sheet.cell(row=i, column=8).value
-        type_account = sheet.cell(row=i, column=9).value
         month_duration = int(duration_days / 30) if duration_days >= 30 else duration_days
 
         product_for_create = Products.objects.filter(id_product=id_product)
@@ -94,7 +93,12 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
                                                        producto=int(id_product)).exists()
 
-        type_account = 1 if type_account is None else type_account
+        sheet_price_xbox_1 = str(sheet.cell(row=i, column=4).value).strip()
+        sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
+        sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
+        sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
+
+        type_account = 1 if sheet_price_code is None else sheet_price_code
         type_account_selected = TypeAccounts.objects.filter(pk=type_account)
 
         if not exist_account:
@@ -108,11 +112,6 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             ).save()
             is_new_account = True
 
-        sheet_price_xbox_1 = str(sheet.cell(row=i, column=4).value).strip()
-        sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
-        sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
-        sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
-        # breakpoint()
         if product_for_create.values().first().get("type_id_id") == 2:
             if sheet_price_xbox_1 != 'None':
                 price = sheet_price_xbox_1
@@ -142,9 +141,6 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         if check_sheet_price(sheet_price_code):
             save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account, duration_days)
 
-    # except Exception as e:
-    #   print("problemas en el manejo del archivo cuentas xbox " + str(e))
-
 
 class ManegePricesFile:
     def __init__(self):
@@ -166,6 +162,7 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
                                                 duracion_dias_alquiler=duration_days
                                                 )
 
+    #breakpoint()
     product_selected = Products.objects.filter(id_product=id_product)
     if not row_game_detail.exists():
         GameDetail(
@@ -179,7 +176,7 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
         ).save()
         product_selected.update(stock=product_selected.values().get()['stock'] + 1)
 
-    elif is_new_account and product_selected:
+    elif product_selected.exists():
         product_selected.update(stock=product_selected.values().get()['stock'] + 1)
         row_game_detail.update(stock=row_game_detail.values().get()['stock'] + 1)
     elif row_game_detail.exists():
