@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import F, Sum
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
@@ -22,7 +22,6 @@ from products.productSerializers import ProductsSerializer, ProductSerializer, S
 from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
-
 
 def get_all_products(request):
     if request.method == "GET":
@@ -677,69 +676,69 @@ def system_variables_group(request, variable):
 
 @csrf_exempt
 def confirm_sale(request):
-    if request.method == "POST":
-        json_request = json.loads(request.body)
-        id_user = json_request['id_user']
-        message_html = ""
+    try:
+        if request.method == "POST":
+            json_request = json.loads(request.body)
+            id_user = json_request['id_user']
+            message_html = ""
 
-        for item in json_request['data']:
-            if item['id_combination'] is None:
-                id_product = item['id_product']
-                combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
-                combination_selected = GameDetail.objects.filter(pk=combination_id)
-            else:
-                combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
+            for item in json_request['data']:
+                if item['id_combination'] is None:
+                    id_product = item['id_product']
+                    combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
+                    combination_selected = GameDetail.objects.filter(pk=combination_id)
+                else:
+                    combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
-            if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
-                type_account = 1 if item['type_account'] is None else item['type_account']
-            else:
-                type_account = get_type_account_suscription(item['type_account'])
+                if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
+                    type_account = 1 if item['type_account'] is None else item['type_account']
+                else:
+                    type_account = get_type_account_suscription(item['type_account'])
 
-            days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
+                days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
 
-            account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
-                                                              dias_duracion=days_rentail,
-                                                              activa__exact=True,
-                                                              tipo_cuenta__exact=type_account
-                                                              ).first()
+                account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
+                                                                  dias_duracion=days_rentail,
+                                                                  activa__exact=True,
+                                                                  tipo_cuenta__exact=type_account
+                                                                  ).first()
 
-            if combination_selected.exists() and account_selected is not None:
-                id_combination = combination_selected.first().id_game_detail
-                item['id_combination'] = id_combination
-                item['days_rentail'] = days_rentail
-                product_selected = Products.objects.filter(id_product=item['id_product'])
+                if combination_selected.exists() and account_selected is not None:
+                    id_combination = combination_selected.first().id_game_detail
+                    item['id_combination'] = id_combination
+                    item['days_rentail'] = days_rentail
+                    product_selected = Products.objects.filter(id_product=item['id_product'])
 
-                new_stock = product_selected.values().get()["stock"] - 1
-                create_sale(item, id_user, account_selected)
-                update_points_sale(id_user, product_selected.first().puntos_venta)
-                delete_shopping_product(id_combination, id_user)
+                    new_stock = product_selected.values().get()["stock"] - 1
+                    create_sale(item, id_user, account_selected)
+                    update_points_sale(id_user, product_selected.first().puntos_venta)
+                    delete_shopping_product(id_combination, id_user)
 
-                message_html += build_div_html(product_selected, combination_selected, account_selected)
+                    message_html += build_div_html(product_selected, combination_selected, account_selected)
 
-                if new_stock >= 0:
-                    combination_selected.update(stock=F('stock') - 1)
-                    product_selected.update(stock=new_stock)
-                    # breakpoint()
-                    PriceForSuscription.objects.filter(
-                        producto = product_selected.first(),
-                        duracion_dias_alquiler = days_rentail,
-                        tipo_producto = item['type_account']
-                    ).update(stock=F('stock') - 1)
-                if product_selected.values().get()['stock'] == 0:
-                    (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
-                     .update(activa=False))
-            else:
-                payload = {'message': 'Ha ocurrido un error, intente mas tarde o contactese con el administrador',
-                           'response': True, 'code': '00', 'status': 200}
-                return HttpResponse(JsonResponse(payload), content_type="application/json")
+                    if new_stock >= 0:
+                        combination_selected.update(stock=F('stock') - 1)
+                        product_selected.update(stock=new_stock)
+                        PriceForSuscription.objects.filter(
+                            producto = product_selected.first(),
+                            duracion_dias_alquiler = days_rentail,
+                            tipo_producto = item['type_account']
+                        ).update(stock=F('stock') - 1)
+                    if product_selected.values().get()['stock'] == 0:
+                        (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
+                         .update(activa=False))
+                else:
+                    return global_exception_handler(request, None)
 
-        send_email_notification(id_user, message_html)
-        payload = {'message': 'proceso exitoso',
-                   'response': True, 'code': '00', 'status': 200}
+            send_email_notification(id_user, message_html)
+            payload = {'message': 'proceso exitoso',
+                       'response': True, 'code': '00', 'status': 200}
+            return HttpResponse(JsonResponse(payload), content_type="application/json")
+        payload = {'message': 'no se encuentran productos existentes', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
-    payload = {'message': 'no se encuentran productos existentes', 'data': [], 'code': '00', 'status': 200}
-    return HttpResponse(JsonResponse(payload), content_type="application/json")
-
+    except Exception as e:
+        send_email = True
+        return global_exception_handler(request, e, send_email)
 
 @csrf_exempt
 def update_shopping_car(request, shooping_car_id, self=None):
@@ -1027,3 +1026,16 @@ def update_stock(product_selected):
     sum_stocks = GameDetail.objects.filter(producto=product_selected.first().pk,
                                            stock__gt=0).aggregate(Sum('stock'))
     product_selected.update(stock=sum_stocks['stock__sum'])
+
+
+def global_exception_handler(request, exception, send_email=False):
+    payload = {'message': 'Ha ocurrido un error, intente mas tarde o contactese con el administrador',
+               'response': False, 'code': '01'}
+    if send_email:
+        body_unicode = request.body.decode('utf-8')
+        body_data = json.loads(body_unicode)
+        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {body_data}</body></html>"
+        SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
+    return HttpResponseServerError(
+        JsonResponse(payload), content_type="application/json"
+    )
