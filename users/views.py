@@ -132,12 +132,13 @@ def update_user(request, self=None):
         user_id = body['user_id']
         first_name = body['first_name']
         last_name = body['last_name']
-        id_document = body['id_document']
+        email = body['email']
         exist_user = User.objects.filter(pk=user_id).exists()
         if exist_user:
             User.objects.filter(pk=user_id).update(first_name=first_name,
-                                                   last_name=last_name)
-            User_Customized.objects.filter(user_id=user_id).update(id_document=id_document)
+                                                   last_name=last_name,
+                                                   username=email,
+                                                   email=email)
             return HttpResponse(
                 JsonResponse({'message': 'datos actualizados exitosamente', "status": 200, "code": "00"}),
                 content_type="application/json")
