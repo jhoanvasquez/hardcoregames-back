@@ -591,7 +591,6 @@ def licence_by_product(request, id_product, id_console):
                                                 consola=id_console,
                                                 licencia__in=type_account_list,
                                                 stock__gt=0).order_by('-pk')
-        breakpoint()
         serializer = SerializerLicencesName(combination, many=True)
         payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data,
                    'code': '00', 'status': 200}
