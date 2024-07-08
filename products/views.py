@@ -962,10 +962,10 @@ def confirm_sale_get(request):
     if request.method == "GET":
         token = request.GET.get('token')
         if validate_token(token):
-            console_id = convert_console_name(request.GET.get('console').lower())
-            product_selected = Products.objects.filter(pk=request.GET.get('id_product'))
-            license = Licenses.objects.filter(pk=request.GET.get('id_licencia'))
-            account = ProductAccounts.objects.filter(cuenta=request.GET.get('account'))
+            console_id = convert_console_name(request.GET.get('console').rstrip().lower())
+            product_selected = Products.objects.filter(pk=request.GET.get('id_product').rstrip())
+            license = Licenses.objects.filter(pk=request.GET.get('id_licencia').strip())
+            account = ProductAccounts.objects.filter(cuenta=request.GET.get('account').rstrip())
             console = Consoles.objects.filter(pk=console_id)
             combination_selected = GameDetail.objects.filter(producto=product_selected.first(),
                                                              consola=console.first(),
