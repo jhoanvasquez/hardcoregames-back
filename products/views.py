@@ -972,11 +972,11 @@ def confirm_sale_get(request):
                                                              licencia=license.first(),
                                                              #stock__gt=0
                                                              )
-            sale = []
+            sale = {}
             if combination_selected.count() > 0:
                 combination_selected.update(stock=F('stock') - 1)
                 product_selected.update(stock=F('stock') - 1)
-                sale['id_combination'] = combination_selected.first().pk
+                sale['id_combination'] = combination_selected.first().id_game_detail
 
             else:
                 payload = {'message': 'no se ha podido actualizar la compra, producto sin stock', 'data': [], 'code': '00',
