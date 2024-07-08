@@ -584,12 +584,14 @@ def licence_by_product(request, id_product, id_console):
         product_accounts = ProductAccounts.objects.filter(producto=id_product, activa=True)
         type_account = product_accounts.values_list('tipo_cuenta', flat=True)
         type_account_list = list(type_account)
-
+        if 1 in type_account:
+            type_account_list.append(2)
         if 2 in type_account:
             type_account_list.append(3)
+            
         combination = GameDetail.objects.filter(producto=id_product,
                                                 consola=id_console,
-                                                licencia__in=type_account_list,
+                                                licencia__in=list(set(type_account_list)),
                                                 stock__gt=0).order_by('-pk')
         serializer = SerializerLicencesName(combination, many=True)
         payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data,
