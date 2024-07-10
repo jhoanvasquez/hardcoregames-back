@@ -976,13 +976,13 @@ def confirm_sale_get(request):
                                                              #stock__gt=0
                                                              )
             sale = {}
-            if combination_selected.count() > 0:
+            if combination_selected.count() > 0 or account.count() > 0 or product_selected.count() > 0:
                 combination_selected.update(stock=F('stock') - 1)
                 product_selected.update(stock=F('stock') - 1)
                 sale['id_combination'] = combination_selected.first().id_game_detail
 
             else:
-                payload = {'message': 'no se ha podido actualizar la compra, producto sin stock', 'data': [], 'code': '00',
+                payload = {'message': 'no se ha podido actualizar la compra, producto o cuenta no existente', 'code': '00',
                            'status': 200}
                 return HttpResponse(JsonResponse(payload), content_type="application/json")
 
