@@ -487,7 +487,9 @@ def price_suscription_product(request, id_product, type_account):
             payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
 
-        if "Cuenta" in id_type_account_req.__str__():
+        if ("cuenta" in id_type_account_req.__str__().lower()
+            or "pc" in id_type_account_req.__str__().lower()
+            or "consola" in id_type_account_req.__str__().lower()):
             type_account_sale = 1
         else:
             type_account_sale = 2
@@ -949,14 +951,16 @@ def get_type_account_suscription(type_account):
 
 def get_name_console_suscription(type_account):
     type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
-    if "Pc" in type_account_suscription.get("descripcion"):
+    if "pc" in type_account_suscription.get("descripcion").lower():
         return Consoles.objects.filter(descripcion__contains="Pc").first()
     return Consoles.objects.filter(descripcion__contains="xbox").first()
 
 
 def get_name_licencia_suscription(type_account):
     type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
-    if "Cuenta" in type_account_suscription.get("descripcion"):
+    if (("cuenta" in type_account_suscription.get("descripcion").lower()
+         or "pc" in type_account_suscription.get("descripcion").lower()
+         or "consola" in type_account_suscription.get("descripcion").lower())):
         return [Licenses.objects.filter(descripcion="Primaria").values().first().get("id_license"),
                 Licenses.objects.filter(descripcion="Secundaria").values().first().get("id_license")]
     return [Licenses.objects.filter(descripcion__contains="digo").values().first().get("id_license")]

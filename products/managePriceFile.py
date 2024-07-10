@@ -90,27 +90,38 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         if not product_for_create.exists():
             raise forms.ValidationError(u"el producto para xbox con id " + str(id_product) + " no existe")
 
-        exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
-                                                       producto=int(id_product)).exists()
-
         sheet_price_xbox_1 = str(sheet.cell(row=i, column=4).value).strip()
         sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
         sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
         sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
 
-        type_account = 1 if sheet_price_code is None else sheet_price_code
-        type_account_selected = TypeAccounts.objects.filter(pk=type_account)
 
-        if not exist_account:
-            ProductAccounts(
+        if sheet_price_code != 'None':
+            type_account_selected = TypeAccounts.objects.filter(pk=2)
+            obj, created = ProductAccounts.objects.get_or_create(
                 cuenta=account.lower(),
                 password=password,
                 activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
-            ).save()
-            is_new_account = True
+            )
+            if created:
+                is_new_account = True
+
+        if sheet_price_xbox_1 != 'None' or sheet_price_xbox_2 != 'None' or sheet_price_pc != 'None':
+            #breakpoint()
+            type_account_selected = TypeAccounts.objects.filter(pk=1)
+            obj, created = ProductAccounts.objects.get_or_create(
+                cuenta=account.lower(),
+                password=password,
+                activa=True,
+                producto=product_for_create.first(),
+                tipo_cuenta=type_account_selected.first(),
+                dias_duracion=duration_days
+            )
+            if created:
+                is_new_account = True
 
         if product_for_create.values().first().get("type_id_id") == 2:
             if sheet_price_xbox_1 != 'None':
