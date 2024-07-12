@@ -590,11 +590,13 @@ def licence_by_product(request, id_product, id_console):
             type_account_list.append(2)
         if 2 in type_account:
             type_account_list.append(3)
-            
+        type_account_list = list(set(type_account_list))
+
         combination = GameDetail.objects.filter(producto=id_product,
                                                 consola=id_console,
-                                                licencia__in=list(set(type_account_list)),
-                                                stock__gt=0).order_by('-pk')
+                                                licencia__in=type_account_list,
+                                                stock__gt=0).order_by('producto', 'consola', 'licencia',
+                                                                      'stock').distinct()
         serializer = SerializerLicencesName(combination, many=True)
         payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data,
                    'code': '00', 'status': 200}
@@ -715,7 +717,6 @@ def confirm_sale(request):
                                                                   activa__exact=True,
                                                                   tipo_cuenta__exact=type_account
                                                                   ).first()
-
                 if combination_selected.exists() and account_selected is not None:
                     id_combination = combination_selected.first().id_game_detail
                     item['id_combination'] = id_combination
@@ -865,10 +866,13 @@ def delete_shopping_product(id_combination: str, id_user: str):
 
 
 def search_combination(id_product, type_account, days_rentail):
+    #solo aplica para productos de suscripcion
     type_account_suscription = get_name_console_suscription(type_account)
+    licence_name = get_name_licencia_suscription(type_account)
     combination = GameDetail.objects.filter(producto=id_product,
-                                            consola=type_account_suscription,
+                                            consola__in=type_account_suscription,
                                             duracion_dias_alquiler = days_rentail,
+                                            licencia__in=licence_name,
                                             stock__gt=0)
     if combination.exists():
         return combination.first().id_game_detail
@@ -941,7 +945,9 @@ def get_duration_account(product_account):
 
 def get_type_account_suscription(type_account):
     type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
-    if "Cuenta" in type_account_suscription.get("descripcion"):
+    if ("cuenta" in type_account_suscription.get("descripcion").lower() or
+        "consola" in type_account_suscription.get("descripcion").lower() or
+        "pc" in type_account_suscription.get("descripcion").lower()):
         type_account_result = 1
     else:
         type_account_result = 2
@@ -950,10 +956,9 @@ def get_type_account_suscription(type_account):
 
 
 def get_name_console_suscription(type_account):
-    type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
-    if "pc" in type_account_suscription.get("descripcion").lower():
-        return Consoles.objects.filter(descripcion__contains="Pc").first()
-    return Consoles.objects.filter(descripcion__contains="xbox").first()
+    #buscar el tipo de consola que se va a comprar de acuerdo al tipo de cuenta de suscripcion
+    return [Consoles.objects.filter(descripcion__contains="xbox").first(),
+            Consoles.objects.filter(descripcion__contains="ps").first()]
 
 
 def get_name_licencia_suscription(type_account):
