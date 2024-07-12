@@ -479,7 +479,7 @@ def price_suscription_product(request, id_product, type_account):
         license_name = get_name_licencia_suscription(type_account)
         stock_for_product = GameDetail.objects.filter(
             producto=id_product,
-            consola=console_name,
+            consola__in=console_name,
             licencia__in=license_name,
             stock__gt=0
         )
