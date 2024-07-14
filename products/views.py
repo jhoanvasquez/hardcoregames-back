@@ -474,15 +474,16 @@ def get_products_by_range_price(request):
 def price_suscription_product(request, id_product, type_account):
     if request.method == "GET":
         id_type_account_req = TypeSuscriptionAccounts.objects.filter(pk=type_account).first()
-        console_name = get_name_console_suscription(type_account)
+        #console_name = get_name_console_suscription(type_account)
 
         license_name = get_name_licencia_suscription(type_account)
         stock_for_product = GameDetail.objects.filter(
             producto=id_product,
-            consola__in=console_name,
+            #consola__in=console_name,
             licencia__in=license_name,
             stock__gt=0
         )
+
         if not stock_for_product.exists():
             payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
@@ -958,7 +959,7 @@ def get_type_account_suscription(type_account):
 def get_name_console_suscription(type_account):
     #buscar el tipo de consola que se va a comprar de acuerdo al tipo de cuenta de suscripcion
     return [Consoles.objects.filter(descripcion__contains="xbox").first(),
-            Consoles.objects.filter(descripcion__contains="ps").first()]
+            Consoles.objects.filter(descripcion__contains="Pc").first()]
 
 
 def get_name_licencia_suscription(type_account):
