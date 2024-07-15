@@ -978,7 +978,7 @@ def confirm_sale_get(request):
             console_id = convert_console_name(request.GET.get('console').rstrip().lower())
             product_selected = Products.objects.filter(pk=request.GET.get('id_product').rstrip())
             license = Licenses.objects.filter(pk=request.GET.get('id_licencia').strip())
-            account = ProductAccounts.objects.filter(cuenta=request.GET.get('account').rstrip())
+            account = ProductAccounts.objects.filter(cuenta__iexact=request.GET.get('account').rstrip())
             console = Consoles.objects.filter(pk=console_id)
             combination_selected = GameDetail.objects.filter(producto=product_selected.first(),
                                                              consola=console.first(),
@@ -986,7 +986,7 @@ def confirm_sale_get(request):
                                                              #stock__gt=0
                                                              )
             sale = {}
-            if combination_selected.count() > 0 or account.count() > 0 or product_selected.count() > 0:
+            if combination_selected.count() > 0 and account.count() > 0 and product_selected.count() > 0:
                 combination_selected.update(stock=F('stock') - 1)
                 product_selected.update(stock=F('stock') - 1)
                 sale['id_combination'] = combination_selected.first().id_game_detail
