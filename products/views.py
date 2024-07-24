@@ -989,6 +989,7 @@ def confirm_sale_get(request):
                                                              #stock__gt=0
                                                              )
             sale = {}
+
             if combination_selected.count() > 0 and account.count() > 0 and product_selected.count() > 0:
                 combination_selected.update(stock=F('stock') - 1)
                 product_selected.update(stock=F('stock') - 1)
@@ -1010,7 +1011,6 @@ def confirm_sale_get(request):
                     tipo_producto=type_account
                 ).update(stock=F('stock') - 1)
             sale['is_rentail'] = request.GET.get('is_rentail')
-            account =  ProductAccounts.objects.filter(cuenta=request.GET.get('account'))
             sale['days_rentail'] = request.GET.get('days_rentail')
             create_sale(sale, 1, account.first())
             payload = {'message': 'se ha actualizado el stock satisfactoriamente!!!', 'data': [], 'code': '00', 'status': 200}
