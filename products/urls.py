@@ -33,4 +33,5 @@ urlpatterns = [
     path("systemVariablesGroup/<str:variable>", views.system_variables_group, name="system_variables_group"),
     path("sendEmail/", views.sendEmail, name="sendEmail"),
     path("manageFile/", views.manageFile, name="manageFile"),
+    path("confirmSaleEpayco/<str:transaction_id>", views.request_api_epayco, name="request_api_epayco"),
 ]

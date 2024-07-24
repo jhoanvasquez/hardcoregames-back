@@ -13,6 +13,7 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
 from ecommerceHardcoregamesBack import settings
+from products.AdapterEpaycoApi import AdapterEpaycoApi
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription, TypeAccounts, \
@@ -1052,6 +1053,17 @@ def update_stock(product_selected):
     sum_stocks = GameDetail.objects.filter(producto=product_selected.first().pk,
                                            stock__gt=0).aggregate(Sum('stock'))
     product_selected.update(stock=sum_stocks['stock__sum'])
+
+
+@csrf_exempt
+def request_api_epayco(request, transaction_id):
+    print("request_api_epayco: " + "#"*10+ str(request.body) +"#"*10)
+    adapter = AdapterEpaycoApi()
+    response = adapter.request_get(transaction_id)
+    if response.get('data').get('x_transaction_state').lower() == "aceptada":
+        return HttpResponse(JsonResponse(response), content_type="application/json")
+    return HttpResponse({"res":"sin resultados"}, content_type="application/json")
+
 
 
 def global_exception_handler(request, exception, send_email=False):

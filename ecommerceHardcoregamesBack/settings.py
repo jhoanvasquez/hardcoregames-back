@@ -160,12 +160,17 @@ STATIC_URL_FILES = 'static/files/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
+#URL_EPAYCO_CONFIRM_SALE = 'https://secure.epayco.co/validation/v1/reference/'
+URL_EPAYCO_CONFIRM_SALE = os.getenv("URL_EPAYCO_CONFIRM_SALE")
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 FROM_EMAIL=os.getenv("FROM_EMAIL")
+#FROM_EMAIL='hardcorgamesx@gmail.com'
 #FROM_EMAIL="jhoan0498@gmail.com"
 PASS_SMTP=os.getenv("PASS_SMTP")
-# PASS_SMTP="nzsp gaip dlie uais " #Hardcorgamesx@gmail.com pass
+#PASS_SMTP='nzsp gaip dlie uais '
+#PASS_SMTP="nzsp gaip dlie uais " #Hardcorgamesx@gmail.com pass
 #PASS_SMTP="bbcg cluw zlia hhui " #jhoan0498 pass
 SUBJECT_EMAIL_FOR_TOKEN = "Código para cambio de contraseña HardCoreGames"
 SUBJECT_EMAIL_FOR_SALE = "Confirmación de compra en HardCoreGames"
