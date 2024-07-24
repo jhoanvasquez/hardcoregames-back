@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.db import connection
 from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from django.utils.timezone import now
@@ -495,18 +496,19 @@ def price_suscription_product(request, id_product, type_account):
         else:
             type_account_sale = 2
 
+
         product_accounts = ProductAccounts.objects.filter(producto=id_product,
                                                           tipo_cuenta=type_account_sale,
                                                           activa=True)
         duration_account = get_duration_account(product_accounts)
 
-        # if type_product is not None:
         product = PriceForSuscription.objects.filter(producto=id_product,
                                                      estado=True,
                                                      duracion_dias_alquiler__in=duration_account,
                                                      tipo_producto__in=[type_account],
                                                      stock__gt = 0,
                                                      ).distinct('tiempo_alquiler')
+
         # else:
         #    product = PriceForSuscription.objects.filter(producto=id_product,
         #                                                 estado=True,
@@ -938,9 +940,10 @@ def check_products_expired():
 
 def get_duration_account(product_account):
     durations = []
-    for i in product_account.values("dias_duracion"):
-        item = i["dias_duracion"]
-        durations += [item]
+    for i in product_account:
+        exist_game_detail = GameDetail.objects.filter(producto_id=i.producto.id_product, duracion_dias_alquiler=i.dias_duracion).exists()
+        if exist_game_detail and durations.count(i.dias_duracion) == 0:
+            durations += [i.dias_duracion]
     return durations
 
 
