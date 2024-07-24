@@ -699,12 +699,14 @@ def confirm_sale(request):
             json_request = json.loads(request.body)
             id_user = json_request['id_user']
             message_html = ""
+            name_console = None
 
             for item in json_request['data']:
                 if item['id_combination'] is None:
                     id_product = item['id_product']
                     combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
                     combination_selected = GameDetail.objects.filter(pk=combination_id)
+                    name_console = TypeSuscriptionAccounts.objects.filter(pk=item['type_account']).first().descripcion
                 else:
                     combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
@@ -731,7 +733,7 @@ def confirm_sale(request):
                     update_points_sale(id_user, product_selected.first().puntos_venta)
                     delete_shopping_product(id_combination, id_user)
 
-                    message_html += build_div_html(product_selected, combination_selected, account_selected)
+                    message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
 
                     if new_stock >= 0:
                         combination_selected.update(stock=F('stock') - 1)
@@ -891,7 +893,7 @@ def send_email_notification(user_id, message_html):
     SendEmail().__int__(str(soup), settings.SUBJECT_EMAIL_FOR_SALE, email_to)
 
 
-def build_div_html(product, combination, account_selected):
+def build_div_html(product, combination, account_selected, name_console):
     string_pass = account_selected.password
     if string_pass is None:
         string_pass = ""
@@ -918,7 +920,7 @@ def build_div_html(product, combination, account_selected):
                   </li>
                   <li>
                      <lu>
-                        <b>Consola:</b> {combination.first().consola}
+                        <b>Consola:</b> {name_console if combination.first().consola is None else combination.first().consola}
                      </lu>
                   </li>
                </div>
