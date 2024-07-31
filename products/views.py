@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import connection
 from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError
+from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 
@@ -696,69 +697,66 @@ def system_variables_group(request, variable):
 @csrf_exempt
 def confirm_sale(request):
     try:
-        if request.method == "POST":
-            json_request = json.loads(request.body)
-            id_user = json_request['id_user']
-            message_html = ""
-            name_console = None
+        json_request = json.loads(request)
+        id_user = json_request['id_user']
+        message_html = ""
+        name_console = None
 
-            for item in json_request['data']:
-                if item['id_combination'] is None:
-                    id_product = item['id_product']
-                    combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
-                    combination_selected = GameDetail.objects.filter(pk=combination_id)
-                    name_console = TypeSuscriptionAccounts.objects.filter(pk=item['type_account']).first().descripcion
-                else:
-                    combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
+        for item in json_request['data']:
+            if item['id_combination'] is None:
+                id_product = item['id_product']
+                combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
+                combination_selected = GameDetail.objects.filter(pk=combination_id)
+                name_console = TypeSuscriptionAccounts.objects.filter(pk=item['type_account']).first().descripcion
+            else:
+                combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
-                if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
-                    type_account = 1 if item['type_account'] is None else item['type_account']
-                else:
-                    type_account = get_type_account_suscription(item['type_account'])
+            if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
+                type_account = 1 if item['type_account'] is None else item['type_account']
+            else:
+                type_account = get_type_account_suscription(item['type_account'])
 
-                days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
+            days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
 
-                account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
-                                                                  dias_duracion=days_rentail,
-                                                                  activa__exact=True,
-                                                                  tipo_cuenta__exact=type_account
-                                                                  ).first()
-                if combination_selected.exists() and account_selected is not None:
-                    id_combination = combination_selected.first().id_game_detail
-                    item['id_combination'] = id_combination
-                    item['days_rentail'] = days_rentail
-                    product_selected = Products.objects.filter(id_product=item['id_product'])
+            account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
+                                                              dias_duracion=days_rentail,
+                                                              activa__exact=True,
+                                                              tipo_cuenta__exact=type_account
+                                                              ).first()
+            if combination_selected.exists() and account_selected is not None:
+                id_combination = combination_selected.first().id_game_detail
+                item['id_combination'] = id_combination
+                item['days_rentail'] = days_rentail
+                product_selected = Products.objects.filter(id_product=item['id_product'])
 
-                    new_stock = product_selected.values().get()["stock"] - 1
-                    create_sale(item, id_user, account_selected)
-                    update_points_sale(id_user, product_selected.first().puntos_venta)
-                    delete_shopping_product(id_combination, id_user)
+                new_stock = product_selected.values().get()["stock"] - 1
+                create_sale(item, id_user, account_selected)
+                update_points_sale(id_user, product_selected.first().puntos_venta)
+                delete_shopping_product(id_combination, id_user)
 
-                    message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
+                message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
 
-                    if new_stock >= 0:
-                        combination_selected.update(stock=F('stock') - 1)
-                        product_selected.update(stock=new_stock)
-                        PriceForSuscription.objects.filter(
-                            producto = product_selected.first(),
-                            duracion_dias_alquiler = days_rentail,
-                            tipo_producto = item['type_account']
-                        ).update(stock=F('stock') - 1)
-                    if product_selected.values().get()['stock'] == 0:
-                        (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
-                         .update(activa=False))
-                else:
-                    return global_exception_handler(request, None)
+                if new_stock >= 0:
+                    combination_selected.update(stock=F('stock') - 1)
+                    product_selected.update(stock=new_stock)
+                    PriceForSuscription.objects.filter(
+                        producto = product_selected.first(),
+                        duracion_dias_alquiler = days_rentail,
+                        tipo_producto = item['type_account']
+                    ).update(stock=F('stock') - 1)
+                if product_selected.values().get()['stock'] == 0:
+                    (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
+                     .update(activa=False))
+            else:
+                global_exception_handler(request, None)
+                return False
 
-            send_email_notification(id_user, message_html)
-            payload = {'message': 'proceso exitoso',
-                       'response': True, 'code': '00', 'status': 200}
-            return HttpResponse(JsonResponse(payload), content_type="application/json")
-        payload = {'message': 'no se encuentran productos existentes', 'data': [], 'code': '00', 'status': 200}
-        return HttpResponse(JsonResponse(payload), content_type="application/json")
+        send_email_notification(id_user, message_html)
+        return True
     except Exception as e:
         send_email = True
-        return global_exception_handler(request, e, send_email)
+        global_exception_handler(request, e, send_email)
+        return False
 
 @csrf_exempt
 def update_shopping_car(request, shooping_car_id, self=None):
@@ -1056,24 +1054,27 @@ def update_stock(product_selected):
 
 
 @csrf_exempt
-def request_api_epayco(request, transaction_id):
-    print("request_api_epayco: " + "#"*10+ str(request.body) +"#"*10)
+def request_api_epayco(request):
+    ref_payco = request.GET.get('ref_payco')
     adapter = AdapterEpaycoApi()
-    response = adapter.request_get(transaction_id)
-    if response.get('data').get('x_transaction_state').lower() == "aceptada":
-        return HttpResponse(JsonResponse(response), content_type="application/json")
-    return HttpResponse({"res":"sin resultados"}, content_type="application/json")
+    response = adapter.request_get(ref_payco)
+    success_value = response.get('success')
+
+    if success_value is not None:
+        if response.get('data').get('x_transaction_state').lower() == "aceptada":
+            confirm_sale_body = response.get('data').get('x_extra7')
+
+            if confirm_sale(confirm_sale_body):
+                return redirect(settings.CONFIRMATION_URL)
+            else:
+                return redirect(settings.DECLINED_URL)
+    return redirect(settings.CONFIRMATION_URL)
 
 
 
 def global_exception_handler(request, exception, send_email=False):
-    payload = {'message': 'Ha ocurrido un error, intente mas tarde o contactese con el administrador',
-               'response': False, 'code': '01'}
     if send_email:
         body_unicode = request.body.decode('utf-8')
         body_data = json.loads(body_unicode)
         message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {body_data}</body></html>"
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
-    return HttpResponseServerError(
-        JsonResponse(payload), content_type="application/json"
-    )

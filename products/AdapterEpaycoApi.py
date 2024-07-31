@@ -10,5 +10,5 @@ class AdapterEpaycoApi:
         pass
 
     def request_get(self, transaction_id):
-        response = requests.get(self.base_url + transaction_id)
+        response = requests.get(str(self.base_url) + str(transaction_id))
         return response.json()

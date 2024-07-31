@@ -165,6 +165,10 @@ URL_EPAYCO_CONFIRM_SALE = os.getenv("URL_EPAYCO_CONFIRM_SALE")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+#CONFIRMATION_URL = "https://hard-core-games-test.onrender.com/autenticacion/usuario/mis-compras"
+CONFIRMATION_URL = os.getenv("CONFIRMATION_URL")
+#DECLINED_URL = "https://hard-core-games-test.onrender.com/"
+DECLINED_URL = os.getenv("DECLINED_URL")
 FROM_EMAIL=os.getenv("FROM_EMAIL")
 #FROM_EMAIL='hardcorgamesx@gmail.com'
 #FROM_EMAIL="jhoan0498@gmail.com"

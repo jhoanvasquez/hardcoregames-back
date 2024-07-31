@@ -17,7 +17,6 @@ urlpatterns = [
     path("getCombinationPriceByGame/<int:id_product>", views.get_combination_price_by_game, name="get_combination_price_by_game"),
     path("licenceByProduct/<int:id_product>/<int:id_console>", views.licence_by_product, name="licence_by_product"),
     path("daysForRentail/", views.days_for_rentail, name="daysForRentail"),
-    path("confirmSale/", views.confirm_sale, name="confirmSale"),
     path("salesByUser/<int:id_user>", views.sales_by_user, name="salesByUser"),
     path("getLicensces/", views.get_licences, name="get_products_by_id"),
     path("getConsoles/", views.get_consoles, name="get_products_by_id"),
@@ -33,5 +32,5 @@ urlpatterns = [
     path("systemVariablesGroup/<str:variable>", views.system_variables_group, name="system_variables_group"),
     path("sendEmail/", views.sendEmail, name="sendEmail"),
     path("manageFile/", views.manageFile, name="manageFile"),
-    path("confirmSaleEpayco/<str:transaction_id>", views.request_api_epayco, name="request_api_epayco"),
+    path("confirmSaleEpayco/", views.request_api_epayco, name="request_api_epayco"),
 ]
