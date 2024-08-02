@@ -735,7 +735,6 @@ def confirm_sale(request):
                 delete_shopping_product(id_combination, id_user)
 
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
-
                 if new_stock >= 0:
                     combination_selected.update(stock=F('stock') - 1)
                     product_selected.update(stock=new_stock)
@@ -919,7 +918,7 @@ def build_div_html(product, combination, account_selected, name_console):
                   </li>
                   <li>
                      <lu>
-                        <b>Consola:</b> {name_console if combination.first().consola is None else combination.first().consola}
+                        <b>Consola:</b> {name_console if name_console is not None else str(combination.first().consola).capitalize()}
                      </lu>
                   </li>
                </div>
