@@ -744,7 +744,7 @@ def confirm_sale(request):
                         duracion_dias_alquiler = days_rentail,
                         tipo_producto = item['type_account']
                     ).update(stock=F('stock') - 1)
-                if product_selected.values().get()['stock'] == 0:
+                if not exist_another_account_available(account_selected, type_account, days_rentail):
                     (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
                      .update(activa=False))
             else:
@@ -1059,7 +1059,6 @@ def request_api_epayco(request):
     adapter = AdapterEpaycoApi()
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
-
     if success_value is not None:
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
             confirm_sale_body = response.get('data').get('x_extra7')
@@ -1078,3 +1077,9 @@ def global_exception_handler(request, exception, send_email=False):
         body_data = json.loads(body_unicode)
         message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {body_data}</body></html>"
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
+def exist_another_account_available(account, type_account, days_rentail):
+
+    account = ProductAccounts.objects.filter(producto_id=account.producto.id_product,
+                                             dias_duracion=days_rentail,
+                                             activa=True).exclude(tipo_cuenta=type_account).first()
+    return account is not None
