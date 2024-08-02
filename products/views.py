@@ -1080,5 +1080,6 @@ def exist_another_account_available(account, type_account, days_rentail):
 
     account = ProductAccounts.objects.filter(producto_id=account.producto.id_product,
                                              dias_duracion=days_rentail,
-                                             activa=True).exclude(tipo_cuenta=type_account).first()
+                                             activa=True).exclude(tipo_cuenta=type_account,
+                                                                  activa=True).first()
     return account is not None
