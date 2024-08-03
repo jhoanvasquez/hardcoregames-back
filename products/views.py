@@ -743,7 +743,8 @@ def confirm_sale(request):
                         duracion_dias_alquiler = days_rentail,
                         tipo_producto = item['type_account']
                     ).update(stock=F('stock') - 1)
-                if not exist_another_account_available(account_selected, type_account, days_rentail):
+                if not exist_another_account_available(account_selected, type_account, days_rentail)\
+                        or (product_selected.values().get()['stock'] == 0 and type_account == 1):
                     (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
                      .update(activa=False))
             else:
