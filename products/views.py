@@ -1067,7 +1067,7 @@ def request_api_epayco(request):
                 return redirect(settings.CONFIRMATION_URL)
             else:
                 return redirect(settings.DECLINED_URL)
-    return redirect(settings.CONFIRMATION_URL)
+    return redirect(settings.DECLINED_URL)
 
 
 
