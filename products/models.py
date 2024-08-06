@@ -134,6 +134,7 @@ class GameDetail(models.Model):
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
     consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
     licencia = models.ForeignKey(Licenses, on_delete=models.CASCADE, null=True)
+    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
     duracion_dias_alquiler = models.IntegerField(null=True)
     stock = models.IntegerField()
     precio = models.IntegerField(default=0)

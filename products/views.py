@@ -718,10 +718,7 @@ def confirm_sale(request):
 
             days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
 
-            account_selected = ProductAccounts.objects.filter(producto_id=item['id_product'],
-                                                              dias_duracion=days_rentail,
-                                                              activa__exact=True,
-                                                              tipo_cuenta__exact=type_account
+            account_selected = ProductAccounts.objects.filter(cuenta=combination_selected.first().cuenta
                                                               ).first()
             if combination_selected.exists() and account_selected is not None:
                 id_combination = combination_selected.first().id_game_detail
@@ -733,7 +730,6 @@ def confirm_sale(request):
                 create_sale(item, id_user, account_selected)
                 update_points_sale(id_user, product_selected.first().puntos_venta)
                 delete_shopping_product(id_combination, id_user)
-
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
                 if new_stock >= 0:
                     combination_selected.update(stock=F('stock') - 1)
@@ -744,8 +740,8 @@ def confirm_sale(request):
                         tipo_producto = item['type_account']
                     ).update(stock=F('stock') - 1)
                 if (type_account == 2 or
-                        (product_selected.values().get()['stock'] == 0 and type_account == 1)):
-                    (ProductAccounts.objects.filter(pk=account_selected.id_product_accounts)
+                        check_for_disable_account(combination_selected)):
+                    (ProductAccounts.objects.filter(cuenta=combination_selected.first().cuenta)
                      .update(activa=False))
             else:
                 global_exception_handler(request, None)
@@ -809,8 +805,10 @@ def sendEmail(request):
                         content_type="application/json")
 
 
+@csrf_exempt
 def manageFile(request):
-    ManegePricesFile()
+    #ManegePricesFile()
+    confirm_sale(request.body)
     return HttpResponse(JsonResponse({'message': 'File procesado', "status": 200, "code": "00"}),
                         content_type="application/json")
 
@@ -1070,6 +1068,12 @@ def request_api_epayco(request):
     return redirect(settings.DECLINED_URL)
 
 
+def check_for_disable_account(product):
+    if (GameDetail.objects.filter(cuenta=product.first().cuenta, stock__gt=0)
+            .count() == 0):
+        return True
+
+    return False
 
 def global_exception_handler(request, exception, send_email=False):
     if send_email:

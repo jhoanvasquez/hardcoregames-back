@@ -118,8 +118,8 @@ class GameDetailAdmin(admin.ModelAdmin):
         UpdateStock(product_selected)
 
     product.short_description = 'Producto1'
-    list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio', 'duracion_dias_alquiler']
-    search_fields = ['producto__title', 'producto__id_product', ]
+    list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio', 'cuenta','duracion_dias_alquiler']
+    search_fields = ['producto__title', 'producto__id_product', 'cuenta__cuenta']
     list_filter = ["consola", 'licencia']
     list_per_page = 10
 
