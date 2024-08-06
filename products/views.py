@@ -672,8 +672,9 @@ def days_for_rentail(request):
 
 def type_accounts(request):
     if request.method == "GET":
-        type_accounts = TypeSuscriptionAccounts.objects.all()
-        serializer = SerializerForTypes(type_accounts, many=True)
+        type_account_available = PriceForSuscription.objects.filter(stock__gt=0).values_list('tipo_producto', flat=True)
+        type_account = TypeSuscriptionAccounts.objects.filter(pk__in=type_account_available)
+        serializer = SerializerForTypes(type_account, many=True)
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
