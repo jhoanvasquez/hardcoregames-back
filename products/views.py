@@ -1058,8 +1058,8 @@ def request_api_epayco(request):
     adapter = AdapterEpaycoApi()
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
+    global_exception_handler(response, "prueba", True)
     if success_value is not None:
-        global_exception_handler(response, "prueba", True)
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
             confirm_sale_body = response.get('data').get('x_extra7')
 
