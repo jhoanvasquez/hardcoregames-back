@@ -230,3 +230,13 @@ class VariablesSistema(models.Model):
     class Meta:
         verbose_name = 'variable de sistema'
         verbose_name_plural = 'Variables de sistema'
+
+class Transactions(models.Model):
+    id_transaction = models.AutoField(primary_key=True)
+    date_transaction = models.DateTimeField(default=datetime.now, blank=True)
+    status = models.CharField(max_length=100)
+    amount = models.IntegerField()
+    payment_id = models.CharField(max_length=100)
+    ref_payco = models.CharField(max_length=100)
+    id_invoice = models.CharField(max_length=100)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
