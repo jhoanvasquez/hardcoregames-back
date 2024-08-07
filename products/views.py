@@ -1059,14 +1059,15 @@ def request_api_epayco(request):
     adapter = AdapterEpaycoApi()
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
+    global_exception_handler(response, "prueba", True)
     if success_value is not None:
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
-            confirm_sale_body = response.get('data').get('x_extra7')
-
-            if confirm_sale(confirm_sale_body):
-                return redirect(settings.CONFIRMATION_URL)
-            else:
-                return redirect(settings.DECLINED_URL)
+            global_exception_handler("fue acpetada", "prueba", True)
+            # confirm_sale_body = response.get('data').get('x_extra7')
+            # if confirm_sale(confirm_sale_body):
+            #     return redirect(settings.CONFIRMATION_URL)
+            # else:
+            #     return redirect(settings.DECLINED_URL)
     return redirect(settings.DECLINED_URL)
 
 
@@ -1075,5 +1076,5 @@ def global_exception_handler(request, exception, send_email=False):
     if send_email:
         body_unicode = request.body.decode('utf-8')
         body_data = json.loads(body_unicode)
-        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {body_data}</body></html>"
+        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {str(request)}</body></html>"
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
