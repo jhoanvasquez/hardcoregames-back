@@ -1059,6 +1059,7 @@ def request_api_epayco(request):
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
     if success_value is not None:
+        global_exception_handler(response, "prueba", True)
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
             confirm_sale_body = response.get('data').get('x_extra7')
 
@@ -1078,7 +1079,7 @@ def check_for_disable_account(product):
 
 def global_exception_handler(request, exception, send_email=False):
     if send_email:
-        body_unicode = request.body.decode('utf-8')
-        body_data = json.loads(body_unicode)
-        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {body_data}</body></html>"
-        SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
+        #body_unicode = request.body.decode('utf-8')
+        #body_data = json.loads(body_unicode)
+        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {str(request)}</body></html>"
+        SendEmail().__int__(message_html, "Ha ocurrido un error", "jhoan0498@gmail.com")
