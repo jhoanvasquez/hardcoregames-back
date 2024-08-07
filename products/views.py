@@ -1074,7 +1074,7 @@ def request_api_epayco(request):
 
 def global_exception_handler(request, exception, send_email=False):
     if send_email:
-        body_unicode = request.body.decode('utf-8')
-        body_data = json.loads(body_unicode)
+        #body_unicode = request.body.decode('utf-8')
+        #body_data = json.loads(body_unicode)
         message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {str(request)}</body></html>"
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
