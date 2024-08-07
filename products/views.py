@@ -718,7 +718,6 @@ def confirm_sale(request):
                 type_account = get_type_account_suscription(item['type_account'])
 
             days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
-
             account_selected = ProductAccounts.objects.filter(cuenta=combination_selected.first().cuenta
                                                               ).first()
             if combination_selected.exists() and account_selected is not None:
@@ -873,7 +872,7 @@ def search_combination(id_product, type_account, days_rentail):
     type_account_suscription = get_name_console_suscription(type_account)
     licence_name = get_name_licencia_suscription(type_account)
     combination = GameDetail.objects.filter(producto=id_product,
-                                            consola__in=type_account_suscription,
+                                            consola=type_account_suscription,
                                             duracion_dias_alquiler = days_rentail,
                                             licencia__in=licence_name,
                                             stock__gt=0)
@@ -961,17 +960,16 @@ def get_type_account_suscription(type_account):
 
 def get_name_console_suscription(type_account):
     #buscar el tipo de consola que se va a comprar de acuerdo al tipo de cuenta de suscripcion
-    return [Consoles.objects.filter(descripcion__contains="xbox").first(),
-            Consoles.objects.filter(descripcion__contains="Pc").first()]
+    return Consoles.objects.filter(descripcion__contains="xbox").first()
 
 
 def get_name_licencia_suscription(type_account):
     type_account_suscription = TypeSuscriptionAccounts.objects.filter(pk=type_account).values().first()
-    if (("cuenta" in type_account_suscription.get("descripcion").lower()
-         or "pc" in type_account_suscription.get("descripcion").lower()
-         or "consola" in type_account_suscription.get("descripcion").lower())):
+    if ("consola" in type_account_suscription.get("descripcion").lower()):
         return [Licenses.objects.filter(descripcion="Primaria").values().first().get("id_license"),
                 Licenses.objects.filter(descripcion="Secundaria").values().first().get("id_license")]
+    if ("pc" in type_account_suscription.get("descripcion").lower()):
+        return [Licenses.objects.filter(descripcion__icontains="pc").values().first().get("id_license")]
     return [Licenses.objects.filter(descripcion__contains="digo").values().first().get("id_license")]
 
 def confirm_sale_get(request):
@@ -986,7 +984,7 @@ def confirm_sale_get(request):
             combination_selected = GameDetail.objects.filter(producto=product_selected.first(),
                                                              consola=console.first(),
                                                              licencia=license.first(),
-                                                             #stock__gt=0
+                                                             stock__gt=0
                                                              )
             sale = {}
 

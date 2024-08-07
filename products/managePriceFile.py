@@ -78,7 +78,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
     is_new_account = False
     account_for_codigo = None
     account_for_producto = None
-    licence_pc = id_primaria
+    licence_pc = Licenses.objects.filter(descripcion__icontains="pc")
     # try:
     sheet = sheetPs
     m_row = sheet.max_row
@@ -141,7 +141,6 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
                 price = sheet_price_xbox_2
                 product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
                 save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
-                licence_pc = id_secundaria
 
             if sheet_price_pc != 'None':
                 price = sheet_price_pc
@@ -158,7 +157,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         if check_sheet_price(sheet_price_xbox_2):
             save_or_update_game_detail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account, duration_days, account_for_producto)
         if check_sheet_price(sheet_price_pc):
-            save_or_update_game_detail(id_product, id_pc, licence_pc, sheet_price_pc, is_new_account, duration_days, account_for_producto)
+            save_or_update_game_detail(id_product, id_xbox, licence_pc, sheet_price_pc, is_new_account, duration_days, account_for_producto)
         if check_sheet_price(sheet_price_code):
             save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account, duration_days, account_for_codigo)
 
