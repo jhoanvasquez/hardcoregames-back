@@ -1073,6 +1073,13 @@ def request_api_epayco(request):
             return redirect(settings.PENDING_URL)
     return redirect(settings.DECLINED_URL)
 
+def check_for_disable_account(product):
+    if (GameDetail.objects.filter(cuenta=product.first().cuenta, stock__gt=0)
+            .count() == 0):
+        return True
+
+    return False
+    
 def global_exception_handler(request, exception, send_email=False):
     if send_email:
         body_unicode = request.body.decode('utf-8')
