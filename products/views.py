@@ -18,7 +18,7 @@ from products.AdapterEpaycoApi import AdapterEpaycoApi
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription, TypeAccounts, \
-    VariablesSistema, TypeSuscriptionAccounts
+    VariablesSistema, TypeSuscriptionAccounts, Transactions
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
     SerializerDaysForRentail, SerializerPriceSuscriptionProduct, SerializerForVariables
@@ -1055,13 +1055,15 @@ def update_stock(product_selected):
 
 @csrf_exempt
 def request_api_epayco(request):
-    ref_payco = request.GET.get('ref_payco')
+    ref_payco = request.GET.get('ref_payco') if request.GET.get('ref_payco') is not None \
+        else get_transaction_saved(request).ref_payco
     adapter = AdapterEpaycoApi()
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
     global_exception_handler(response, str(ref_payco), True)
     if success_value is not None:
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
+            update_transaction(ref_payco)
             global_exception_handler("fue acpetada", "prueba", True)
             # confirm_sale_body = response.get('data').get('x_extra7')
             # if confirm_sale(confirm_sale_body):
@@ -1069,7 +1071,9 @@ def request_api_epayco(request):
             # else:
             #     return redirect(settings.DECLINED_URL)
         if response.get('data').get('x_transaction_state').lower() == "pendiente":
+            save_transaction(response, ref_payco)
             return redirect(settings.PENDING_URL)
+
     return redirect(settings.DECLINED_URL)
 
 
@@ -1080,3 +1084,23 @@ def global_exception_handler(request, exception, send_email=False):
         #body_data = json.loads(body_unicode)
         message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {str(request)}</body></html>"
         SendEmail().__int__(message_html, "Ha ocurrido un error", "jhoan0498@gmail.com")
+
+def save_transaction(response, ref_payco):
+    Transactions(
+        status="pending",
+        amount = response.get('data').get('x_amount'),
+        payment_id = response.get('data').get('x_bank_name').lower(),
+        ref_payco = ref_payco,
+        id_invoice = response.get('data').get('x_id_invoice'),
+        user_id = User.objects.filter(pk=response.get('data').get('x_extra6')).first(),
+    ).save()
+
+def get_transaction_saved(request):
+    id_invoice = request.GET.get('x_id_invoice')
+    transaction = Transactions.objects.filter(id_invoice=id_invoice).first()
+    if transaction is not None:
+        return transaction
+    return None
+
+def update_transaction(ref_payco):
+    Transactions.objects.filter(ref_payco=ref_payco).update(status="accepted")
