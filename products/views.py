@@ -1060,30 +1060,25 @@ def request_api_epayco(request):
     adapter = AdapterEpaycoApi()
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
-    global_exception_handler(response, str(ref_payco), True)
     if success_value is not None:
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
             update_transaction(ref_payco)
-            global_exception_handler("fue acpetada", "prueba", True)
-            # confirm_sale_body = response.get('data').get('x_extra7')
-            # if confirm_sale(confirm_sale_body):
-            #     return redirect(settings.CONFIRMATION_URL)
-            # else:
-            #     return redirect(settings.DECLINED_URL)
+            confirm_sale_body = response.get('data').get('x_extra7')
+            if confirm_sale(confirm_sale_body):
+                return redirect(settings.CONFIRMATION_URL)
+            else:
+                return redirect(settings.DECLINED_URL)
         if response.get('data').get('x_transaction_state').lower() == "pendiente":
             save_transaction(response, ref_payco)
             return redirect(settings.PENDING_URL)
-
     return redirect(settings.DECLINED_URL)
-
-
 
 def global_exception_handler(request, exception, send_email=False):
     if send_email:
-        #body_unicode = request.body.decode('utf-8')
-        #body_data = json.loads(body_unicode)
-        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {str(request)}</body></html>"
-        SendEmail().__int__(message_html, "Ha ocurrido un error", "jhoan0498@gmail.com")
+        body_unicode = request.body.decode('utf-8')
+        body_data = json.loads(body_unicode)
+        message_html = f"<html><head>Ha ocurrido un error en una compra </head><body>{exception} con el request: <br> {body_data}</body></html>"
+        SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
 
 def save_transaction(response, ref_payco):
     Transactions(
