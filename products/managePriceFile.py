@@ -45,11 +45,12 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
             obj, created = ProductAccounts.objects.get_or_create(
                 cuenta=account.lower(),
                 password=password,
-                activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
             )
+            obj.activa = True
+            obj.save()
             if created:
                 is_new_account = True
             account_for_producto = obj
@@ -108,11 +109,12 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             obj, created = ProductAccounts.objects.get_or_create(
                 cuenta=account.lower(),
                 password=password,
-                activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
             )
+            obj.activa = True
+            obj.save()
             if created:
                 is_new_account = True
             account_for_codigo = obj
@@ -123,11 +125,12 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             obj, created = ProductAccounts.objects.get_or_create(
                 cuenta=account.lower(),
                 password=password,
-                activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
             )
+            obj.activa=True
+            obj.save()
             if created:
                 is_new_account = True
             account_for_producto = obj
