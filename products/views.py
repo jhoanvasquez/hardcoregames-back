@@ -1059,7 +1059,6 @@ def request_api_epayco(request):
     adapter = AdapterEpaycoApi()
     response = adapter.request_get(ref_payco)
     success_value = response.get('success')
-    global_exception_handler(response, "prueba", True)
     if success_value is not None:
         if response.get('data').get('x_transaction_state').lower() == "aceptada":
             update_transaction(ref_payco)
