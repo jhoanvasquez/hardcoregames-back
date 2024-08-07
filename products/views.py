@@ -1055,21 +1055,23 @@ def update_stock(product_selected):
 @csrf_exempt
 def request_api_epayco(request):
     ref_payco = request.GET.get('ref_payco') if request.GET.get('ref_payco') is not None \
-        else get_transaction_saved(request).ref_payco
-    adapter = AdapterEpaycoApi()
-    response = adapter.request_get(ref_payco)
-    success_value = response.get('success')
-    if success_value is not None:
-        if response.get('data').get('x_transaction_state').lower() == "aceptada":
-            update_transaction(ref_payco)
-            confirm_sale_body = response.get('data').get('x_extra7')
-            if confirm_sale(confirm_sale_body):
-                return redirect(settings.CONFIRMATION_URL)
-            else:
-                return redirect(settings.DECLINED_URL)
-        if response.get('data').get('x_transaction_state').lower() == "pendiente":
-            save_transaction(response, ref_payco)
-            return redirect(settings.PENDING_URL)
+        else get_transaction_saved(request)
+
+    if ref_payco is not None:
+        adapter = AdapterEpaycoApi()
+        response = adapter.request_get(ref_payco)
+        success_value = response.get('success')
+        if success_value is not None:
+            if response.get('data').get('x_transaction_state').lower() == "aceptada":
+                update_transaction(ref_payco)
+                confirm_sale_body = response.get('data').get('x_extra7')
+                if confirm_sale(confirm_sale_body):
+                    return redirect(settings.CONFIRMATION_URL)
+                else:
+                    return redirect(settings.DECLINED_URL)
+            if response.get('data').get('x_transaction_state').lower() == "pendiente":
+                save_transaction(response, ref_payco)
+                return redirect(settings.PENDING_URL)
     return redirect(settings.DECLINED_URL)
 
 def check_for_disable_account(product):
@@ -1100,7 +1102,7 @@ def get_transaction_saved(request):
     id_invoice = request.GET.get('x_id_invoice')
     transaction = Transactions.objects.filter(id_invoice=id_invoice).first()
     if transaction is not None:
-        return transaction
+        return transaction.ref_payco
     return None
 
 def update_transaction(ref_payco):
