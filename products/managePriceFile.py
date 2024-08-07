@@ -42,15 +42,14 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
         type_account_selected = TypeAccounts.objects.filter(pk=type_account)
         duration_days = 0 if duration_days is None else duration_days
         if not exist_account:
-            obj, created = ProductAccounts.objects.get_or_create(
+            obj, created = ProductAccounts.objects.update_or_create(
                 cuenta=account.lower(),
                 password=password,
+                activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
             )
-            obj.activa = True
-            obj.save()
             if created:
                 is_new_account = True
             account_for_producto = obj
@@ -106,15 +105,14 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
 
         if sheet_price_code != 'None':
             type_account_selected = TypeAccounts.objects.filter(pk=2)
-            obj, created = ProductAccounts.objects.get_or_create(
+            obj, created = ProductAccounts.objects.update_or_create(
                 cuenta=account.lower(),
                 password=password,
+                activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
             )
-            obj.activa = True
-            obj.save()
             if created:
                 is_new_account = True
             account_for_codigo = obj
@@ -122,15 +120,14 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
         if sheet_price_xbox_1 != 'None' or sheet_price_xbox_2 != 'None' or sheet_price_pc != 'None':
             #breakpoint()
             type_account_selected = TypeAccounts.objects.filter(pk=1)
-            obj, created = ProductAccounts.objects.get_or_create(
+            obj, created = ProductAccounts.objects.update_or_create(
                 cuenta=account.lower(),
                 password=password,
+                activa=True,
                 producto=product_for_create.first(),
                 tipo_cuenta=type_account_selected.first(),
                 dias_duracion=duration_days
             )
-            obj.activa=True
-            obj.save()
             if created:
                 is_new_account = True
             account_for_producto = obj
@@ -189,7 +186,7 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
     #breakpoint()
     product_selected = Products.objects.filter(id_product=id_product)
     if not row_game_detail.exists():
-        GameDetail.objects.get_or_create(
+        GameDetail.objects.update_or_create(
             producto=product_selected.first(),
             consola=id_console.first(),
             licencia=id_license.first(),
@@ -212,7 +209,7 @@ def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, 
     UpdateStock(product_selected)
 
 def save_price_suscription(product_for_create, product_name, month_duration, duration_days, price):
-    product_subscription, created = PriceForSuscription.objects.get_or_create(
+    product_subscription, created = PriceForSuscription.objects.update_or_create(
         producto=product_for_create,
         tipo_producto=product_name,
         tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration) + " meses",
@@ -229,7 +226,7 @@ def save_price_suscription(product_for_create, product_name, month_duration, dur
 
     product_subscription.save()
     #if not row_price_suscription.exists():
-    #    row_price_suscription.get_or_create()
+    #    row_price_suscription.update_or_create()
     #else:
     #    row_price_suscription.update(price=price)
 
