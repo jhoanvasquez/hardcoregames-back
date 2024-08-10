@@ -1054,22 +1054,33 @@ def update_stock(product_selected):
 def request_api_epayco(request):
     ref_payco = request.GET.get('ref_payco') if request.GET.get('ref_payco') is not None \
         else get_transaction_saved(request)
+    x_ref_epayco = request.GET.get('x_ref_payco')
 
-    if ref_payco is not None:
-        adapter = AdapterEpaycoApi()
-        response = adapter.request_get(ref_payco)
-        success_value = response.get('success')
-        if success_value is not None:
-            if response.get('data').get('x_transaction_state').lower() == "aceptada":
-                update_transaction(ref_payco)
-                confirm_sale_body = response.get('data').get('x_extra7')
-                if confirm_sale(confirm_sale_body):
-                    return redirect(settings.CONFIRMATION_URL)
-                else:
-                    return redirect(settings.DECLINED_URL)
-            if response.get('data').get('x_transaction_state').lower() == "pendiente":
+    if ref_payco is not None or x_ref_epayco is not None:
+
+        if ref_payco is not None:
+            adapter = AdapterEpaycoApi()
+            response = adapter.request_get(ref_payco)
+            success_value = response.get('success')
+            is_accepted = response.get('data').get('x_transaction_state').lower() == "aceptada"
+            confirm_sale_body = response.get('data').get('x_extra7')
+            is_pending = response.get('data').get('x_transaction_state').lower() == "pendiente"
+
+            if is_pending:
                 save_transaction(response, ref_payco)
                 return redirect(settings.PENDING_URL)
+        else:
+            success_value = request.GET.get("x_response").lower() == "aceptada"
+            is_accepted = request.GET.get('x_transaction_state').lower() == "aceptada"
+            confirm_sale_body = request.GET.get('x_extra7')
+
+        if success_value is not None and is_accepted:
+            update_transaction(ref_payco)
+            if confirm_sale(confirm_sale_body):
+                return redirect(settings.CONFIRMATION_URL)
+            else:
+                return redirect(settings.DECLINED_URL)
+
     return redirect(settings.DECLINED_URL)
 
 def check_for_disable_account(product):
