@@ -1064,8 +1064,8 @@ def request_api_epayco(request):
             is_accepted = response.get('data').get('x_transaction_state').lower() == "aceptada"
             confirm_sale_body = response.get('data').get('x_extra7')
             is_pending = response.get('data').get('x_transaction_state').lower() == "pendiente"
-
             if is_pending:
+                save_transaction(response, ref_payco)
                 return redirect(settings.PENDING_URL)
         else:
             success_value = request.GET.get("x_response").lower() == "aceptada"
@@ -1078,7 +1078,8 @@ def request_api_epayco(request):
                     "x_bank_name": request.GET.get('x_bank_name'),
                     "ref_payco": ref_payco,
                     "x_id_invoice": request.GET.get('x_id_invoice'),
-                    "x_extra6": request.GET.get('x_extra6')
+                    "x_extra6": request.GET.get('x_extra6'),
+                    "x_transaction_state": request.GET.get('x_transaction_state')
                 }
             }
         exist_transaction = save_transaction(response, ref_payco)
@@ -1087,7 +1088,6 @@ def request_api_epayco(request):
             return redirect(settings.CONFIRMATION_URL)
 
         if success_value is not None and is_accepted:
-            update_transaction(ref_payco)
             if confirm_sale(confirm_sale_body):
                 return redirect(settings.CONFIRMATION_URL)
             else:
@@ -1112,12 +1112,15 @@ def global_exception_handler(request, exception, send_email=False):
 def save_transaction(response, ref_payco):
 
     id_invoice = response.get('data').get('x_id_invoice')
+    status = response.get('data').get('x_transaction_state').lower()
+
     if Transactions.objects.filter(id_invoice=id_invoice).exists():
-        Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco)
+        Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco,
+                                                                status=status)
         return False
 
     Transactions(
-        status="pending",
+        status=status,
         amount = response.get('data').get('x_amount'),
         payment_id = response.get('data').get('x_bank_name').lower(),
         ref_payco = ref_payco,
@@ -1133,6 +1136,3 @@ def get_transaction_saved(request):
     if transaction is not None:
         return transaction.ref_payco
     return None
-
-def update_transaction(ref_payco):
-    Transactions.objects.filter(ref_payco=ref_payco).update(status="accepted")
