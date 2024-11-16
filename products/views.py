@@ -1080,7 +1080,7 @@ def request_api_epayco(request):
                     "ref_payco": ref_payco,
                     "x_id_invoice": request.GET.get('x_id_invoice'),
                     "x_extra6": request.GET.get('x_extra6'),
-                    "status": request.GET.get('x_transaction_state').lower()
+                    "x_transaction_state": request.GET.get('x_transaction_state').lower()
                 }
             }
         exist_transaction = save_transaction(response, ref_payco)
@@ -1119,7 +1119,7 @@ def save_transaction(response, ref_payco):
         return False
 
     Transactions(
-        status=response.get('data').get('status'),
+        status=response.get('data').get('x_transaction_state'),
         amount = response.get('data').get('x_amount'),
         payment_id = response.get('data').get('x_bank_name').lower(),
         ref_payco = ref_payco,
