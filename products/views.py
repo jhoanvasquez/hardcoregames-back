@@ -1084,7 +1084,7 @@ def request_api_epayco(request):
         exist_transaction = save_transaction(response, ref_payco)
 
         if not exist_transaction:
-            return redirect(settings.PENDING_URL)
+            return redirect(settings.CONFIRMATION_URL)
 
         if success_value is not None and is_accepted:
             update_transaction(ref_payco)
