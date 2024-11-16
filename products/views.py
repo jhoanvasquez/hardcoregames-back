@@ -1065,8 +1065,8 @@ def request_api_epayco(request):
             confirm_sale_body = response.get('data').get('x_extra7')
             is_pending = response.get('data').get('x_transaction_state').lower() == "pendiente"
 
-            #if is_pending:
-            #    return redirect(settings.PENDING_URL)
+            if is_pending:
+                return redirect(settings.PENDING_URL)
         else:
             success_value = request.GET.get("x_response").lower() == "aceptada"
             is_accepted = request.GET.get('x_transaction_state').lower() == "aceptada"
@@ -1081,9 +1081,9 @@ def request_api_epayco(request):
                     "x_extra6": request.GET.get('x_extra6')
                 }
             }
-        save_transaction(response, ref_payco)
+        exist_transaction = save_transaction(response, ref_payco)
 
-        if get_transaction_status(ref_payco):
+        if not exist_transaction:
             return redirect(settings.PENDING_URL)
 
         if success_value is not None and is_accepted:
@@ -1110,14 +1110,22 @@ def global_exception_handler(request, exception, send_email=False):
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
 
 def save_transaction(response, ref_payco):
+
+    id_invoice = response.get('data').get('x_id_invoice')
+    if Transactions.objects.filter(id_invoice=id_invoice).exists():
+        Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco)
+        return False
+
     Transactions(
         status="pending",
         amount = response.get('data').get('x_amount'),
         payment_id = response.get('data').get('x_bank_name').lower(),
         ref_payco = ref_payco,
-        id_invoice = response.get('data').get('x_id_invoice'),
+        id_invoice = id_invoice,
         user_id = User.objects.filter(pk=response.get('data').get('x_extra6')).first(),
     ).save()
+
+    return True
 
 def get_transaction_saved(request):
     id_invoice = request.GET.get('x_id_invoice')
@@ -1128,6 +1136,3 @@ def get_transaction_saved(request):
 
 def update_transaction(ref_payco):
     Transactions.objects.filter(ref_payco=ref_payco).update(status="accepted")
-
-def get_transaction_status(ref_epayco):
-    return Transactions.objects.filter(ref_payco=ref_epayco).values().first().get('status') == "accepted"
