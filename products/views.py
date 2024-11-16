@@ -1078,7 +1078,8 @@ def request_api_epayco(request):
                     "x_bank_name": request.GET.get('x_bank_name'),
                     "ref_payco": ref_payco,
                     "x_id_invoice": request.GET.get('x_id_invoice'),
-                    "x_extra6": request.GET.get('x_extra6')
+                    "x_extra6": request.GET.get('x_extra6'),
+                    "status": request.GET.get('x_transaction_state').lower()
                 }
             }
         exist_transaction = save_transaction(response, ref_payco)
@@ -1087,7 +1088,6 @@ def request_api_epayco(request):
             return redirect(settings.CONFIRMATION_URL)
 
         if success_value is not None and is_accepted:
-            update_transaction(ref_payco)
             if confirm_sale(confirm_sale_body):
                 return redirect(settings.CONFIRMATION_URL)
             else:
@@ -1113,11 +1113,12 @@ def save_transaction(response, ref_payco):
 
     id_invoice = response.get('data').get('x_id_invoice')
     if Transactions.objects.filter(id_invoice=id_invoice).exists():
-        Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco)
+        Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco,
+                                                                status=response.get('data').get('status'))
         return False
 
     Transactions(
-        status="pending",
+        status=response.get('data').get('status'),
         amount = response.get('data').get('x_amount'),
         payment_id = response.get('data').get('x_bank_name').lower(),
         ref_payco = ref_payco,
@@ -1133,6 +1134,3 @@ def get_transaction_saved(request):
     if transaction is not None:
         return transaction.ref_payco
     return None
-
-def update_transaction(ref_payco):
-    Transactions.objects.filter(ref_payco=ref_payco).update(status="accepted")
