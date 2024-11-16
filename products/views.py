@@ -1057,7 +1057,6 @@ def request_api_epayco(request):
     x_ref_epayco = request.GET.get('x_ref_payco')
 
     if ref_payco is not None or x_ref_epayco is not None:
-
         if ref_payco is not None:
             adapter = AdapterEpaycoApi()
             response = adapter.request_get(ref_payco)
@@ -1066,13 +1065,26 @@ def request_api_epayco(request):
             confirm_sale_body = response.get('data').get('x_extra7')
             is_pending = response.get('data').get('x_transaction_state').lower() == "pendiente"
 
-            if is_pending:
-                save_transaction(response, ref_payco)
-                return redirect(settings.PENDING_URL)
+            #if is_pending:
+            #    return redirect(settings.PENDING_URL)
         else:
             success_value = request.GET.get("x_response").lower() == "aceptada"
             is_accepted = request.GET.get('x_transaction_state').lower() == "aceptada"
             confirm_sale_body = request.GET.get('x_extra7')
+            ref_payco = x_ref_epayco if ref_payco is None else ref_payco
+            response = {
+                "data": {
+                    "x_amount": request.GET.get('x_amount'),
+                    "x_bank_name": request.GET.get('x_bank_name'),
+                    "ref_payco": ref_payco,
+                    "x_id_invoice": request.GET.get('x_id_invoice'),
+                    "x_extra6": request.GET.get('x_extra6')
+                }
+            }
+        save_transaction(response, ref_payco)
+
+        if get_transaction_status(ref_payco):
+            return redirect(settings.PENDING_URL)
 
         if success_value is not None and is_accepted:
             update_transaction(ref_payco)
@@ -1116,3 +1128,6 @@ def get_transaction_saved(request):
 
 def update_transaction(ref_payco):
     Transactions.objects.filter(ref_payco=ref_payco).update(status="accepted")
+
+def get_transaction_status(ref_epayco):
+    return Transactions.objects.filter(ref_payco=ref_epayco).values().first().get('status') == "accepted"
