@@ -1066,6 +1066,7 @@ def request_api_epayco(request):
             is_pending = response.get('data').get('x_transaction_state').lower() == "pendiente"
 
             if is_pending:
+                save_transaction(response, ref_payco)
                 return redirect(settings.PENDING_URL)
         else:
             success_value = request.GET.get("x_response").lower() == "aceptada"
