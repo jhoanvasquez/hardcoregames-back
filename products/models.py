@@ -50,9 +50,6 @@ class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
     description = models.TextField()
-    stock = models.IntegerField(null=True, blank=True)
-    price = models.IntegerField()
-    precio_descuento = models.IntegerField(null=True, blank=True, default=None)
     date_register = models.DateField(default=datetime.now)
     date_last_modified = models.DateField(auto_now=True)
     image = models.CharField(max_length=500)
@@ -101,7 +98,6 @@ class ProductAccounts(models.Model):
     cuenta = models.CharField(max_length=200)
     password = models.CharField(max_length=100, null=True, blank=True)
     activa = models.BooleanField()
-    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
     tipo_cuenta = models.ForeignKey(TypeAccounts, on_delete=models.CASCADE, default=1)
     dias_duracion = models.IntegerField(default=0, null=True, blank=True)
     codigo_seguridad = models.CharField(max_length=500, null=True, blank=True)
@@ -138,7 +134,7 @@ class GameDetail(models.Model):
     duracion_dias_alquiler = models.IntegerField(null=True)
     stock = models.IntegerField()
     precio = models.IntegerField(default=0)
-    estado = models.BooleanField()
+    precio_descuento = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Precio por consola y licencia'
