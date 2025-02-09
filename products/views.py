@@ -704,9 +704,10 @@ def confirm_sale(request):
 
         for item in json_request['data']:
 
-            combination_selected = GameDetail.objects.filter(pk=item['id_combination']).first()
-            name_console = combination_selected.consola.descripcion
+            combination_selected:GameDetail = GameDetail.objects.filter(pk=item['id_combination']).first()
+            name_console:str = combination_selected.consola.descripcion
             account_selected = combination_selected.cuenta
+            item['days_rentail'] = combination_selected.duracion_dias_alquiler
 
             if combination_selected:
                 product_selected = combination_selected.producto
@@ -773,7 +774,7 @@ def delete_product_shopping_car(request, shooping_car_id):
 
 def sendEmail(request):
     # check_products_expired()
-    #send_email_notification(2, "<html><head>prueba</head><body>prueba</body></html>")
+    send_email_notification(2, "<html><head>prueba</head><body>prueba</body></html>")
     return HttpResponse(JsonResponse({'message': "prueba email", "status": 200, "code": "00"}),
                         content_type="application/json")
 
