@@ -49,7 +49,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-            'pk', 'title', 'description', 'stock', 'price', 'precio_descuento', 'date_register',
+            'pk', 'title', 'description', 'date_register',
             'image', 'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
             'puntos_venta', 'puede_rentarse', 'destacado')
 
@@ -68,8 +68,8 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCar
-        fields = ('pk', 'id_product', 'id_combination', 'title_product', 'stock', 'price', 'licence', 'console',
-                  'type', 'estado', 'image', 'type_account')
+        fields = ('pk', 'id_product', 'id_combination', 'title_product', 'stock', 'price', 'licence',
+                  'console', 'type', 'estado', 'image', 'type_account')
 
     def get_type_account(self, obj):
         licence_value = obj.producto.licencia.descripcion
@@ -81,7 +81,8 @@ class SerializerGameDetail(serializers.ModelSerializer):
 
     class Meta:
         model = GameDetail
-        fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence', 'stock', 'precio')
+        fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence',
+                  'stock', 'precio', 'precio_descuento','duracion_dias_alquiler')
 
 
 class SerializerLicencesName(serializers.ModelSerializer):
