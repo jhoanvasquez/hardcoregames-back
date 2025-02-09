@@ -13,12 +13,17 @@ from products.models import ProductAccounts, Consoles, Licenses, Products, GameD
 def read_file_ps(sheetPs, id_primaria, id_secundaria):
     id_ps4 = Consoles.objects.filter(descripcion__icontains="playstation 4")
     id_ps5 = Consoles.objects.filter(descripcion__icontains="playstation 5")
-    account_for_producto = None
 
     sheet = sheetPs
     m_row = sheet.max_row
+    batch_size = 5
 
-    for i in range(2, m_row + 1):
+    for start in range(2, m_row + 1, batch_size):
+        end = min(start + batch_size, m_row + 1)
+        process_batch_ps(sheet, start, end, id_ps4, id_ps5, id_primaria, id_secundaria)
+
+def process_batch_ps(sheet, start, end, id_ps4, id_ps5, id_primaria, id_secundaria):
+    for i in range(start, end):
         account = sheet.cell(row=i, column=1).value
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
@@ -26,28 +31,23 @@ def read_file_ps(sheetPs, id_primaria, id_secundaria):
         type_account = sheet.cell(row=i, column=9).value or 1
 
         if not account or not id_product:
-            continue
+            continue  # Skip invalid rows
 
         product_for_create = Products.objects.filter(id_product=id_product).first()
         if not product_for_create:
             raise forms.ValidationError(f"El producto para PlayStation con ID {id_product} no existe")
 
-        exist_account = ProductAccounts.objects.filter(
-            cuenta=account.lower(),
-        ).exists()
-
         type_account_selected = TypeAccounts.objects.filter(pk=type_account).first()
 
-        if not exist_account:
-            account_for_producto, created = ProductAccounts.objects.update_or_create(
-                cuenta=account.lower(),
-                defaults={
-                    "password": password,
-                    "activa": True,
-                    "tipo_cuenta": type_account_selected,
-                    "dias_duracion": duration_days,
-                }
-            )
+        account_for_producto, _ = ProductAccounts.objects.update_or_create(
+            cuenta=account.lower(),
+            defaults={
+                "password": password,
+                "activa": True,
+                "tipo_cuenta": type_account_selected,
+                "dias_duracion": duration_days,
+            }
+        )
 
         prices = {
             "ps4_1": sheet.cell(row=i, column=4).value,
@@ -70,18 +70,21 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
 
     sheet = sheetPs
     m_row = sheet.max_row
+    batch_size = 5  # Process 5 rows at a time
 
-    for i in range(2, m_row + 1):
+    for start in range(2, m_row + 1, batch_size):
+        end = min(start + batch_size, m_row + 1)
+        process_batch_xbx(sheet, start, end, id_xbox, id_code, id_pc, licence_pc, id_primaria, id_secundaria)
+
+def process_batch_xbx(sheet, start, end, id_xbox, id_code, id_pc, licence_pc, id_primaria, id_secundaria):
+    for i in range(start, end):
         account = sheet.cell(row=i, column=1).value
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
         duration_days = sheet.cell(row=i, column=8).value or 0
 
-        account_for_codigo = None
-        account_for_producto = None
-
         if not account or not id_product:
-            continue
+            continue  # Skip invalid rows
 
         product_for_create = Products.objects.filter(id_product=id_product).first()
         if not product_for_create:
@@ -94,33 +97,16 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             "code": str(sheet.cell(row=i, column=7).value).strip(),
         }
 
-        # Update or create for 'code'
-        if sheet_prices["code"] != "None":
-            type_account_selected = TypeAccounts.objects.filter(pk=2).first()
-            account_for_codigo, _ = ProductAccounts.objects.update_or_create(
-                cuenta=account.lower(),
-                defaults={
-                    "password": password,
-                    "activa": True,
-                    "tipo_cuenta": type_account_selected,
-                    "dias_duracion": duration_days,
-                }
-            )
+        account_for_producto, _ = ProductAccounts.objects.update_or_create(
+            cuenta=account.lower(),
+            defaults={
+                "password": password,
+                "activa": True,
+                "tipo_cuenta": TypeAccounts.objects.filter(pk=1).first(),
+                "dias_duracion": duration_days,
+            }
+        )
 
-        # Update or create for Xbox/PC
-        if any(sheet_prices[key] != "None" for key in ["xbox_1", "xbox_2", "pc"]):
-            type_account_selected = TypeAccounts.objects.filter(pk=1).first()
-            account_for_producto, _ = ProductAccounts.objects.update_or_create(
-                cuenta=account.lower(),
-                defaults={
-                    "password": password,
-                    "activa": True,
-                    "tipo_cuenta": type_account_selected,
-                    "dias_duracion": duration_days,
-                }
-            )
-
-        # Save or update game details
         for key, console, license_type in [
             ("xbox_1", id_xbox, id_primaria),
             ("xbox_2", id_xbox, id_secundaria),
@@ -128,8 +114,7 @@ def read_file_xbx(sheetPs, id_primaria, id_secundaria):
             ("code", id_xbox, id_code),
         ]:
             if check_sheet_price(sheet_prices[key]):
-                account_to_use = account_for_producto if key != "code" else account_for_codigo
-                save_or_update_game_detail(id_product, console, license_type, duration_days, account_to_use)
+                save_or_update_game_detail(id_product, console, license_type, duration_days, account_for_producto)
 
 class ManegePricesFile:
     def __init__(self):
@@ -140,8 +125,10 @@ class ManegePricesFile:
         sheet_xbox = excel_document.get_sheet_by_name('cuentas_xbox')
         id_primaria = Licenses.objects.filter(descripcion__icontains="primaria")
         id_secundaria = Licenses.objects.filter(descripcion__icontains="secundaria")
+
         read_file_ps(sheet_ps, id_primaria, id_secundaria)
         read_file_xbx(sheet_xbox, id_primaria, id_secundaria)
+
 
 
 def save_or_update_game_detail(id_product, id_console, id_license, duration_days, account):

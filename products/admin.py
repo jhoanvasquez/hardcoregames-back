@@ -17,7 +17,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses, TypeAccounts, TypeSuscriptionAccounts
+    TypeGames, VariablesSistema, Licenses, TypeAccounts
 
 from products.UpdateProductForm import UpdateProductForm
 @admin.action(description="Update price and other fields")
@@ -218,17 +218,6 @@ class ProductsTypeAdmin(admin.ModelAdmin):
 
 class ConsolesAdmin(admin.ModelAdmin):
     list_display = ['pk', 'descripcion', 'estado']
-
-
-class DaysForRentailAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'numero_dias', 'porcentaje_descuento']
-
-
-class PriceForSuscriptionAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'tipo_producto', 'stock','tiempo_alquiler',
-                    'duracion_dias_alquiler', 'precio', 'estado']
-
-    list_filter = ["tipo_producto", 'tiempo_alquiler']
     search_fields = ['producto__title',]
 
 class TypeGamesAdmin(admin.ModelAdmin):
@@ -239,24 +228,23 @@ class TypeAccountsAdmin(admin.ModelAdmin):
     list_display = ['id_type_account', 'descripcion']
 
 
-class TypeSuscriptionAccountsAdmin(admin.ModelAdmin):
-    list_display = ['id_type_suscription_account', 'descripcion']
-
-
 class LicencesAdmin(admin.ModelAdmin):
     list_display = ['id_license', 'descripcion']
 
 class GameDetailAdmin(admin.ModelAdmin):
+    @staticmethod
+    def has_module_permission(request):
+        return False
     def product(obj):
         url = reverse('admin:products_products_change', args=[obj.producto.id_product])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.producto.title)
 
     def save_model(self, request, obj, form, change):
+
         super(GameDetailAdmin, self).save_model(request, obj, form, change)
         product = int(request.POST.get('producto'))
         license = int(request.POST.get('licencia'))
-        new_price = request.POST.get('precio')
         duration_days = int(request.POST.get('duracion_dias_alquiler'))
 
         game_details = GameDetail.objects.filter(
@@ -265,7 +253,12 @@ class GameDetailAdmin(admin.ModelAdmin):
             duracion_dias_alquiler=duration_days
         ).values('producto', 'duracion_dias_alquiler', 'precio')
 
-        game_details.update(precio=new_price)
+        if request.POST.get('price_type') == '1':
+            new_price = request.POST.get('precio_descuento')
+            game_details.update(precio_descuento=new_price)
+        else:
+            new_price = request.POST.get('precio')
+            game_details.update(precio=new_price)
 
         messages.success(request, f"Successfully updated game details.")
         return None
@@ -274,8 +267,7 @@ class GameDetailAdmin(admin.ModelAdmin):
     def response_change(request, obj):
         return redirect('/admin/products/products/')
 
-    product.short_description = 'Producto1'
-    #list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio', 'cuenta','duracion_dias_alquiler']
+    product.short_description = 'Producto'
     search_fields = ['producto__title', 'producto__id_product', 'cuenta__cuenta']
     list_filter = ["consola", 'licencia']
     form = UpdateProductForm
@@ -309,18 +301,6 @@ class ProductAccountsAdmin(admin.ModelAdmin):
     search_fields = ['cuenta','producto__title', 'producto__id_product']
     list_filter = ["tipo_cuenta",]
     list_per_page = 10
-
-    """"def save_model(self, request, obj, form, change):
-        email_form = form.cleaned_data.get('cuenta')
-        title_product = form.cleaned_data.get('producto')
-        count_account_product = ProductAccounts.objects.filter(cuenta=email_form).count()
-        stock_product = Products.objects.filter(title=title_product).values("stock")[0]['stock']
-        if int(stock_product) >= count_account_product:
-            super(ProductAccountsAdmin, self).save_model(request, obj, form, change)
-        else:
-            messages.set_level(request, messages.ERROR)
-            messages.error(request, "El número de cuentas para este producto ha excedido el stock")"""
-
 
 class SalesDetailAdmin(admin.ModelAdmin):
     def producto(obj):
@@ -359,10 +339,7 @@ admin.site.register(ProductAccounts, ProductAccountsAdmin)
 admin.site.register(Consoles, ConsolesAdmin)
 admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
-admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(TypeAccounts, TypeAccountsAdmin)
-admin.site.register(TypeSuscriptionAccounts, TypeSuscriptionAccountsAdmin)
-admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
 admin.site.register(Licenses, LicencesAdmin)
