@@ -1069,13 +1069,16 @@ def save_transaction(response, ref_payco):
                                                                 status=status)
         return False
 
+    extra7_param = request.GET.get('x_extra7', '')
+    extra7_data = json.loads(extra7_param)
+    id_user = extra7_data.get('id_user', None)
     Transactions(
         status=status,
         amount = response.get('data').get('x_amount'),
         payment_id = response.get('data').get('x_bank_name').lower(),
         ref_payco = ref_payco,
         id_invoice = id_invoice,
-        user_id = User.objects.filter(pk=response.get('data').get('x_extra6')).first(),
+        user_id = User.objects.filter(pk=id_user).first(),
     ).save()
 
     return True
