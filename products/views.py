@@ -1060,7 +1060,6 @@ def global_exception_handler(request, exception, send_email=False):
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
 
 def save_transaction(response, ref_payco):
-
     id_invoice = response.get('data').get('x_id_invoice')
     status = response.get('data').get('x_transaction_state').lower()
 
@@ -1069,9 +1068,10 @@ def save_transaction(response, ref_payco):
                                                                 status=status)
         return False
 
-    extra6_param = response.get('data').get('x_extra6')
-    extra6_data = json.loads(extra6_param)
-    id_user = extra6_data.get('id_user', None)
+    extra7_param = response.get('data').get('x_extra7')
+    extra7_data = json.loads(extra7_param)
+    id_user = extra7_data.get('id_user', None)
+
     Transactions(
         status=status,
         amount = response.get('data').get('x_amount'),
