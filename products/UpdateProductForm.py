@@ -3,8 +3,8 @@ from products.models import GameDetail, Licenses  # Import Licenses model
 
 class UpdateProductForm(forms.ModelForm):
     PRICE_CHOICES = [
-        ('1', 'Precio Promoción'),
-        ('2', 'Precio Regular')
+        ('1', 'Precio Regular'),
+        ('2', 'Precio Promoción')
     ]
 
     price_type = forms.ChoiceField(

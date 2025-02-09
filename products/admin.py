@@ -247,15 +247,16 @@ class GameDetailAdmin(admin.ModelAdmin):
         license = int(request.POST.get('licencia'))
         duration_days = int(request.POST.get('duracion_dias_alquiler'))
 
+
         game_details = GameDetail.objects.filter(
             producto=product,
             licencia=license,
             duracion_dias_alquiler=duration_days
-        ).values('producto', 'duracion_dias_alquiler', 'precio')
-
-        if request.POST.get('price_type') == '1':
+        ).distinct()
+        
+        if request.POST.get('price_type') == '2':
             new_price = request.POST.get('precio_descuento')
-            game_details.update(precio_descuento=new_price)
+            game_details.update(precio_descuento=new_price if new_price != "0.00" else 0)
         else:
             new_price = request.POST.get('precio')
             game_details.update(precio=new_price)
@@ -271,7 +272,7 @@ class GameDetailAdmin(admin.ModelAdmin):
     search_fields = ['producto__title', 'producto__id_product', 'cuenta__cuenta']
     list_filter = ["consola", 'licencia']
     form = UpdateProductForm
-    list_display = ('consola', 'licencia', 'precio')  # Display in the admin list view
+    list_display = ('consola', 'licencia', 'precio')
     actions = [update_game_detail]
     list_per_page = 10
 
