@@ -239,7 +239,7 @@ class GameDetailAdmin(admin.ModelAdmin):
                            url, obj.producto.title)
 
     @staticmethod
-    def save_model(request):
+    def save_model(request, obj, form, change):
         product = int(request.POST.get('producto'))
         license = int(request.POST.get('licencia'))
         duration_days = int(request.POST.get('duracion_dias_alquiler'))
