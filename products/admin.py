@@ -6,12 +6,10 @@ from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.core.cache import cache
 from django.db import models
-from django.db.models import F, Sum, Count, Q
-from django.forms import Textarea
+from django.db.models import Sum
 from django.urls import reverse
 from django.utils.html import format_html
 from django.shortcuts import redirect
-from django.db import connection
 
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
@@ -240,29 +238,28 @@ class GameDetailAdmin(admin.ModelAdmin):
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.producto.title)
 
-    def save_model(self, request, obj, form, change):
-
-        super(GameDetailAdmin, self).save_model(request, obj, form, change)
+    @staticmethod
+    def save_model(request):
         product = int(request.POST.get('producto'))
         license = int(request.POST.get('licencia'))
         duration_days = int(request.POST.get('duracion_dias_alquiler'))
-
 
         game_details = GameDetail.objects.filter(
             producto=product,
             licencia=license,
             duracion_dias_alquiler=duration_days
-        ).distinct()
-        
+        )
+
         if request.POST.get('price_type') == '2':
             new_price = request.POST.get('precio_descuento')
-            game_details.update(precio_descuento=new_price if new_price != "0.00" else 0)
+            game_details.update(precio_descuento=new_price)
         else:
             new_price = request.POST.get('precio')
             game_details.update(precio=new_price)
 
+        cache.clear()
         messages.success(request, f"Successfully updated game details.")
-        return None
+        return
 
     @staticmethod
     def response_change(request, obj):

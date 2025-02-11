@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import connection
 from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError
+from django.core.cache import cache
 from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
@@ -25,7 +26,7 @@ from products.productSerializers import ProductsSerializer, ProductSerializer, S
 from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
-
+from django.core.cache import cache
 def get_all_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
@@ -189,10 +190,11 @@ def get_news_for_products(request):
 def get_products_by_id(request, id_product):
     if request.method == "GET":
         product = Products.objects.filter(pk=id_product)
-        if product.exists():
+        prices_game = (GameDetail.objects.filter(producto=id_product,stock__gt=0,licencia=1)
+                       .first())
+        if product.exists() and prices_game is not None:
+
             serializer = ProductSerializer(product, many=True)
-            prices_game = (GameDetail.objects.filter(producto=id_product,stock__gt=0,licencia=1)
-                           .first())
             serializer.data[0]['precio_descuento'] = prices_game.precio_descuento
             serializer.data[0]['price'] = prices_game.precio
             serializer.data[0]['stock'] = GameDetail.objects.filter(producto=id_product,
@@ -1089,3 +1091,9 @@ def get_transaction_saved(request):
     if transaction is not None:
         return transaction.ref_payco
     return None
+
+def clear_cache(request):
+    if request.method == "GET":
+        cache.clear()
+        payload = {'message': 'cache cleared', 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
