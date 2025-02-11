@@ -190,7 +190,7 @@ def get_news_for_products(request):
 def get_products_by_id(request, id_product):
     if request.method == "GET":
         product = Products.objects.filter(pk=id_product)
-        prices_game = (GameDetail.objects.filter(producto=id_product,stock__gt=0,licencia=1)
+        prices_game = (GameDetail.objects.filter(producto=id_product,stock__gt=0,precio__gt=0)
                        .first())
         if product.exists() and prices_game is not None:
 
