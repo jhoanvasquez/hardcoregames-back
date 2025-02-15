@@ -33,4 +33,5 @@ urlpatterns = [
     path("sendEmail/", views.sendEmail, name="sendEmail"),
     path("manageFile/", views.manageFile, name="manageFile"),
     path("confirmSaleEpayco/", views.request_api_epayco, name="request_api_epayco"),
+    path("clearCache/", views.clear_cache, name="clear_cache"),
 ]

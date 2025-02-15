@@ -1,23 +1,43 @@
 import glob
 import os
 from datetime import date, timedelta
-
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
 from django.core.cache import cache
 from django.db import models
-from django.db.models import F, Sum
-from django.forms import Textarea
+from django.db.models import Sum
 from django.urls import reverse
 from django.utils.html import format_html
+from django.shortcuts import redirect
 
-from products.UpdateStock import UpdateStock
 from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    DaysForRentail, TypeGames, PriceForSuscription, VariablesSistema, Licenses, TypeAccounts, TypeSuscriptionAccounts
+    TypeGames, VariablesSistema, Licenses, TypeAccounts
+
+from products.UpdateProductForm import UpdateProductForm
+@admin.action(description="Update price and other fields")
+def update_game_detail(admin_model, request, queryset):
+    if 'apply' in request.POST:
+        product = request.POST.get('producto')
+        console = request.POST.get('consola')
+        licencia = request.POST.get('licencia')
+        new_price = request.POST.get('precio')
+
+        # Filter and update the GameDetail objects based on producto, consola, and licencia
+        game_details = queryset.filter(
+            producto=product,
+            consola=console,
+            licencia=licencia
+        )
+
+        updated_count = game_details.update(
+            precio=new_price,
+        )
+        messages.success(request, f"Successfully updated {updated_count} game details.")
+        return None
 
 
 class CloseToExp(SimpleListFilter):
@@ -37,34 +57,154 @@ class CloseToExp(SimpleListFilter):
 
 
 class ProductsAdmin(admin.ModelAdmin):
-    formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows': 4})},
-    }
 
-    list_display = ['pk', 'title', 'stock', 'price', 'precio_descuento', 'nombre_consola', 'image',
-                    'get_type_product', 'tipo_juego', 'calification', 'puntos_venta',
-                    'puede_rentarse', 'destacado']
+    list_display = ('id_product','title','stock_primaries', 'price_primaries',
+                    'stock_secondaries', 'price_secondaries',
+                    'stock_codes', 'price_codes',
+                    'stock_pc', 'price_pc', 'console', 'duration_days')
 
-    list_display_links = ("title",)
-    filter_horizontal = ('consola',)
-    list_per_page = 10
+    @staticmethod
+    def product_id(obj):
+        price_codes = (
+            GameDetail.objects.filter(
+                licencia__id_license=1,
+                producto__id_product=obj.id_product,
+                stock__gt = 0
+            )
+            .first())
+        return price_codes.id_game_detail if price_codes is not None else None
 
-    def save_model(self, request, obj, form, change):
-        cache.clear()
-        super(ProductsAdmin, self).save_model(request, obj, form, change)
+    @staticmethod
+    def stock_primaries(obj):
+        return (
+                GameDetail.objects.filter(
+                    licencia__id_license=1,
+                    producto__id_product=obj.id_product,
+                    stock__gt = 0
+                )
+                .aggregate(total_stock=Sum('stock'))['total_stock'] or 0)
 
-    def nombre_consola(self, obj):
-        return [console.descripcion for console in obj.consola.all()]
+    @staticmethod
+    def stock_secondaries(obj):
+        return (
+                GameDetail.objects.filter(
+                    licencia__id_license=2,
+                    producto__id_product=obj.id_product,
+                    stock__gt = 0
+                )
+                .aggregate(total_stock=Sum('stock'))['total_stock'] or 0
+        )
 
-    @admin.display(description='Tipo de producto')
-    def get_type_product(self, obj):
-        return obj.type_id.description
+    @staticmethod
+    def stock_codes(obj):
+        return (
+                GameDetail.objects.filter(
+                    licencia__id_license=3,
+                    producto__id_product=obj.id_product
+                )
+                .aggregate(total_stock=Sum('stock'))['total_stock'] or 0
+        )
 
-    get_type_product.short_description = 'Tipo de producto'
-    search_fields = ['title', 'description', 'calification']
-    list_filter = ["calification", 'tipo_juego', 'consola']
-    form = ProductsFormCreate
 
+    @staticmethod
+    def stock_pc(obj):
+        return (
+                GameDetail.objects.filter(
+                    licencia__id_license=4,
+                    producto__id_product=obj.id_product,
+                )
+                .aggregate(total_stock=Sum('stock'))['total_stock'] or 0
+        )
+
+    @staticmethod
+    def price_primaries(obj):
+        inventory_primary = (
+            GameDetail.objects.filter(
+                licencia__id_license=1,
+                producto__id_product=obj.id_product
+            ).first()
+        )
+        if inventory_primary is None:
+            return None
+        url = f"/admin/products/gamedetail/{inventory_primary.id_game_detail}/change/"
+        return format_html(
+            '<a href="{}" target="_blank">{}</a>',
+            url,
+            inventory_primary.precio
+        )
+
+    @staticmethod
+    def price_secondaries(obj):
+        inventory_secondary = (
+            GameDetail.objects.filter(
+                licencia__id_license=2,
+                producto__id_product=obj.id_product
+            ).first()
+        )
+        if inventory_secondary is None:
+            return None
+        url = f"/admin/products/gamedetail/{inventory_secondary.id_game_detail}/change/"
+        return format_html(
+            '<a href="{}" target="_blank">{}</a>',
+            url,
+            inventory_secondary.precio
+        )
+    @staticmethod
+    def price_codes(obj):
+        inventory_codes = (
+            GameDetail.objects.filter(
+                licencia__id_license=3,
+                producto__id_product=obj.id_product
+            ).first()
+        )
+        if inventory_codes is None:
+            return None
+        url = f"/admin/products/gamedetail/{inventory_codes.id_game_detail}/change/"
+        return format_html(
+            '<a href="{}" target="_blank">{}</a>',
+            url,
+            inventory_codes.precio
+        )
+
+    @staticmethod
+    def price_pc(obj):
+        inventory_pc = (
+            GameDetail.objects.filter(
+                licencia__id_license=4,
+                producto__id_product=obj.id_product
+            ).first()
+        )
+        if inventory_pc is None:
+            return None
+        url = f"/admin/products/gamedetail/{inventory_pc.id_game_detail}/change/"
+        return format_html(
+            '<a href="{}" target="_blank">{}</a>',
+            url,
+            inventory_pc.precio
+        )
+
+    @staticmethod
+    def console(obj):
+        game_inventory = (
+            GameDetail.objects.filter(
+                producto__id_product=obj.id_product
+            ).distinct('consola')
+        )
+        return ", ".join(str(result.consola) for result in game_inventory) \
+            if game_inventory is not None else None
+
+    @staticmethod
+    def duration_days(obj):
+        game_inventory = (
+            GameDetail.objects.filter(
+                producto__id_product=obj.id_product
+            ).distinct('duracion_dias_alquiler')
+        )
+        return ", ".join(str(result.duracion_dias_alquiler) for result in game_inventory) \
+            if game_inventory is not None else None
+    list_per_page = 5
+    search_fields = ['title',]
+    list_filter = ["consola",]
 
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['pk', 'description']
@@ -76,17 +216,6 @@ class ProductsTypeAdmin(admin.ModelAdmin):
 
 class ConsolesAdmin(admin.ModelAdmin):
     list_display = ['pk', 'descripcion', 'estado']
-
-
-class DaysForRentailAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'numero_dias', 'porcentaje_descuento']
-
-
-class PriceForSuscriptionAdmin(admin.ModelAdmin):
-    list_display = ['producto', 'tipo_producto', 'stock','tiempo_alquiler',
-                    'duracion_dias_alquiler', 'precio', 'estado']
-
-    list_filter = ["tipo_producto", 'tiempo_alquiler']
     search_fields = ['producto__title',]
 
 class TypeGamesAdmin(admin.ModelAdmin):
@@ -97,30 +226,51 @@ class TypeAccountsAdmin(admin.ModelAdmin):
     list_display = ['id_type_account', 'descripcion']
 
 
-class TypeSuscriptionAccountsAdmin(admin.ModelAdmin):
-    list_display = ['id_type_suscription_account', 'descripcion']
-
-
 class LicencesAdmin(admin.ModelAdmin):
     list_display = ['id_license', 'descripcion']
 
-
 class GameDetailAdmin(admin.ModelAdmin):
+    @staticmethod
+    def has_module_permission(request):
+        return False
     def product(obj):
         url = reverse('admin:products_products_change', args=[obj.producto.id_product])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
                            url, obj.producto.title)
 
-    def save_model(self, request, obj, form, change):
-        super(GameDetailAdmin, self).save_model(request, obj, form, change)
-        product = form.cleaned_data.get('producto')
-        product_selected = Products.objects.filter(pk=product.id_product)
-        UpdateStock(product_selected)
+    @staticmethod
+    def save_model(request, obj, form, change):
+        product = int(request.POST.get('producto'))
+        license = int(request.POST.get('licencia'))
+        duration_days = int(request.POST.get('duracion_dias_alquiler'))
 
-    product.short_description = 'Producto1'
-    list_display = ['pk', product, 'consola', 'licencia', 'stock', 'precio', 'cuenta','duracion_dias_alquiler']
+        game_details = GameDetail.objects.filter(
+            producto=product,
+            licencia=license,
+            duracion_dias_alquiler=duration_days
+        )
+
+        if request.POST.get('price_type') == '2':
+            new_price = request.POST.get('precio_descuento')
+            game_details.update(precio_descuento=new_price)
+        else:
+            new_price = request.POST.get('precio')
+            game_details.update(precio=new_price)
+
+        cache.clear()
+        messages.success(request, f"Successfully updated game details.")
+        return
+
+    @staticmethod
+    def response_change(request, obj):
+        return redirect('/admin/products/products/')
+
+    product.short_description = 'Producto'
     search_fields = ['producto__title', 'producto__id_product', 'cuenta__cuenta']
     list_filter = ["consola", 'licencia']
+    form = UpdateProductForm
+    list_display = ('consola', 'licencia', 'precio')
+    actions = [update_game_detail]
     list_per_page = 10
 
 class SalesAdmin(admin.ModelAdmin):
@@ -144,23 +294,11 @@ class SystemVariablesAdmin(admin.ModelAdmin):
 
 
 class ProductAccountsAdmin(admin.ModelAdmin):
-    list_display = ['cuenta', 'password', 'activa', 'producto', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad', ]
+    list_display = ['cuenta', 'password', 'activa', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad', ]
     form = AccountProductForm
     search_fields = ['cuenta','producto__title', 'producto__id_product']
     list_filter = ["tipo_cuenta",]
     list_per_page = 10
-
-    """"def save_model(self, request, obj, form, change):
-        email_form = form.cleaned_data.get('cuenta')
-        title_product = form.cleaned_data.get('producto')
-        count_account_product = ProductAccounts.objects.filter(cuenta=email_form).count()
-        stock_product = Products.objects.filter(title=title_product).values("stock")[0]['stock']
-        if int(stock_product) >= count_account_product:
-            super(ProductAccountsAdmin, self).save_model(request, obj, form, change)
-        else:
-            messages.set_level(request, messages.ERROR)
-            messages.error(request, "El número de cuentas para este producto ha excedido el stock")"""
-
 
 class SalesDetailAdmin(admin.ModelAdmin):
     def producto(obj):
@@ -199,10 +337,7 @@ admin.site.register(ProductAccounts, ProductAccountsAdmin)
 admin.site.register(Consoles, ConsolesAdmin)
 admin.site.register(GameDetail, GameDetailAdmin)
 admin.site.register(Files, FilesAdmin)
-admin.site.register(DaysForRentail, DaysForRentailAdmin)
 admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(TypeAccounts, TypeAccountsAdmin)
-admin.site.register(TypeSuscriptionAccounts, TypeSuscriptionAccountsAdmin)
-admin.site.register(PriceForSuscription, PriceForSuscriptionAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
 admin.site.register(Licenses, LicencesAdmin)

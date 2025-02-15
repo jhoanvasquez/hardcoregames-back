@@ -6,7 +6,6 @@ from django import forms
 from django.conf import settings
 from django.db.models import F
 
-from products.UpdateStock import UpdateStock
 from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, \
     PriceForSuscription, TypeSuscriptionAccounts
 
@@ -14,153 +13,108 @@ from products.models import ProductAccounts, Consoles, Licenses, Products, GameD
 def read_file_ps(sheetPs, id_primaria, id_secundaria):
     id_ps4 = Consoles.objects.filter(descripcion__icontains="playstation 4")
     id_ps5 = Consoles.objects.filter(descripcion__icontains="playstation 5")
-    is_new_account = False
-    account_for_producto = None
 
-    # try:
     sheet = sheetPs
     m_row = sheet.max_row
+    batch_size = 5
 
-    for i in range(2, m_row + 1):
+    for start in range(2, m_row + 1, batch_size):
+        end = min(start + batch_size, m_row + 1)
+        process_batch_ps(sheet, start, end, id_ps4, id_ps5, id_primaria, id_secundaria)
+
+def process_batch_ps(sheet, start, end, id_ps4, id_ps5, id_primaria, id_secundaria):
+    for i in range(start, end):
         account = sheet.cell(row=i, column=1).value
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
-        product_for_create = Products.objects.filter(id_product=id_product)
-        duration_days = sheet.cell(row=i, column=8).value
-        type_account = sheet.cell(row=i, column=9).value
+        duration_days = sheet.cell(row=i, column=8).value or 0
+        type_account = sheet.cell(row=i, column=9).value or 1
 
-        if account is None or id_product is None:
-            continue
+        if not account or not id_product:
+            continue  # Skip invalid rows
 
-        if not product_for_create.exists():
-            raise forms.ValidationError(u"el producto para play station con id " + str(id_product) + " no existe")
+        product_for_create = Products.objects.filter(id_product=id_product).first()
+        if not product_for_create:
+            raise forms.ValidationError(f"El producto para PlayStation con ID {id_product} no existe")
 
-        exist_account = ProductAccounts.objects.filter(cuenta=account.lower(),
-                                                       producto=int(id_product)).exists()
+        type_account_selected = TypeAccounts.objects.filter(pk=type_account).first()
 
-        type_account = 1 if type_account is None else type_account
-        type_account_selected = TypeAccounts.objects.filter(pk=type_account)
-        duration_days = 0 if duration_days is None else duration_days
-        if not exist_account:
-            obj, created = ProductAccounts.objects.update_or_create(
-                cuenta=account.lower(),
-                password=password,
-                activa=True,
-                producto=product_for_create.first(),
-                tipo_cuenta=type_account_selected.first(),
-                dias_duracion=duration_days
-            )
-            if created:
-                is_new_account = True
-            account_for_producto = obj
-        sheet_price_ps4_1 = str(sheet.cell(row=i, column=4).value).strip()
-        sheet_price_ps4_2 = str(sheet.cell(row=i, column=5).value).strip()
-        sheet_price_ps5_1 = str(sheet.cell(row=i, column=6).value).strip()
-        sheet_price_ps5_2 = str(sheet.cell(row=i, column=7).value).strip()
+        account_for_producto, _ = ProductAccounts.objects.update_or_create(
+            cuenta=account.lower(),
+            defaults={
+                "password": password,
+                "activa": True,
+                "tipo_cuenta": type_account_selected,
+                "dias_duracion": duration_days,
+            }
+        )
 
-        if check_sheet_price(sheet_price_ps4_1):
-            save_or_update_game_detail(id_product, id_ps4, id_primaria, sheet_price_ps4_1, is_new_account, duration_days, account_for_producto)
-        if check_sheet_price(sheet_price_ps4_2):
-            save_or_update_game_detail(id_product, id_ps4, id_secundaria, sheet_price_ps4_2, is_new_account, duration_days, account_for_producto)
-        if check_sheet_price(sheet_price_ps5_1):
-            save_or_update_game_detail(id_product, id_ps5, id_primaria, sheet_price_ps5_1, is_new_account, duration_days, account_for_producto)
-        if check_sheet_price(sheet_price_ps5_2):
-            save_or_update_game_detail(id_product, id_ps5, id_secundaria, sheet_price_ps5_2, is_new_account, duration_days, account_for_producto)
+        prices = {
+            "ps4_1": sheet.cell(row=i, column=4).value,
+            "ps4_2": sheet.cell(row=i, column=5).value,
+            "ps5_1": sheet.cell(row=i, column=6).value,
+            "ps5_2": sheet.cell(row=i, column=7).value,
+        }
 
-    # except Exception as e:
-    #     print("problemas en el manejo del archivo cuentas play station " + str(e))
-
+        for key, price in prices.items():
+            if check_sheet_price(str(price).strip()):
+                console = id_ps4 if "ps4" in key else id_ps5
+                tipo = id_primaria if "1" in key else id_secundaria
+                save_or_update_game_detail(id_product, console, tipo, duration_days, account_for_producto)
 
 def read_file_xbx(sheetPs, id_primaria, id_secundaria):
     id_xbox = Consoles.objects.filter(descripcion__exact="xbox")
     id_code = Licenses.objects.filter(descripcion__icontains="codigo")
     id_pc = Consoles.objects.filter(descripcion__exact="Pc")
-    is_new_account = False
-    account_for_codigo = None
-    account_for_producto = None
     licence_pc = Licenses.objects.filter(descripcion__icontains="pc")
-    # try:
+
     sheet = sheetPs
     m_row = sheet.max_row
-    for i in range(2, m_row + 1):
+    batch_size = 5  # Process 5 rows at a time
+
+    for start in range(2, m_row + 1, batch_size):
+        end = min(start + batch_size, m_row + 1)
+        process_batch_xbx(sheet, start, end, id_xbox, id_code, id_pc, licence_pc, id_primaria, id_secundaria)
+
+def process_batch_xbx(sheet, start, end, id_xbox, id_code, id_pc, licence_pc, id_primaria, id_secundaria):
+    for i in range(start, end):
         account = sheet.cell(row=i, column=1).value
         password = sheet.cell(row=i, column=2).value
         id_product = sheet.cell(row=i, column=3).value
-        duration_days = 0 if sheet.cell(row=i, column=8).value is None else sheet.cell(row=i, column=8).value
-        month_duration = int(duration_days / 30) if duration_days >= 30 else duration_days
+        duration_days = sheet.cell(row=i, column=8).value or 0
 
-        product_for_create = Products.objects.filter(id_product=id_product)
+        if not account or not id_product:
+            continue  # Skip invalid rows
 
-        if account is None or id_product is None:
-            continue
+        product_for_create = Products.objects.filter(id_product=id_product).first()
+        if not product_for_create:
+            raise forms.ValidationError(f"El producto para Xbox con ID {id_product} no existe")
 
-        if not product_for_create.exists():
-            raise forms.ValidationError(u"el producto para xbox con id " + str(id_product) + " no existe")
+        sheet_prices = {
+            "xbox_1": str(sheet.cell(row=i, column=4).value).strip(),
+            "xbox_2": str(sheet.cell(row=i, column=5).value).strip(),
+            "pc": str(sheet.cell(row=i, column=6).value).strip(),
+            "code": str(sheet.cell(row=i, column=7).value).strip(),
+        }
 
-        sheet_price_xbox_1 = str(sheet.cell(row=i, column=4).value).strip()
-        sheet_price_xbox_2 = str(sheet.cell(row=i, column=5).value).strip()
-        sheet_price_pc = str(sheet.cell(row=i, column=6).value).strip()
-        sheet_price_code = str(sheet.cell(row=i, column=7).value).strip()
+        account_for_producto, _ = ProductAccounts.objects.update_or_create(
+            cuenta=account.lower(),
+            defaults={
+                "password": password,
+                "activa": True,
+                "tipo_cuenta": TypeAccounts.objects.filter(pk=1).first(),
+                "dias_duracion": duration_days,
+            }
+        )
 
-
-        if sheet_price_code != 'None':
-            type_account_selected = TypeAccounts.objects.filter(pk=2)
-            obj, created = ProductAccounts.objects.update_or_create(
-                cuenta=account.lower(),
-                password=password,
-                activa=True,
-                producto=product_for_create.first(),
-                tipo_cuenta=type_account_selected.first(),
-                dias_duracion=duration_days
-            )
-            if created:
-                is_new_account = True
-            account_for_codigo = obj
-
-        if sheet_price_xbox_1 != 'None' or sheet_price_xbox_2 != 'None' or sheet_price_pc != 'None':
-            #breakpoint()
-            type_account_selected = TypeAccounts.objects.filter(pk=1)
-            obj, created = ProductAccounts.objects.update_or_create(
-                cuenta=account.lower(),
-                password=password,
-                activa=True,
-                producto=product_for_create.first(),
-                tipo_cuenta=type_account_selected.first(),
-                dias_duracion=duration_days
-            )
-            if created:
-                is_new_account = True
-            account_for_producto = obj
-        if product_for_create.values().first().get("type_id_id") == 2:
-            if sheet_price_xbox_1 != 'None':
-                price = sheet_price_xbox_1
-                product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
-                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
-
-            if sheet_price_xbox_2 != 'None':
-                price = sheet_price_xbox_2
-                product_name = TypeSuscriptionAccounts.objects.filter(pk=3).first()
-                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
-
-            if sheet_price_pc != 'None':
-                price = sheet_price_pc
-                product_name = TypeSuscriptionAccounts.objects.filter(pk=1).first()
-                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
-
-            if sheet_price_code != 'None':
-                price = sheet_price_code
-                product_name = TypeSuscriptionAccounts.objects.filter(pk=2).first()
-                save_price_suscription(product_for_create.first(), product_name, month_duration, duration_days, price)
-
-        if check_sheet_price(sheet_price_xbox_1):
-            save_or_update_game_detail(id_product, id_xbox, id_primaria, sheet_price_xbox_1, is_new_account, duration_days, account_for_producto)
-        if check_sheet_price(sheet_price_xbox_2):
-            save_or_update_game_detail(id_product, id_xbox, id_secundaria, sheet_price_xbox_2, is_new_account, duration_days, account_for_producto)
-        if check_sheet_price(sheet_price_pc):
-            save_or_update_game_detail(id_product, id_xbox, licence_pc, sheet_price_pc, is_new_account, duration_days, account_for_producto)
-        if check_sheet_price(sheet_price_code):
-            save_or_update_game_detail(id_product, id_xbox, id_code, sheet_price_code, is_new_account, duration_days, account_for_codigo)
-
+        for key, console, license_type in [
+            ("xbox_1", id_xbox, id_primaria),
+            ("xbox_2", id_xbox, id_secundaria),
+            ("pc", id_pc, licence_pc),
+            ("code", id_xbox, id_code),
+        ]:
+            if check_sheet_price(sheet_prices[key]):
+                save_or_update_game_detail(id_product, console, license_type, duration_days, account_for_producto)
 
 class ManegePricesFile:
     def __init__(self):
@@ -171,65 +125,25 @@ class ManegePricesFile:
         sheet_xbox = excel_document.get_sheet_by_name('cuentas_xbox')
         id_primaria = Licenses.objects.filter(descripcion__icontains="primaria")
         id_secundaria = Licenses.objects.filter(descripcion__icontains="secundaria")
+
         read_file_ps(sheet_ps, id_primaria, id_secundaria)
         read_file_xbx(sheet_xbox, id_primaria, id_secundaria)
 
 
-def save_or_update_game_detail(id_product, id_console, id_license, sheet_price, is_new_account, duration_days, account):
-    row_game_detail = GameDetail.objects.filter(producto=id_product,
-                                                licencia__exact=id_license[0].id_license,
-                                                consola__exact=id_console[0].id_console,
-                                                duracion_dias_alquiler=duration_days,
-                                                cuenta = account
-                                                )
 
-    #breakpoint()
-    product_selected = Products.objects.filter(id_product=id_product)
-    if not row_game_detail.exists():
-        GameDetail.objects.update_or_create(
-            producto=product_selected.first(),
-            consola=id_console.first(),
-            licencia=id_license.first(),
-            stock=1,
-            precio=sheet_price,
-            estado=True,
-            duracion_dias_alquiler=duration_days,
-            cuenta=account
-        )
-        product_selected.update(stock=product_selected.values().get()['stock'] + 1)
-
-    elif product_selected.exists():
-        product_selected.update(stock=product_selected.values().get()['stock'] + 1)
-        row_game_detail.update(stock=row_game_detail.values().get()['stock'] + 1)
-    elif row_game_detail.exists():
-        if sheet_price == "x":
-            sheet_price = row_game_detail.values().get()['precio']
-        row_game_detail.update(precio=sheet_price)
-
-    UpdateStock(product_selected)
-
-def save_price_suscription(product_for_create, product_name, month_duration, duration_days, price):
-    product_subscription, created = PriceForSuscription.objects.update_or_create(
-        producto=product_for_create,
-        tipo_producto=product_name,
-        tiempo_alquiler=str(month_duration) + " mes" if month_duration == 1 else str(month_duration) + " meses",
+def save_or_update_game_detail(id_product, id_console, id_license, duration_days, account):
+    row_game_detail, created = GameDetail.objects.get_or_create(
+        producto_id=id_product,
+        licencia=id_license.first(),
+        consola=id_console.first(),
         duracion_dias_alquiler=duration_days,
-        precio=price,
-        estado=True if duration_days > 0 else False
+        cuenta=account,
+        defaults={"stock": 1}
     )
-    # breakpoint()
-    product_subscription.stock = F('stock') + 1
-    # if not created:
-    #     product_subscription.stock = F('stock') + 1
-    # else:
-    #     product_subscription.stock = 1
 
-    product_subscription.save()
-    #if not row_price_suscription.exists():
-    #    row_price_suscription.update_or_create()
-    #else:
-    #    row_price_suscription.update(price=price)
-
+    if not created:
+        row_game_detail.stock += 1
+        row_game_detail.save()
 
 def check_sheet_price(sheet):
     return sheet.strip() != "None" or "x" in sheet

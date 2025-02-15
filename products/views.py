@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import connection
 from django.db.models import F, Sum
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError
+from django.core.cache import cache
 from django.shortcuts import redirect
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
@@ -25,7 +26,7 @@ from products.productSerializers import ProductsSerializer, ProductSerializer, S
 from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
-
+from django.core.cache import cache
 def get_all_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
@@ -36,7 +37,7 @@ def get_all_products(request):
         if cached_data:
             return JsonResponse(cached_data)
 
-        all_products = Products.objects.filter(stock__gt=0)
+        all_products = Products.objects.order_by("pk")
         count_rows = all_products.count()
         if size == "all":
             paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
@@ -50,13 +51,17 @@ def get_all_products(request):
             response = paginator.page(paginator.num_pages)
 
         serializer = ProductSerializer(response, many=True)
+
+        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
+                   'code': '00', 'status': 200}
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            product_price = GameDetail.objects.filter(producto=i['pk'],
+                                              stock__gt=0,
+                                              licencia=1).first()
             i['stock'] = 0 if stock is None else stock
-        payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
-                   'code': '00', 'status': 200}
-        # Cache the result
+            i['price'] = 0 if product_price is None else product_price.precio
         cache.set(cache_key, payload)
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
@@ -65,14 +70,12 @@ def get_favorite_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
         page = request.GET.get('page')
-        # Check if the result is already cached
         cache_key = f"favorite_products_{size}_{page}"
         cached_data = cache.get(cache_key)
 
         if cached_data:
             return JsonResponse(cached_data)
-        all_products = Products.objects.filter(stock__gt=0).order_by('-calification')
-        # [10:20]
+        all_products = Products.objects.filter().order_by('-calification')
 
         count_rows = all_products.count()
         if size == "all":
@@ -90,7 +93,11 @@ def get_favorite_products(request):
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            product_price = GameDetail.objects.filter(producto=i['pk'],
+                                                      stock__gt=0,
+                                                      licencia=1).first()
             i['stock'] = 0 if stock is None else stock
+            i['price'] = 0 if product_price is None else product_price.precio
         payload = {
             'message': 'Proceso exitoso',
             'data': serializer.data,
@@ -98,8 +105,6 @@ def get_favorite_products(request):
             'code': '00',
             'status': 200
         }
-
-        # Cache the result
         cache.set(cache_key, payload)
 
         return JsonResponse(payload)
@@ -114,7 +119,7 @@ def get_featured_products(request):
 
         if cached_data:
             return JsonResponse(cached_data)
-        all_products = Products.objects.filter(stock__gt=0, destacado=True).order_by('-pk')
+        all_products = Products.objects.filter(destacado=True).order_by('-pk')
         count_rows = all_products.count()
         if size == "all":
             paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
@@ -131,7 +136,11 @@ def get_featured_products(request):
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            product_price = GameDetail.objects.filter(producto=i['pk'],
+                                                      stock__gt=0,
+                                                      licencia=1).first()
             i['stock'] = 0 if stock is None else stock
+            i['price'] = 0 if product_price is None else product_price.precio
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
         # Cache the result
@@ -149,7 +158,7 @@ def get_news_for_products(request):
         if cached_data:
             return JsonResponse(cached_data)
 
-        all_products = Products.objects.filter(stock__gt=0).order_by('-date_last_modified')
+        all_products = Products.objects.filter().order_by('-date_last_modified')
         count_rows = all_products.count()
         if size == "all":
             paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
@@ -166,7 +175,11 @@ def get_news_for_products(request):
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
+            product_price = GameDetail.objects.filter(producto=i['pk'],
+                                                      stock__gt=0,
+                                                      licencia=1).first()
             i['stock'] = 0 if stock is None else stock
+            i['price'] = 0 if product_price is None else product_price.precio
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
         # Cache the result
@@ -176,9 +189,14 @@ def get_news_for_products(request):
 
 def get_products_by_id(request, id_product):
     if request.method == "GET":
-        product = Products.objects.filter(pk=id_product, stock__gt=0)
-        if product.exists():
+        product = Products.objects.filter(pk=id_product)
+        prices_game = (GameDetail.objects.filter(producto=id_product,precio__gt=0)
+                       .first())
+        if product.exists() and prices_game is not None:
+
             serializer = ProductSerializer(product, many=True)
+            serializer.data[0]['precio_descuento'] = prices_game.precio_descuento
+            serializer.data[0]['price'] = prices_game.precio
             serializer.data[0]['stock'] = GameDetail.objects.filter(producto=id_product,
                                                                     stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             payload = {'message': 'proceso exitoso', 'data': serializer.data[0], 'code': '00', 'status': 200}
@@ -189,10 +207,8 @@ def get_products_by_id(request, id_product):
 def find_product_by_name(request, name_product):
     if request.method == "GET":
         if name_product != "null":
-            product = (Products.objects.filter(title__icontains=name_product,
-                                              stock__gt=0)|
-                       Products.objects.filter(title__icontains=name_product.replace(" ", ""),
-                                               stock__gt=0)
+            product = (Products.objects.filter(title__icontains=name_product)|
+                       Products.objects.filter(title__icontains=name_product.replace(" ", ""))
                        )
 
             if product.exists():
@@ -206,7 +222,7 @@ def find_product_by_name(request, name_product):
 def get_products_by_type_console(request, id_console):
     if request.method == "GET":
         console = Consoles.objects.filter(pk=id_console)
-        product = Products.objects.filter(consola__in=console, stock__gt=0).exclude(consola__isnull=True)
+        product = Products.objects.filter(consola__in=console).exclude(consola__isnull=True)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
@@ -448,7 +464,7 @@ def get_products_by_type_game(request, id_type_game):
         if cached_data:
             return JsonResponse(cached_data)
 
-        product = Products.objects.filter(tipo_juego=id_type_game, stock__gt=0)
+        product = Products.objects.filter(tipo_juego=id_type_game,)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso',
@@ -465,7 +481,9 @@ def get_products_by_range_price(request):
     if request.method == "GET":
         range_min = request.GET['range_min']
         range_max = request.GET['range_max']
-        product = Products.objects.filter(price__gt=range_min, price__lte=range_max, stock__gt=0)
+        inventory_products = GameDetail.objects.filter(precio__gt=range_min, precio__lte=range_max, stock__gt=0)
+        pk_list = inventory_products.values_list('producto', flat=True)
+        product = Products.objects.filter(pk__in=pk_list)
         if product.exists():
             serializer = ProductSerializer(product, many=True)
             payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
@@ -568,16 +586,9 @@ def get_type_games(request):
 
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
-        xbox_id = Consoles.objects.filter(estado=False)
-        combination = GameDetail.objects.filter(producto=id_product, estado=True, )
+        combination = GameDetail.objects.filter(producto=id_product, stock__gt=0, precio__gt=0)
+
         if combination.exists():
-            if combination.first().consola == xbox_id.first():
-                data_response = json.dumps(response_xbox_price(combination))
-                payload = {'message': 'proceso exitoso', 'product_id': id_product,
-                           'data': json.loads(data_response),
-                           'code': '00',
-                           'status': 200}
-                return HttpResponse(JsonResponse(payload), content_type="application/json")
             serializer = SerializerGameDetail(combination, many=True)
             payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
                        'status': 200}
@@ -588,18 +599,9 @@ def get_combination_price_by_game(request, id_product):
 
 def licence_by_product(request, id_product, id_console):
     if request.method == "GET":
-        product_accounts = ProductAccounts.objects.filter(producto=id_product, activa=True)
-        type_account = product_accounts.values_list('tipo_cuenta', flat=True)
-        type_account_list = list(type_account)
-        if 1 in type_account:
-            type_account_list.append(2)
-        if 2 in type_account:
-            type_account_list.append(3)
-        type_account_list = list(set(type_account_list))
-
         combination = GameDetail.objects.filter(producto=id_product,
                                                 consola=id_console,
-                                                licencia__in=type_account_list,
+                                                #licencia__in=type_account_list,
                                                 stock__gt=0).order_by('producto', 'consola', 'licencia',
                                                                       'stock').distinct()
         serializer = SerializerLicencesName(combination, many=True)
@@ -701,53 +703,27 @@ def confirm_sale(request):
         json_request = json.loads(request)
         id_user = json_request['id_user']
         message_html = ""
-        name_console = None
 
         for item in json_request['data']:
-            if item['id_combination'] is None:
-                id_product = item['id_product']
-                combination_id = search_combination(id_product, item['type_account'], item['days_rentail'])
-                combination_selected = GameDetail.objects.filter(pk=combination_id)
-                name_console = TypeSuscriptionAccounts.objects.filter(pk=item['type_account']).first().descripcion
-            else:
-                combination_selected = GameDetail.objects.filter(pk=item['id_combination'], stock__gt=0)
 
-            if Products.objects.filter(pk=item['id_product']).values().first().get("type_id_id") == 1:
-                type_account = 1 if item['type_account'] is None else item['type_account']
-            else:
-                type_account = get_type_account_suscription(item['type_account'])
+            combination_selected:GameDetail = GameDetail.objects.filter(pk=item['id_combination']).first()
+            name_console:str = combination_selected.consola.descripcion
+            account_selected = combination_selected.cuenta
+            item['days_rentail'] = combination_selected.duracion_dias_alquiler
 
-            days_rentail = 0 if item['days_rentail'] is None else item['days_rentail']
-            account_selected = ProductAccounts.objects.filter(cuenta=combination_selected.first().cuenta
-                                                              ).first()
-            if combination_selected.exists() and account_selected is not None:
-                id_combination = combination_selected.first().id_game_detail
-                item['id_combination'] = id_combination
-                item['days_rentail'] = days_rentail
-                product_selected = Products.objects.filter(id_product=item['id_product'])
-
-                new_stock = product_selected.values().get()["stock"] - 1
+            if combination_selected:
+                product_selected = combination_selected.producto
                 create_sale(item, id_user, account_selected)
-                update_points_sale(id_user, product_selected.first().puntos_venta)
-                delete_shopping_product(id_combination, id_user)
+                update_points_sale(id_user, product_selected.puntos_venta)
+                delete_shopping_product(item['id_combination'], id_user)
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
-                if new_stock >= 0:
-                    combination_selected.update(stock=F('stock') - 1)
-                    product_selected.update(stock=new_stock)
-                    PriceForSuscription.objects.filter(
-                        producto = product_selected.first(),
-                        duracion_dias_alquiler = days_rentail,
-                        tipo_producto = item['type_account']
-                    ).update(stock=F('stock') - 1)
-                if (type_account == 2 or
-                        check_for_disable_account(combination_selected)):
-                    (ProductAccounts.objects.filter(cuenta=combination_selected.first().cuenta)
-                     .update(activa=False))
+                send_email_notification(id_user, message_html)
+                combination_selected.stock = F('stock') - 1
+                combination_selected.save()
             else:
                 global_exception_handler(request, None)
                 return False
 
-        send_email_notification(id_user, message_html)
         return True
     except Exception as e:
         send_email = True
@@ -813,30 +789,6 @@ def manageFile(request):
                         content_type="application/json")
 
 
-def response_xbox_price(queryset):
-    data = []
-    for item in queryset:
-        data.append({
-            'pk': item.id_game_detail,
-            'consola': item.consola.get_id_console(),
-            'desc_console': "Xbox one",
-            'licencia': item.licencia.get_id_licence(),
-            'desc_licence': item.licencia.__str__(),
-            'stock': item.stock,
-            'precio': item.precio
-        })
-        data.append({
-            'pk': item.id_game_detail,
-            'consola': item.consola.get_id_console(),
-            'desc_console': "Xbox Series",
-            'licencia': item.licencia.get_id_licence(),
-            'desc_licence': item.licencia.__str__(),
-            'stock': item.stock,
-            'precio': item.precio
-        })
-    return data
-
-
 def create_sale(sale, id_user, account_selected):
     user = User.objects.filter(pk=id_user).first()
     combination = GameDetail.objects.filter(pk=sale['id_combination']).first()
@@ -895,10 +847,10 @@ def build_div_html(product, combination, account_selected, name_console):
     if string_pass is None:
         string_pass = ""
     return f'''<div style="margin-bottom: 20%;">
-               <h3>{product.first().title}</h3>
+               <h3>{product.title}</h3>
                <div style="margin-bottom: auto;">
                   <div style="float:right;font-weight:600;font-size:16px;">
-                     <img src="{product.first().image}" width="30" class="CToWUd" data-bit="iit">
+                     <img src="{product.image}" width="30" class="CToWUd" data-bit="iit">
                   </div>
                   <li style="margin-bottom: 10px;">
                      <lu>
@@ -912,12 +864,12 @@ def build_div_html(product, combination, account_selected, name_console):
                   </li> 
                   <li>
                      <lu>
-                        <b>Licencia:</b> {combination.first().licencia}
+                        <b>Licencia:</b> {combination.licencia}
                      </lu>
                   </li>
                   <li>
                      <lu>
-                        <b>Consola:</b> {name_console if name_console is not None else str(combination.first().consola).capitalize()}
+                        <b>Consola:</b> {name_console if name_console is not None else str(combination.consola).capitalize()}
                      </lu>
                   </li>
                </div>
@@ -1110,7 +1062,6 @@ def global_exception_handler(request, exception, send_email=False):
         SendEmail().__int__(message_html, "Ha ocurrido un error", settings.FROM_EMAIL)
 
 def save_transaction(response, ref_payco):
-
     id_invoice = response.get('data').get('x_id_invoice')
     status = response.get('data').get('x_transaction_state').lower()
 
@@ -1119,13 +1070,17 @@ def save_transaction(response, ref_payco):
                                                                 status=status)
         return False
 
+    extra7_param = response.get('data').get('x_extra7')
+    extra7_data = json.loads(extra7_param)
+    id_user = extra7_data.get('id_user', None)
+
     Transactions(
         status=status,
         amount = response.get('data').get('x_amount'),
         payment_id = response.get('data').get('x_bank_name').lower(),
         ref_payco = ref_payco,
         id_invoice = id_invoice,
-        user_id = User.objects.filter(pk=response.get('data').get('x_extra6')).first(),
+        user_id = User.objects.filter(pk=id_user).first(),
     ).save()
 
     return True
@@ -1136,3 +1091,9 @@ def get_transaction_saved(request):
     if transaction is not None:
         return transaction.ref_payco
     return None
+
+def clear_cache(request):
+    if request.method == "GET":
+        cache.clear()
+        payload = {'message': 'cache cleared', 'code': '00', 'status': 200}
+        return HttpResponse(JsonResponse(payload), content_type="application/json")
