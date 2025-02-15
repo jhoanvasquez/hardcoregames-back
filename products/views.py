@@ -278,7 +278,7 @@ def filter_product(request, ):
             if cached_data:
                 return JsonResponse(cached_data)
 
-            product = Products.objects.filter(tipo_juego=id_category)
+            product = Products.objects.filter(tipo_juego=id_category).order_by("pk")
             count_rows = product.count()
             if size == "all":
                 paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
@@ -307,7 +307,7 @@ def filter_product(request, ):
             if cached_data:
                 return JsonResponse(cached_data)
 
-            product = Products.objects.filter(consola=id_console, tipo_juego=id_category)
+            product = Products.objects.filter(consola=id_console, tipo_juego=id_category).order_by("pk")
             count_rows = product.count()
             if size == "all":
                 paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
@@ -336,10 +336,14 @@ def filter_product(request, ):
             if cached_data:
                 return JsonResponse(cached_data)
 
+            product_inventory = GameDetail.objects.filter(
+                precio__gte=range_min,
+                precio__lt=range_max
+            ).values('producto')
             product = Products.objects.filter(consola=id_console,
                                               tipo_juego=id_category,
-                                              price__gte=range_min,
-                                              price__lt=range_max)
+                                              pk__in=product_inventory
+                                              ).order_by("pk")
             count_rows = product.count()
             if size == "all":
                 paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
@@ -369,9 +373,12 @@ def filter_product(request, ):
             if cached_data:
                 return JsonResponse(cached_data)
 
+            product_inventory = GameDetail.objects.filter(
+                precio__gte=range_min,
+                precio__lt=range_max
+            ).values('producto')
             product = Products.objects.filter(consola=id_console,
-                                              price__gte=range_min,
-                                              price__lt=range_max)
+                                              pk__in=product_inventory).order_by("pk")
             count_rows = product.count()
             if size == "all":
                 paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
@@ -400,9 +407,12 @@ def filter_product(request, ):
             if cached_data:
                 return JsonResponse(cached_data)
 
+            product_inventory = GameDetail.objects.filter(
+                precio__gte=range_min,
+                precio__lt=range_max
+            ).values('producto')
             product = Products.objects.filter(tipo_juego=id_category,
-                                              price__gte=range_min,
-                                              price__lt=range_max)
+                                              pk__in=product_inventory).order_by("pk")
             count_rows = product.count()
             if size == "all":
                 paginator = Paginator(product, 1 if count_rows == 0 else count_rows)
@@ -431,8 +441,11 @@ def filter_product(request, ):
             if cached_data:
                 return JsonResponse(cached_data)
 
-            product = Products.objects.filter(price__gte=range_min,
-                                              price__lt=range_max)
+            product_inventory = GameDetail.objects.filter(
+                precio__gte=range_min,
+                precio__lt=range_max
+            ).values('producto')
+            product = Products.objects.filter(pk__in=product_inventory).order_by("pk")
             count_rows = product.count()
             if size == "all":
                 paginator = Paginator(product, count_rows)
