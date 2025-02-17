@@ -4,7 +4,7 @@ import os
 import openpyxl
 from django import forms
 from django.conf import settings
-from django.db.models import F
+from django.db.models import F,Q
 
 from products.models import ProductAccounts, Consoles, Licenses, Products, GameDetail, TypeAccounts, \
     PriceForSuscription, TypeSuscriptionAccounts
@@ -132,18 +132,39 @@ class ManegePricesFile:
 
 
 def save_or_update_game_detail(id_product, id_console, id_license, duration_days, account):
+    existing_game_detail = GameDetail.objects.filter(
+                                producto_id=id_product,
+                                licencia=id_license.first(),
+                                consola=id_console.first(),
+                                duracion_dias_alquiler=duration_days,
+                            ).filter(
+                                Q(precio__gt=0) | Q(precio_descuento__gt=0)
+                            ).first()
+
+    if existing_game_detail:
+        price = existing_game_detail.precio
+        offer_price = existing_game_detail.precio_descuento
+    else:
+        price = 0
+        offer_price = 0
+
     row_game_detail, created = GameDetail.objects.get_or_create(
         producto_id=id_product,
         licencia=id_license.first(),
         consola=id_console.first(),
         duracion_dias_alquiler=duration_days,
         cuenta=account,
-        defaults={"stock": 1}
+        defaults={
+            "stock": 1,
+            "precio": price,
+            "precio_descuento": offer_price
+        }
     )
 
     if not created:
         row_game_detail.stock += 1
         row_game_detail.save()
+
 
 def check_sheet_price(sheet):
     return sheet.strip() != "None" or "x" in sheet
