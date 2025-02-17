@@ -25,7 +25,7 @@ class SerializerForTypes(serializers.ModelSerializer):
 class SerializerForVariables(serializers.ModelSerializer):
     class Meta:
         model = VariablesSistema
-        fields = ('nombre_variable', 'valor',)
+        fields = ('nombre_variable', 'valor', 'url')
 
 
 class ProductsSerializer(serializers.ModelSerializer):
@@ -49,7 +49,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Products
         fields = (
-            'pk', 'title', 'description', 'stock', 'price', 'precio_descuento', 'date_register',
+            'pk', 'title', 'description', 'date_register',
             'image', 'date_last_modified', 'consola', 'type_id', 'calification', 'tipo_juego',
             'puntos_venta', 'puede_rentarse', 'destacado')
 
@@ -64,12 +64,16 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
     price = serializers.IntegerField(source='producto.precio', read_only=True)
     type = serializers.IntegerField(source='producto.producto.type_id_id', read_only=True)
     image = serializers.CharField(source='producto.producto.image', read_only=True)
+    type_account = serializers.SerializerMethodField()
 
     class Meta:
         model = ShoppingCar
-        fields = ('pk', 'id_product', 'id_combination', 'title_product', 'stock', 'price', 'licence', 'console',
-                  'type', 'estado', 'image')
+        fields = ('pk', 'id_product', 'id_combination', 'title_product', 'stock', 'price', 'licence',
+                  'console', 'type', 'estado', 'image', 'type_account')
 
+    def get_type_account(self, obj):
+        licence_value = obj.producto.licencia.descripcion
+        return 2 if licence_value.lower() == 'codigo' else 1
 
 class SerializerGameDetail(serializers.ModelSerializer):
     desc_licence = serializers.CharField(source='licencia.descripcion', read_only=True)
@@ -77,15 +81,21 @@ class SerializerGameDetail(serializers.ModelSerializer):
 
     class Meta:
         model = GameDetail
-        fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence', 'stock', 'precio')
+        fields = ('pk', 'consola', 'desc_console', 'licencia', 'desc_licence',
+                  'stock', 'precio', 'precio_descuento','duracion_dias_alquiler')
 
 
 class SerializerLicencesName(serializers.ModelSerializer):
     desc_licence = serializers.CharField(source='licencia.descripcion', read_only=True)
+    type_account = serializers.SerializerMethodField()
 
     class Meta:
         model = GameDetail
-        fields = ('licencia', 'desc_licence', 'stock')
+        fields = ('licencia', 'desc_licence', 'stock','type_account')
+
+    def get_type_account(self, obj):
+        licence_value = obj.licencia.id_license
+        return 2 if licence_value == 3 else 1
 
 
 class SerializerPriceSuscriptionProduct(serializers.ModelSerializer):

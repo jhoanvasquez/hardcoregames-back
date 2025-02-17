@@ -50,9 +50,6 @@ class Products(models.Model):
     id_product = models.AutoField(primary_key=True)
     title = models.CharField(max_length=200, default="")
     description = models.TextField()
-    stock = models.IntegerField(null=True, blank=True)
-    price = models.IntegerField()
-    precio_descuento = models.IntegerField(null=True, blank=True, default=None)
     date_register = models.DateField(default=datetime.now)
     date_last_modified = models.DateField(auto_now=True)
     image = models.CharField(max_length=500)
@@ -101,7 +98,6 @@ class ProductAccounts(models.Model):
     cuenta = models.CharField(max_length=200)
     password = models.CharField(max_length=100, null=True, blank=True)
     activa = models.BooleanField()
-    producto = models.ForeignKey(Products, on_delete=models.CASCADE)
     tipo_cuenta = models.ForeignKey(TypeAccounts, on_delete=models.CASCADE, default=1)
     dias_duracion = models.IntegerField(default=0, null=True, blank=True)
     codigo_seguridad = models.CharField(max_length=500, null=True, blank=True)
@@ -134,9 +130,11 @@ class GameDetail(models.Model):
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
     consola = models.ForeignKey(Consoles, on_delete=models.CASCADE, null=True)
     licencia = models.ForeignKey(Licenses, on_delete=models.CASCADE, null=True)
+    cuenta = models.ForeignKey(ProductAccounts, on_delete=models.CASCADE, null=True)
+    duracion_dias_alquiler = models.IntegerField(null=True)
     stock = models.IntegerField()
     precio = models.IntegerField(default=0)
-    estado = models.BooleanField()
+    precio_descuento = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Precio por consola y licencia'
@@ -201,6 +199,7 @@ class PriceForSuscription(models.Model):
     producto = models.ForeignKey(Products, on_delete=models.CASCADE, null=True)
     tipo_producto = models.ForeignKey(TypeSuscriptionAccounts, on_delete=models.CASCADE)
     tiempo_alquiler = models.CharField(max_length=100, default="")
+    stock = models.IntegerField(default=0)
     duracion_dias_alquiler = models.IntegerField(default=0)
     precio = models.IntegerField()
     estado = models.BooleanField(default=True)
@@ -218,6 +217,7 @@ class VariablesSistema(models.Model):
     nombre_variable = models.CharField(max_length=100)
     descripcion = models.TextField(null=True, default=None, blank=True)
     valor = models.CharField(max_length=500)
+    url = models.TextField(null=True, default=None, blank=True)
     estado = models.BooleanField(default=True)
 
     def __str__(self):
@@ -226,3 +226,13 @@ class VariablesSistema(models.Model):
     class Meta:
         verbose_name = 'variable de sistema'
         verbose_name_plural = 'Variables de sistema'
+
+class Transactions(models.Model):
+    id_transaction = models.AutoField(primary_key=True)
+    date_transaction = models.DateTimeField(default=datetime.now, blank=True)
+    status = models.CharField(max_length=100)
+    amount = models.IntegerField()
+    payment_id = models.CharField(max_length=100)
+    ref_payco = models.CharField(max_length=100)
+    id_invoice = models.CharField(max_length=100)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
