@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import connection
-from django.db.models import F, Sum
+from django.db.models import F, Sum, Min
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from django.core.cache import cache
 from django.shortcuts import redirect
@@ -93,11 +93,9 @@ def get_favorite_products(request):
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
-            product_price = GameDetail.objects.filter(producto=i['pk'],
-                                                      stock__gt=0,
-                                                      licencia=1).first()
+            product_price = get_lower_price(i['pk'])
             i['stock'] = 0 if stock is None else stock
-            i['price'] = 0 if product_price is None else product_price.precio
+            i['price'] = 0 if product_price is None else product_price
         payload = {
             'message': 'Proceso exitoso',
             'data': serializer.data,
@@ -136,11 +134,9 @@ def get_featured_products(request):
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
-            product_price = GameDetail.objects.filter(producto=i['pk'],
-                                                      stock__gt=0,
-                                                      licencia=1).first()
+            product_price = get_lower_price(i['pk'])
             i['stock'] = 0 if stock is None else stock
-            i['price'] = 0 if product_price is None else product_price.precio
+            i['price'] = 0 if product_price is None else product_price
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
         # Cache the result
@@ -175,11 +171,9 @@ def get_news_for_products(request):
         for i in serializer.data:
             stock = GameDetail.objects.filter(producto=i['pk'],
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
-            product_price = GameDetail.objects.filter(producto=i['pk'],
-                                                      stock__gt=0,
-                                                      licencia=1).first()
+            product_price = get_lower_price(i['pk'])
             i['stock'] = 0 if stock is None else stock
-            i['price'] = 0 if product_price is None else product_price.precio
+            i['price'] = 0 if product_price is None else product_price
         payload = {'message': 'proceso exitoso', 'data': serializer.data, 'total_items': count_rows,
                    'code': '00', 'status': 200}
         # Cache the result
@@ -1110,3 +1104,10 @@ def clear_cache(request):
         cache.clear()
         payload = {'message': 'cache cleared', 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+def get_lower_price(pk,):
+    lower_price = GameDetail.objects.filter(
+        producto=pk,
+        stock__gt=0,
+    ).aggregate(Min('precio'))
+    return lower_price['precio__min']
