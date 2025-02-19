@@ -296,7 +296,7 @@ class SystemVariablesAdmin(admin.ModelAdmin):
 class ProductAccountsAdmin(admin.ModelAdmin):
     list_display = ['cuenta', 'password', 'activa', 'tipo_cuenta', 'dias_duracion', 'codigo_seguridad', ]
     form = AccountProductForm
-    search_fields = ['cuenta','producto__title', 'producto__id_product']
+    search_fields = ['cuenta',]
     list_filter = ["tipo_cuenta",]
     list_per_page = 10
 
