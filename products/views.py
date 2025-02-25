@@ -722,10 +722,10 @@ def confirm_sale(request):
                 product_selected = combination_selected.producto
                 combination_selected.stock = F('stock') - 1
                 create_sale(item, id_user, account_selected)
-                send_email_notification(id_user, message_html)
                 update_points_sale(id_user, product_selected.puntos_venta)
                 delete_shopping_product(item['id_combination'], id_user)
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
+                send_email_notification(id_user, message_html)
                 combination_selected.save()
             else:
                 global_exception_handler(request, None)
