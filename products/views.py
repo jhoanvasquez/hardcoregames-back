@@ -720,12 +720,12 @@ def confirm_sale(request):
 
             if combination_selected:
                 product_selected = combination_selected.producto
+                combination_selected.stock = F('stock') - 1
                 create_sale(item, id_user, account_selected)
+                send_email_notification(id_user, message_html)
                 update_points_sale(id_user, product_selected.puntos_venta)
                 delete_shopping_product(item['id_combination'], id_user)
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
-                send_email_notification(id_user, message_html)
-                combination_selected.stock = F('stock') - 1
                 combination_selected.save()
             else:
                 global_exception_handler(request, None)
@@ -1014,7 +1014,6 @@ def request_api_epayco(request):
     ref_payco = request.GET.get('ref_payco') if request.GET.get('ref_payco') is not None \
         else get_transaction_saved(request)
     x_ref_epayco = request.GET.get('x_ref_payco')
-
     if ref_payco is not None or x_ref_epayco is not None:
         if ref_payco is not None:
             adapter = AdapterEpaycoApi()
@@ -1038,6 +1037,7 @@ def request_api_epayco(request):
                     "ref_payco": ref_payco,
                     "x_id_invoice": request.GET.get('x_id_invoice'),
                     "x_extra6": request.GET.get('x_extra6'),
+                    "x_extra7": request.GET.get('x_extra7'),
                     "x_transaction_state": request.GET.get('x_transaction_state')
                 }
             }
