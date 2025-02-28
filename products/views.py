@@ -1019,15 +1019,15 @@ def request_api_epayco(request):
             adapter = AdapterEpaycoApi()
             response = adapter.request_get(ref_payco)
             success_value = response.get('success')
-            is_accepted = response.get('data').get('x_transaction_state').lower() == "aceptada"
+            is_accepted = (response.get('data', {}).get('x_transaction_state') or "").lower() == "aceptada"
             confirm_sale_body = response.get('data').get('x_extra7')
-            is_pending = response.get('data').get('x_transaction_state').lower() == "pendiente"
+            is_pending = (response.get('data', {}).get('x_transaction_state') or "").lower() == "pendiente"
             if is_pending:
                 save_transaction(response, ref_payco)
                 return redirect(settings.PENDING_URL)
         else:
-            success_value = request.GET.get("x_response").lower() == "aceptada"
-            is_accepted = request.GET.get('x_transaction_state').lower() == "aceptada"
+            success_value = (request.GET.get("x_response") or "").lower() == "aceptada"
+            is_accepted = (request.GET.get('x_transaction_state') or "").lower() == "aceptada"
             confirm_sale_body = request.GET.get('x_extra7')
             ref_payco = x_ref_epayco if ref_payco is None else ref_payco
             response = {
