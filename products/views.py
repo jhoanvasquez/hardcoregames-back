@@ -1038,7 +1038,7 @@ def request_api_epayco(request):
                     "x_id_invoice": request.GET.get('x_id_invoice'),
                     "x_extra6": request.GET.get('x_extra6'),
                     "x_extra7": request.GET.get('x_extra7'),
-                    "x_transaction_state": request.GET.get('x_transaction_state')
+                    "x_transaction_state": request.GET.get('x_transaction_state') or ""
                 }
             }
         exist_transaction = save_transaction(response, ref_payco)
