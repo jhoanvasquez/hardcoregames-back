@@ -1070,7 +1070,7 @@ def global_exception_handler(request, exception, send_email=False):
 
 def save_transaction(response, ref_payco):
     id_invoice = response.get('data').get('x_id_invoice')
-    status = response.get('data').get('x_transaction_state').lower()
+    status = response.get('data', {}).get('x_transaction_state', "").lower()
 
     if Transactions.objects.filter(id_invoice=id_invoice).exists():
         Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco,
