@@ -1077,8 +1077,14 @@ def save_transaction(response, ref_payco):
                                                                 status=status)
         return False
 
-    extra7_param = response.get('data').get('x_extra7')
-    extra7_data = json.loads(extra7_param)
+    extra7_param = response.get("data", {}).get("x_extra7")
+    if extra7_param:
+        try:
+            extra7_data = json.loads(extra7_param)
+        except json.JSONDecodeError:
+            extra7_data = {}
+    else:
+        extra7_data = {}
     id_user = extra7_data.get('id_user', None)
 
     Transactions(
