@@ -940,38 +940,37 @@ def confirm_sale_get(request):
             license = Licenses.objects.filter(pk=request.GET.get('id_licencia').strip())
             account = ProductAccounts.objects.filter(cuenta__iexact=request.GET.get('account').rstrip())
             console = Consoles.objects.filter(pk=console_id)
+            days_retail = request.GET.get('days_rentail').rstrip() if request.GET.get('days_rentail').rstrip() != 'null' else 0
             combination_selected = GameDetail.objects.filter(producto=product_selected.first(),
                                                              consola=console.first(),
                                                              licencia=license.first(),
+                                                             duracion_dias_alquiler = days_retail,
                                                              stock__gt=0
-                                                             )
+                                                             ).first()
             sale = {}
-
-            if combination_selected.count() > 0 and account.count() > 0 and product_selected.count() > 0:
-                combination_selected.update(stock=F('stock') - 1)
-                product_selected.update(stock=F('stock') - 1)
-                sale['id_combination'] = combination_selected.first().id_game_detail
-
-            else:
-                payload = {'message': 'no se ha podido actualizar la compra, producto o cuenta no existente', 'code': '00',
+            if not combination_selected or not product_selected.exists() :
+                payload = {'message': 'producto no existente',
+                           'code': '00',
                            'status': 200}
                 return HttpResponse(JsonResponse(payload), content_type="application/json")
 
+            if not account.exists():
+                payload = {'message': 'cuenta no existente',
+                           'code': '00',
+                           'status': 200}
+                return HttpResponse(JsonResponse(payload), content_type="application/json")
+
+            combination_selected.stock = F('stock') - 1
+            sale['id_combination'] = combination_selected.id_game_detail
+            combination_selected.save()
+
             check_account_stock(combination_selected, account)
-            if product_selected.first().type_id.id_product_type == 2:
-                type_account = convert_name_type_suscription_account(
-                    request.GET.get('console')
-                )
-                PriceForSuscription.objects.filter(
-                    producto=product_selected.first(),
-                    duracion_dias_alquiler=request.GET.get('days_rentail'),
-                    tipo_producto=type_account
-                ).update(stock=F('stock') - 1)
             sale['is_rentail'] = request.GET.get('is_rentail')
-            sale['days_rentail'] = request.GET.get('days_rentail')
+            sale['days_rentail'] = days_retail
             create_sale(sale, 1, account.first())
             payload = {'message': 'se ha actualizado el stock satisfactoriamente!!!', 'data': [], 'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
+
         payload = {'message': 'token invalido', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 def validate_token(token):
@@ -998,7 +997,7 @@ def convert_name_type_suscription_account(type_name):
         return 1
 
 def check_account_stock(product_selected, account):
-    count_stock = GameDetail.objects.filter(pk=product_selected.first().pk,
+    count_stock = GameDetail.objects.filter(pk=product_selected.pk,
                                             stock__gt=1).count()
     if count_stock < 1:
         account.update(activa=False)
