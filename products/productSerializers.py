@@ -61,7 +61,7 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
     stock = serializers.IntegerField(source='producto.stock', read_only=True)
     licence = serializers.CharField(source='producto.licencia.descripcion', read_only=True)
     console = serializers.CharField(source='producto.consola.descripcion', read_only=True)
-    price = serializers.IntegerField(source='producto.precio', read_only=True)
+    price = serializers.SerializerMethodField()
     type = serializers.IntegerField(source='producto.producto.type_id_id', read_only=True)
     image = serializers.CharField(source='producto.producto.image', read_only=True)
     type_account = serializers.SerializerMethodField()
@@ -71,9 +71,15 @@ class ShoppingCarSerializer(serializers.ModelSerializer):
         fields = ('pk', 'id_product', 'id_combination', 'title_product', 'stock', 'price', 'licence',
                   'console', 'type', 'estado', 'image', 'type_account')
 
-    def get_type_account(self, obj):
+    @staticmethod
+    def get_price(obj):
+        return obj.producto.precio_descuento if obj.producto.precio_descuento > 0 else obj.producto.precio
+
+    @staticmethod
+    def get_type_account(obj):
         licence_value = obj.producto.licencia.descripcion
         return 2 if licence_value.lower() == 'codigo' else 1
+
 
 class SerializerGameDetail(serializers.ModelSerializer):
     desc_licence = serializers.CharField(source='licencia.descripcion', read_only=True)

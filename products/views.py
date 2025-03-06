@@ -12,7 +12,10 @@ from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from django.core.cache import cache
 from django.shortcuts import redirect
 from django.utils.timezone import now
+from django.db.models.functions import Lower
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.postgres.search import TrigramSimilarity
+from unidecode import unidecode
 
 from ecommerceHardcoregamesBack import settings
 from products.AdapterEpaycoApi import AdapterEpaycoApi
@@ -198,19 +201,29 @@ def get_products_by_id(request, id_product):
         payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
+
 def find_product_by_name(request, name_product):
     if request.method == "GET":
-        if name_product != "null":
-            product = (Products.objects.filter(title__icontains=name_product)|
-                       Products.objects.filter(title__icontains=name_product.replace(" ", ""))
-                       )
+        if name_product and name_product.lower() != "null":
+            normalized_name = unidecode(name_product.lower())  # Remove accents
+            print(normalized_name)
+            product = Products.objects.annotate(
+                normalized_title=Lower("title")
+            ).filter(
+                normalized_title__icontains=normalized_name
+            ) | Products.objects.annotate(
+                normalized_title=Lower("title")
+            ).filter(
+                normalized_title__icontains=normalized_name.replace(" ", "")
+            )
 
             if product.exists():
                 serializer = ProductSerializer(product, many=True)
                 payload = {'message': 'proceso exitoso', 'data': serializer.data, 'code': '00', 'status': 200}
-                return HttpResponse(JsonResponse(payload), content_type="application/json")
+                return JsonResponse(payload, safe=False)
+
         payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
-        return HttpResponse(JsonResponse(payload), content_type="application/json")
+        return JsonResponse(payload, safe=False)
 
 
 def get_products_by_type_console(request, id_console):
@@ -643,13 +656,14 @@ def get_shopping_car(request):
     if request.method == "GET":
         user_id = request.GET['user_id']
         user = ShoppingCar.objects.filter(usuario=user_id, producto__stock__gt=0)
+        state = True if request.GET['state'] == "true" else False
         if user.exists():
-            if request.GET['state']:
-                state = True if request.GET['state'] == "true" else False
+            if state:
                 shopping_cars = ShoppingCar.objects.filter(usuario=user_id, estado=state,
                                                            producto__stock__gt=0).order_by('pk')
             else:
                 shopping_cars = ShoppingCar.objects.filter(usuario=user_id, producto__stock__gt=0).order_by('pk')
+            print(shopping_cars)
             shopping_cars_serialized = ShoppingCarSerializer(shopping_cars, many=True)
             payload = {'message': 'proceso exitoso', 'user_id': int(user_id),
                        'data': shopping_cars_serialized.data, 'code': '00', 'status': 200}

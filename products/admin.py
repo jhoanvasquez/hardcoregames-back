@@ -16,7 +16,7 @@ from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
     TypeGames, VariablesSistema, Licenses, TypeAccounts
-
+from django.contrib.admin import DateFieldListFilter
 from products.UpdateProductForm import UpdateProductForm
 @admin.action(description="Update price and other fields")
 def update_game_detail(admin_model, request, queryset):
@@ -316,7 +316,7 @@ class SalesDetailAdmin(admin.ModelAdmin):
 
     list_display = ["pk", producto, "combinacion", "fecha_venta", "fecha_vencimiento", cuenta,
                     "password", "usuario"]
-    list_filter = [CloseToExp]
+    list_filter = [CloseToExp, ("fecha_venta", DateFieldListFilter),]
 
     @admin.action(description='Enviar mensaje de renovación')
     def send_email_renovation(self, request, queryset):
@@ -325,7 +325,7 @@ class SalesDetailAdmin(admin.ModelAdmin):
         messages.add_message(request, messages.INFO, 'Mensaje enviado exitosamente')
 
     actions = [send_email_renovation]
-    search_fields = ["usuario__email", ]
+    search_fields = ["usuario__email", "fecha_venta"]
     list_per_page = 10
 
 admin.site.site_header = 'Administración HardCoreGames'
