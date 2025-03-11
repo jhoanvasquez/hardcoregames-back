@@ -1102,7 +1102,7 @@ def save_transaction(response, ref_payco):
 
     Transactions(
         status=status,
-        amount = response.get('data').get('x_amount'),
+        amount=response.get('data', {}).get('x_amount') or 0,
         payment_id = (response.get('data', {}).get('x_bank_name') or "").lower(),
         ref_payco = ref_payco,
         id_invoice = id_invoice,
