@@ -244,8 +244,8 @@ def filter_product(request, ):
         json_request = json.loads(request.body)
         id_console = json_request['id_console']
         id_category = json_request['id_category']
-        range_min = json_request['range_min']
-        range_max = json_request['range_max']
+        range_min = json_request['range_min'] or 0
+        range_max = json_request['range_max'] or  0
         size = json_request['size']
         page = json_request['page']
 
@@ -1085,6 +1085,7 @@ def save_transaction(response, ref_payco):
     id_invoice = response.get('data').get('x_id_invoice')
     status = response.get('data', {}).get('x_transaction_state', "").lower()
 
+
     if Transactions.objects.filter(id_invoice=id_invoice).exists():
         Transactions.objects.filter(ref_payco=ref_payco).update(ref_payco=ref_payco,
                                                                 status=status)
@@ -1100,14 +1101,17 @@ def save_transaction(response, ref_payco):
         extra7_data = {}
     id_user = extra7_data.get('id_user', None)
 
-    Transactions(
-        status=status,
-        amount=response.get('data', {}).get('x_amount') or 0,
-        payment_id = (response.get('data', {}).get('x_bank_name') or "").lower(),
-        ref_payco = ref_payco,
-        id_invoice = id_invoice,
-        user_id = User.objects.filter(pk=id_user).first(),
-    ).save()
+    try:
+        Transactions(
+            status=status,
+            amount=response.get('data', {}).get('x_amount') or 0,
+            payment_id=(response.get('data', {}).get('x_bank_name') or "").lower(),
+            ref_payco=ref_payco,
+            id_invoice=id_invoice,
+            user_id=User.objects.filter(pk=id_user).first(),
+        ).save()
+    except Exception as e:
+        print(f"An error occurred while saving the transaction: {e}")
 
     return True
 
