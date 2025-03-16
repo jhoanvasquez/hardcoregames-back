@@ -1036,6 +1036,7 @@ def request_api_epayco(request):
             confirm_sale_body = response.get('data').get('x_extra7')
             is_pending = (response.get('data', {}).get('x_transaction_state') or "").lower() == "pendiente"
             if is_pending:
+                response["data"]["x_id_invoice"] = request.GET.get("x_id_factura", "x_id_invoice")
                 save_transaction(response, ref_payco)
                 return redirect(settings.PENDING_URL)
         else:
