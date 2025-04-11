@@ -606,12 +606,14 @@ def get_type_games(request):
 
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
+        product_type = Products.objects.filter(pk=id_product).first().type_id.id_product_type
         combination = GameDetail.objects.filter(producto=id_product, stock__gt=0, precio__gt=0)
 
         if combination.exists():
             serializer = SerializerGameDetail(combination, many=True)
-            payload = {'message': 'proceso exitoso', 'product_id': id_product, 'data': serializer.data, 'code': '00',
-                       'status': 200}
+            payload = {'message': 'proceso exitoso', 'product_id': id_product,
+                       "product_type": product_type, 'data': serializer.data,
+                       'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
         payload = {'message': 'proceso exitoso', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
