@@ -34,4 +34,7 @@ urlpatterns = [
     path("manageFile/", views.manageFile, name="manageFile"),
     path("confirmSaleEpayco/", views.request_api_epayco, name="request_api_epayco"),
     path("clearCache/", views.clear_cache, name="clear_cache"),
+    path("boldWebHook/", views.bold_webhook, name="bold_webhook"),
+    path("generateHashBold/", views.generate_hash_bold, name="generate_hash_bold"),
+    path("confirmSaleBold/", views.confirm_sale_bold, name="confirm_sale_bold"),
 ]

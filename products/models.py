@@ -234,5 +234,6 @@ class Transactions(models.Model):
     amount = models.IntegerField()
     payment_id = models.CharField(max_length=100)
     ref_payco = models.CharField(max_length=100)
+    request = models.TextField(blank=True, null=True)
     id_invoice = models.CharField(max_length=100)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)

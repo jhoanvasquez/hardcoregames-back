@@ -30,6 +30,14 @@ from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
 from django.core.cache import cache
+import datetime
+import hashlib
+import logging
+import base64
+import hmac
+
+logger = logging.getLogger(__name__)
+
 def get_all_products(request):
     if request.method == "GET":
         size = request.GET.get('size')
@@ -725,6 +733,7 @@ def confirm_sale(request):
     try:
         json_request = json.loads(request)
         id_user = json_request['id_user']
+        user = User.objects.filter(pk=id_user).first()
         message_html = ""
 
         for item in json_request['data']:
@@ -736,13 +745,14 @@ def confirm_sale(request):
 
             if combination_selected:
                 product_selected = combination_selected.producto
-                combination_selected.stock = F('stock') - 1
-                create_sale(item, id_user, account_selected)
-                update_points_sale(id_user, product_selected.puntos_venta)
-                delete_shopping_product(item['id_combination'], id_user)
+                if user and not user.is_superuser:
+                    combination_selected.stock = F('stock') - 1
+                    create_sale(item, id_user, account_selected)
+                    update_points_sale(id_user, product_selected.puntos_venta)
+                    delete_shopping_product(item['id_combination'], id_user)
+                    combination_selected.save()
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
                 send_email_notification(id_user, message_html)
-                combination_selected.save()
             else:
                 global_exception_handler(request, None)
                 return False
@@ -1131,9 +1141,155 @@ def clear_cache(request):
         payload = {'message': 'cache cleared', 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
+def confirm_sale_bold(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    order_id = request.GET.get('bold-order-id')
+    status = request.GET.get('bold-tx-status')
+
+    if not all([order_id, status]):
+        return JsonResponse({"error": "Missing required fields"}, status=400)
+
+    transaction = Transactions.objects.filter(ref_payco=order_id).first()
+    if transaction:
+        transaction.status = status
+        transaction.save()
+        if status == "approved":
+            confirm_sale(transaction.request)
+            return redirect(settings.CONFIRMATION_URL)
+        return redirect(settings.DECLINED_URL)
+
+    return JsonResponse({"error": "Transaction not found"}, status=404)
+
+@csrf_exempt
+def bold_webhook(request):
+    logger.info("Received a request at bold_webhook")
+
+    if request.method != "POST":
+        logger.warning("Invalid request method: %s", request.method)
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    signature = request.headers.get("x-bold-signature", "")
+    body = request.body
+
+    logger.debug("Request body: %s", body)
+    logger.debug("Received signature: %s", signature)
+
+    encoded_body = base64.b64encode(body)
+    secret_key = settings.SECRET_KEY_BOLD.encode()
+    hashed = hmac.new(secret_key, encoded_body, hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(hashed, signature):
+        logger.error("Signature validation failed")
+        return JsonResponse({"error": "Invalid signature"}, status=400)
+
+    logger.info("Signature validation succeeded")
+
+    response = JsonResponse({"message": "Event received successfully"}, status=200)
+
+    try:
+        data = json.loads(body)
+        logger.info("Parsed request data: %s", data)
+        process_bold_event(data)
+    except json.JSONDecodeError as e:
+        logger.error("Failed to parse JSON: %s", e)
+    except Exception as e:
+        logger.exception("Error processing event: %s", e)
+
+    logger.info("bold_webhook processing completed")
+    return response
+
+def process_bold_event(data):
+    event_type = data.get("type")
+    franchise = data.get("data", {}).get("card", {}).get("franchise")
+    transaction_id = data.get("data", {}).get("metadata", {}).get("reference")
+
+    if event_type == "SALE_APPROVED":
+        transaction = Transactions.objects.filter(ref_payco=transaction_id).first()
+        if transaction and transaction.status != "approved":
+            logger.info("Processing SALE_APPROVED event for transaction: %s", transaction_id)
+            transaction.status = "approved"
+            transaction.payment_id = franchise
+            transaction.save()
+
+            request_data = transaction.request
+            confirm_sale(request_data)
+
+        elif transaction.status == "approved":
+            logger.info("Transaction already approved: %s", transaction_id)
+            transaction.payment_id = franchise
+            transaction.save()
+
+@csrf_exempt
+def generate_hash_bold(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    data = parse_request_data(request)
+    if not data:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    amount = data.get('amount')
+    currency = data.get('currency')
+    request_transaction = data.get('request_transaction')
+
+    if not all([amount, currency, request_transaction]):
+        return JsonResponse({"error": "Missing required fields"}, status=400)
+
+    order_id = generate_order_id()
+    signature = generate_signature(order_id, amount, currency, settings.SECRET_KEY_BOLD)
+
+    create_transaction_record(order_id, amount, request_transaction)
+
+    payload = build_payload(order_id, signature)
+    return JsonResponse(payload, status=200)
+
+def parse_request_data(request):
+    try:
+        return json.loads(request.body)
+    except json.JSONDecodeError:
+        return None
+
+def generate_signature(order_id, amount, currency, secret_key):
+    linked_string = f"{order_id}{amount}{currency}{secret_key}"
+    m = hashlib.sha256()
+    m.update(linked_string.encode())
+    return m.hexdigest()
+
+def create_transaction_record(order_id, amount, request_transaction):
+    user_id = json.loads(request_transaction)["id_user"]
+    return Transactions.objects.create(
+        status="pendiente",
+        amount=amount,
+        payment_id="bold",
+        ref_payco=order_id,
+        id_invoice=order_id,
+        request=request_transaction,
+        user_id=User.objects.filter(pk=user_id).first()
+    )
+
+def build_payload(order_id, signature):
+    return {
+        'apiKey': settings.API_KEY_BOLD,
+        'integritySignature': signature,
+        'orderId': order_id,
+        'redirectionUrl': settings.REDIRECTION_URL_BOLD,
+        'code': '00',
+        'status': 200
+    }
+
 def get_lower_price(pk,):
     lower_price = GameDetail.objects.filter(
         producto=pk,
         stock__gt=0,
     ).aggregate(Min('precio'))
     return lower_price['precio__min']
+
+
+def generate_order_id():
+    now = datetime.datetime.now()
+    timestamp = int(now.timestamp() * 1000)
+    order_id = f"inv_{timestamp}"
+
+    return order_id
