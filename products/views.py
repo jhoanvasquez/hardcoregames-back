@@ -86,8 +86,7 @@ def get_favorite_products(request):
 
         if cached_data:
             return JsonResponse(cached_data)
-        all_products = Products.objects.filter().order_by('-calification')
-
+        all_products = Products.objects.filter().order_by('pk')
         count_rows = all_products.count()
         if size == "all":
             paginator = Paginator(all_products, 1 if count_rows == 0 else count_rows)
@@ -106,7 +105,7 @@ def get_favorite_products(request):
                                               stock__gt=0).aggregate(Sum('stock'))['stock__sum']
             product_price = get_lower_price(i['pk'])
             i['stock'] = 0 if stock is None else stock
-            i['price'] = 0 if product_price is None else product_price
+            i['price'] = get_lowest_price_by_product(i['pk'])
         payload = {
             'message': 'Proceso exitoso',
             'data': serializer.data,
@@ -1293,3 +1292,8 @@ def generate_order_id():
     order_id = f"inv_{timestamp}"
 
     return order_id
+
+def get_lowest_price_by_product(product_id):
+    lowest_price = (GameDetail.objects.filter(producto_id=product_id, stock__gt=0, precio__gt=0)
+                    .aggregate(Min('precio')))
+    return lowest_price['precio__min'] or 0
