@@ -1172,8 +1172,8 @@ def bold_webhook(request):
     signature = request.headers.get("x-bold-signature", "")
     body = request.body
 
-    logger.debug("Request body: %s", body)
-    logger.debug("Received signature: %s", signature)
+    logger.error("Request body: %s", body)
+    logger.error("Received signature: %s", signature)
 
     encoded_body = base64.b64encode(body)
     secret_key = settings.SECRET_KEY_BOLD.encode()
