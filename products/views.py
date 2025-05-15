@@ -29,12 +29,14 @@ from products.productSerializers import ProductsSerializer, ProductSerializer, S
 from users.models import User_Customized
 from utils.SendEmail import SendEmail
 from utils.getJsonFromRequest import GetJsonFromRequest
+from django.http import JsonResponse
 from django.core.cache import cache
 import datetime
 import hashlib
 import logging
 import base64
 import hmac
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -1161,6 +1163,7 @@ def confirm_sale_bold(request):
 
     return JsonResponse({"error": "Transaction not found"}, status=404)
 
+
 @csrf_exempt
 def bold_webhook(request):
     logger.info("Received a request at bold_webhook")
@@ -1169,56 +1172,71 @@ def bold_webhook(request):
         logger.warning("Invalid request method: %s", request.method)
         return JsonResponse({"error": "Method not allowed"}, status=405)
 
-    signature = request.headers.get("x-bold-signature", "")
-    body = request.body
-
-    logger.error("Request body: %s", body)
-    logger.error("Received signature: %s", signature)
-
-    encoded_body = base64.b64encode(body)
-    secret_key = settings.SECRET_KEY_BOLD.encode()
-    hashed = hmac.new(secret_key, encoded_body, hashlib.sha256).hexdigest()
-
-    if not hmac.compare_digest(hashed, signature):
-        logger.error("Signature validation failed")
-        return JsonResponse({"error": "Invalid signature"}, status=400)
-
-    logger.info("Signature validation succeeded")
-
     response = JsonResponse({"message": "Event received successfully"}, status=200)
 
-    try:
-        data = json.loads(body)
-        logger.info("Parsed request data: %s", data)
-        process_bold_event(data)
-    except json.JSONDecodeError as e:
-        logger.error("Failed to parse JSON: %s", e)
-    except Exception as e:
-        logger.exception("Error processing event: %s", e)
+    def process_request():
+        signature = request.headers.get("x-bold-signature", "")
+        body = request.body
 
-    logger.info("bold_webhook processing completed")
+        logger.error("Request body: %s", body)
+        logger.error("Received signature: %s", signature)
+
+        str_message = body.decode(encoding="utf-8")
+        encoded = base64.b64encode(str_message.encode("utf-8"))
+
+        secret_key = "".encode()
+        #secret_key = settings.SECRET_KEY.encode()
+        hashed = hmac.new(key=secret_key, digestmod=hashlib.sha256, msg=encoded).hexdigest()
+
+        logger.error(f"Signature: {signature.encode()}")
+        logger.error(f"Hashed: {hashed.encode()}")
+
+        is_valid_request = hmac.compare_digest(hashed.encode(), signature.encode())
+
+        if not is_valid_request:
+            logger.error("Signature validation failed")
+            return
+
+        logger.info("Signature validation succeeded")
+
+        try:
+            data = json.loads(body)
+            logger.info("Parsed request data: %s", data)
+            process_bold_event(data)
+        except json.JSONDecodeError as e:
+            logger.error("Failed to parse JSON: %s", e)
+        except Exception as e:
+            logger.exception("Error processing event: %s", e)
+
+        logger.info("bold_webhook processing completed")
+
+    threading.Thread(target=process_request).start()
+
     return response
 
 def process_bold_event(data):
     event_type = data.get("type")
-    franchise = data.get("data", {}).get("card", {}).get("franchise")
+    franchise = (data.get("data", {}).get("card", {}).get("franchise") or
+                data.get("data", {}).get("payment_method", {}))
     transaction_id = data.get("data", {}).get("metadata", {}).get("reference")
 
-    if event_type == "SALE_APPROVED":
-        transaction = Transactions.objects.filter(ref_payco=transaction_id).first()
-        if transaction and transaction.status != "approved":
-            logger.info("Processing SALE_APPROVED event for transaction: %s", transaction_id)
-            transaction.status = "approved"
-            transaction.payment_id = franchise
-            transaction.save()
+    transaction = Transactions.objects.filter(ref_payco=transaction_id).first()
 
-            request_data = transaction.request
-            confirm_sale(request_data)
+    if (transaction and transaction.status not in ("approved", "SALE_APPROVED") and
+        event_type == "SALE_APPROVED"):
 
-        elif transaction.status == "approved":
-            logger.info("Transaction already approved: %s", transaction_id)
-            transaction.payment_id = franchise
-            transaction.save()
+        logger.info("Processing SALE_APPROVED event for transaction: %s", transaction_id)
+        transaction.status = event_type
+        transaction.payment_id = franchise
+        transaction.save()
+
+        request_data = transaction.request
+        confirm_sale(request_data)
+
+    elif transaction.status == "approved":
+        logger.info("Transaction already approved: %s", transaction_id)
+        transaction.payment_id = franchise
+        transaction.save()
 
 @csrf_exempt
 def generate_hash_bold(request):
