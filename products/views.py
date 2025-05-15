@@ -748,10 +748,10 @@ def confirm_sale(request):
                 product_selected = combination_selected.producto
                 if user and not user.is_superuser:
                     combination_selected.stock = F('stock') - 1
-                    create_sale(item, id_user, account_selected)
                     update_points_sale(id_user, product_selected.puntos_venta)
                     delete_shopping_product(item['id_combination'], id_user)
                     combination_selected.save()
+                create_sale(item, id_user, account_selected)
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
                 send_email_notification(id_user, message_html)
             else:
@@ -1156,10 +1156,15 @@ def confirm_sale_bold(request):
     if transaction:
         transaction.status = status
         transaction.save()
-        if status == "approved":
+        if transaction.status not in ("approved", "SALE_APPROVED") and status == "approved":
             confirm_sale(transaction.request)
             return redirect(settings.CONFIRMATION_URL)
-        return redirect(settings.DECLINED_URL)
+        elif status in ("failed", "SALE_REJECTED"):
+            return redirect(settings.DECLINED_URL)
+        elif status == "pending":
+            return redirect(settings.PENDING_URL)
+        else:
+            return redirect(settings.CONFIRMATION_URL)
 
     return JsonResponse({"error": "Transaction not found"}, status=404)
 
