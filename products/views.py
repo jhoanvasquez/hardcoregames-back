@@ -1154,9 +1154,10 @@ def confirm_sale_bold(request):
 
     transaction = Transactions.objects.filter(ref_payco=order_id).first()
     if transaction:
+        previous_status = transaction.status
         transaction.status = status
         transaction.save()
-        if transaction.status not in ("approved", "SALE_APPROVED") and status == "approved":
+        if previous_status not in ("approved", "SALE_APPROVED") and status == "approved":
             confirm_sale(transaction.request)
             return redirect(settings.CONFIRMATION_URL)
         elif status in ("failed", "SALE_REJECTED"):
