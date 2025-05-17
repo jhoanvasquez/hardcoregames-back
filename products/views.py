@@ -1243,6 +1243,11 @@ def process_bold_event(data):
         transaction.payment_id = franchise
         transaction.save()
 
+    elif event_type == "SALE_REJECTED":
+        logger.info("Processing SALE_REJECTED event for transaction: %s", transaction_id)
+        transaction.status = event_type
+        transaction.save()
+
 @csrf_exempt
 def generate_hash_bold(request):
     if request.method != "POST":
