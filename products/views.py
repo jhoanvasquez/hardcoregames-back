@@ -1190,8 +1190,7 @@ def bold_webhook(request):
         str_message = body.decode(encoding="utf-8")
         encoded = base64.b64encode(str_message.encode("utf-8"))
 
-        secret_key = "".encode()
-        #secret_key = settings.SECRET_KEY.encode()
+        secret_key = settings.SECRET_KEY.encode()
         hashed = hmac.new(key=secret_key, digestmod=hashlib.sha256, msg=encoded).hexdigest()
 
         logger.error(f"Signature: {signature.encode()}")
