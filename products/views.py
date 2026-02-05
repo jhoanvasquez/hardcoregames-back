@@ -615,53 +615,15 @@ def get_type_games(request):
 
 def get_combination_price_by_game(request, id_product):
     if request.method == "GET":
-        product = Products.objects.filter(pk=id_product).first()
-        if not product:
-            payload = {'message': 'producto no existente', 'data': [], 'code': '00', 'status': 200}
+        product_type = Products.objects.filter(pk=id_product).first().type_id.id_product_type
+        combination = GameDetail.objects.filter(producto=id_product, stock__gt=0, precio__gt=0)
+
+        if combination.exists():
+            serializer = SerializerGameDetail(combination, many=True)
+            payload = {'message': 'proceso exitoso', 'product_id': id_product,
+                       "product_type": product_type, 'data': serializer.data,
+                       'code': '00', 'status': 200}
             return HttpResponse(JsonResponse(payload), content_type="application/json")
-
-        product_type = product.type_id.id_product_type
-
-        combinations = (
-            GameDetail.objects
-            .filter(producto=id_product, stock__gt=0, precio__gt=0)
-            .values(
-                'precio',
-                'precio_descuento',
-                'licencia',
-                'licencia__descripcion',
-                'consola',
-                'consola__descripcion',
-                'duracion_dias_alquiler',
-            )
-            .annotate(stock=Sum('stock'))
-        )
-
-        if combinations:
-            data = [
-                {
-                    'precio': c['precio'],
-                    'precio_descuento': c['precio_descuento'],
-                    'licencia': c['licencia'],
-                    'desc_licence': c['licencia__descripcion'],
-                    'consola': c['consola'],
-                    'desc_console': c['consola__descripcion'],
-                    'stock': c['stock'],
-                    'duracion_dias_alquiler': c['duracion_dias_alquiler'],
-                }
-                for c in combinations
-            ]
-
-            payload = {
-                'message': 'proceso exitoso',
-                'product_id': id_product,
-                'product_type': product_type,
-                'data': data,
-                'code': '00',
-                'status': 200,
-            }
-            return HttpResponse(JsonResponse(payload), content_type="application/json")
-
         payload = {'message': 'proceso exitoso', 'data': [], 'code': '00', 'status': 200}
         return HttpResponse(JsonResponse(payload), content_type="application/json")
 
