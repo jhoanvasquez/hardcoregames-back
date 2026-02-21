@@ -1,5 +1,6 @@
 import json
 import uuid
+import random
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -225,12 +226,13 @@ def create_email_validation_token(request, self=None):
                 content_type="application/json")
 
         subject_email = settings.SUBJECT_EMAIL_FOR_CONFIRMATION
-        text_email = settings.TEMPLATE_FOR_EMAIL_CONFIRMATION
+        text_email = settings.TEMPLATE_FOR_EMAIL_CONFIRMATION or ""
 
-        token = str(uuid.uuid4())[0:5]
+        # Token numérico de 6 dígitos
+        token = f"{random.randint(0, 999999):06d}"
         token_key = f"email_validation_token:{token}"
         while cache.get(token_key) is not None:
-            token = str(uuid.uuid4())[0:5]
+            token = f"{random.randint(0, 999999):06d}"
             token_key = f"email_validation_token:{token}"
 
         user_key = f"email_validation_user:{username}"
