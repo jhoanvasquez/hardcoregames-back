@@ -225,7 +225,7 @@ def create_email_validation_token(request, self=None):
                 content_type="application/json")
 
         subject_email = settings.SUBJECT_EMAIL_FOR_EMAIL_VALIDATION
-        text_email = settings.SUBJECT_EMAIL_FOR_EMAIL_VALIDATION
+        text_email = settings.EMAIL_FOR_EMAIL_VALIDATION
 
         token = str(uuid.uuid4())[0:5]
         token_key = f"email_validation_token:{token}"
