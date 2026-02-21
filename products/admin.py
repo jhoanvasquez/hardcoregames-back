@@ -15,7 +15,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    TypeGames, VariablesSistema, Licenses, TypeAccounts
+    TypeGames, VariablesSistema, Licenses, TypeAccounts, Coupon
 from django.contrib.admin import DateFieldListFilter
 from products.UpdateProductForm import UpdateProductForm
 @admin.action(description="Update price and other fields")
@@ -341,3 +341,20 @@ admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(TypeAccounts, TypeAccountsAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
 admin.site.register(Licenses, LicencesAdmin)
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = (
+        'id_coupon',
+        'name_coupon',
+        'user',
+        'is_valid',
+        'percentage_off',
+        'points_given',
+        'expiration_date',
+        'created_at',
+        'modified_at',
+        'product',
+    )
+    list_filter = ('is_valid', 'created_at')
+    search_fields = ('name_coupon', 'user__username', 'user__email', 'product__title')
+    list_per_page = 25

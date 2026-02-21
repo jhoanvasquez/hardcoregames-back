@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core import serializers
+from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
@@ -208,3 +209,68 @@ def set_password(request, self=None):
                 content_type="application/json")
         return HttpResponse(JsonResponse({'message': 'usuario no existe', "status": 200, "code": "01"}),
                             content_type="application/json")
+
+
+@csrf_exempt
+def create_email_validation_token(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        username = body["username"]
+
+        # No creamos token si ya existe un usuario con este email
+        exist_user = User.objects.filter(username=username).exists()
+        if exist_user:
+            return HttpResponse(
+                JsonResponse({'message': 'ya esxiste un usuario con este email', "status": 200, "code": "01"}),
+                content_type="application/json")
+
+        subject_email = settings.SUBJECT_EMAIL_FOR_EMAIL_VALIDATION
+        text_email = settings.SUBJECT_EMAIL_FOR_EMAIL_VALIDATION
+
+        token = str(uuid.uuid4())[0:5]
+        token_key = f"email_validation_token:{token}"
+        while cache.get(token_key) is not None:
+            token = str(uuid.uuid4())[0:5]
+            token_key = f"email_validation_token:{token}"
+
+        user_key = f"email_validation_user:{username}"
+        old_token = cache.get(user_key)
+        if old_token:
+            cache.delete(f"email_validation_token:{old_token}")
+
+        timeout_seconds = 15 * 60
+        cache.set(token_key, username, timeout=timeout_seconds)
+        cache.set(user_key, token, timeout=timeout_seconds)
+
+        text_email += "<center><b>" + token + "</b><center>"
+        SendEmail.__int__(self, text_email, subject_email, username)
+
+        return HttpResponse(
+            JsonResponse({'token': token, "status": 200, "code": "00"}),
+            content_type="application/json")
+
+
+@csrf_exempt
+def validate_email_token(request, self=None):
+    if request.method == "POST":
+        body = GetJsonFromRequest.__int__(self, request)
+        username = body["username"]
+        token = body["token"]
+
+        token_key = f"email_validation_token:{token}"
+        user_from_cache = cache.get(token_key)
+
+        if user_from_cache is None or user_from_cache != username:
+            return HttpResponse(
+                JsonResponse({'message': 'token inválido', "status": 200, "code": "01"}),
+                content_type="application/json")
+
+        # Token válido: eliminarlo para que sea de un solo uso
+        cache.delete(token_key)
+        user_key = f"email_validation_user:{username}"
+        cache.delete(user_key)
+
+        return HttpResponse(
+            JsonResponse({'message': 'token válido', "status": 200, "code": "00"}),
+            content_type="application/json")
+

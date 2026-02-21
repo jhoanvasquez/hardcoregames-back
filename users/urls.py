@@ -12,5 +12,7 @@ urlpatterns = [
     path("updateUser/", views.update_user, name="update_user"),
     path("changePassword/", views.change_password, name="change_password"),
     path("setPassword/", views.set_password, name="set_password"),
-    path("tokenPass/", views.token_pass, name="token_pass")
+    path("tokenPass/", views.token_pass, name="token_pass"),
+    path("createEmailValidationToken/", views.create_email_validation_token, name="create_email_validation_token"),
+    path("validateEmailToken/", views.validate_email_token, name="validate_email_token"),
 ]

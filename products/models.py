@@ -1,7 +1,10 @@
 from datetime import datetime
+from itertools import product
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import models
+
 from django.db import models
 
 
@@ -237,3 +240,25 @@ class Transactions(models.Model):
     request = models.TextField(blank=True, null=True)
     id_invoice = models.CharField(max_length=100)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
+class Coupon(models.Model):
+    id_coupon = models.AutoField(primary_key=True)
+    name_coupon = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    expiration_date = models.DateTimeField()
+    is_valid = models.BooleanField(default=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    product = models.ForeignKey(Products, on_delete=models.CASCADE, null=True, blank=True)
+    percentage_off = models.IntegerField(default=0)
+    points_given = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "coupons_coupon"
+        managed = False
+        verbose_name = 'cupón'
+        verbose_name_plural = 'cupones'
+
+    def __str__(self):
+        return self.name_coupon
