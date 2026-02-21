@@ -224,8 +224,8 @@ def create_email_validation_token(request, self=None):
                 JsonResponse({'message': 'ya esxiste un usuario con este email', "status": 200, "code": "01"}),
                 content_type="application/json")
 
-        subject_email = settings.SUBJECT_EMAIL_FOR_EMAIL_VALIDATION
-        text_email = settings.EMAIL_FOR_EMAIL_VALIDATION
+        subject_email = settings.SUBJECT_EMAIL_FOR_CONFIRMATION
+        text_email = settings.TEMPLATE_FOR_EMAIL_CONFIRMATION
 
         token = str(uuid.uuid4())[0:5]
         token_key = f"email_validation_token:{token}"
