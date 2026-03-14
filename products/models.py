@@ -1,11 +1,9 @@
 from datetime import datetime
-from itertools import product
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-
-from django.db import models
+from django.utils import timezone
 
 
 # Create your models here.
@@ -255,10 +253,232 @@ class Coupon(models.Model):
     points_given = models.IntegerField(default=0)
 
     class Meta:
-        db_table = "coupons_coupon"
-        managed = False
+        db_table = 'coupons_coupon'
         verbose_name = 'cupón'
         verbose_name_plural = 'cupones'
 
     def __str__(self):
         return self.name_coupon
+
+    # ------------------------------------------------------------------ #
+    #  Rule evaluation                                                     #
+    # ------------------------------------------------------------------ #
+    def validate_coupon(self, user, cart_total, cart_items, payment_method=None):
+        """
+        Evaluate all CouponRule objects linked to this coupon.
+
+        Parameters
+        ----------
+        user            : django.contrib.auth.models.User
+        cart_total      : numeric  – total monetary value of the cart
+        cart_items      : list[dict] – each dict may have keys:
+                          'product_id', 'category_id', 'quantity'
+        payment_method  : str | None
+
+        Returns
+        -------
+        (is_valid: bool, reason: str)
+        """
+        if not self.is_valid:
+            return False, 'El cupón no está activo.'
+
+        if timezone.now() > self.expiration_date:
+            return False, 'El cupón ha expirado.'
+
+        if self.user_id and self.user_id != user.pk:
+            return False, 'Este cupón no es válido para tu cuenta.'
+
+        if self.product_id:
+            cart_product_ids = [item.get('product_id') for item in cart_items]
+            if self.product_id not in cart_product_ids:
+                return False, 'El cupón no aplica a los productos del carrito.'
+
+        for rule in self.rules.select_related():
+            valid, reason = rule.evaluate(user, cart_total, cart_items)
+            if not valid:
+                return False, reason
+
+        return True, 'Cupón válido.'
+
+
+# ------------------------------------------------------------------ #
+#  CouponRule                                                          #
+# ------------------------------------------------------------------ #
+
+class CouponRule(models.Model):
+    class RuleType(models.TextChoices):
+        MIN_ORDER_AMOUNT   = 'min_order_amount',   'Monto mínimo de orden'
+        MAX_ORDER_AMOUNT   = 'max_order_amount',   'Monto máximo de orden'
+        MIN_ITEM_QUANTITY  = 'min_item_quantity',  'Cantidad mínima de ítems'
+        ALLOWED_CATEGORIES = 'allowed_categories', 'Categorías permitidas'
+        FIRST_PURCHASE_ONLY = 'first_purchase_only', 'Solo primera compra'
+        USAGE_LIMIT_TOTAL  = 'usage_limit_total',  'Límite de usos totales'
+        USAGE_LIMIT_PER_USER = 'usage_limit_per_user', 'Límite de usos por usuario'
+        DAY_OF_WEEK        = 'day_of_week',        'Día de la semana'
+
+    class Operator(models.TextChoices):
+        GTE     = 'gte',     'Mayor o igual (>=)'
+        LTE     = 'lte',     'Menor o igual (<=)'
+        EQ      = 'eq',      'Igual (=)'
+        IN      = 'in',      'En lista (in)'
+        BETWEEN = 'between', 'Entre (between)'
+
+    coupon = models.ForeignKey(
+        Coupon, on_delete=models.CASCADE, related_name='rules'
+    )
+    rule_type = models.CharField(
+        max_length=50, choices=RuleType.choices, verbose_name='Tipo de regla'
+    )
+    operator = models.CharField(
+        max_length=10, choices=Operator.choices, verbose_name='Operador'
+    )
+    value = models.JSONField(
+        verbose_name='Valor',
+        help_text=(
+            'JSON con la configuración de la regla. Ejemplos: '
+            '{"amount": 50000} | {"quantity": 3} | {"categories": [1,2]} | '
+            '{"limit": 5} | {"days": [0,1,2,3,4]} | {"min": 10000, "max": 200000}'
+        ),
+    )
+
+    class Meta:
+        verbose_name = 'regla de cupón'
+        verbose_name_plural = 'reglas de cupón'
+
+    def __str__(self):
+        return f'{self.get_rule_type_display()} [{self.get_operator_display()}]'
+
+    def evaluate(self, user, cart_total, cart_items):
+        """
+        Evaluate this single rule.
+
+        Returns
+        -------
+        (is_valid: bool, reason: str)
+        """
+        rt = self.rule_type
+        op = self.operator
+        v  = self.value or {}
+
+        # --- min_order_amount -------------------------------------------
+        if rt == self.RuleType.MIN_ORDER_AMOUNT:
+            amount = v.get('amount', 0)
+            if op == self.Operator.GTE:
+                if cart_total >= amount:
+                    return True, ''
+                return False, f'El monto mínimo de la orden debe ser {amount}.'
+            if op == self.Operator.BETWEEN:
+                min_val = v.get('min', 0)
+                max_val = v.get('max', float('inf'))
+                if min_val <= cart_total <= max_val:
+                    return True, ''
+                return False, f'El monto de la orden debe estar entre {min_val} y {max_val}.'
+
+        # --- max_order_amount -------------------------------------------
+        elif rt == self.RuleType.MAX_ORDER_AMOUNT:
+            amount = v.get('amount', float('inf'))
+            if op == self.Operator.LTE:
+                if cart_total <= amount:
+                    return True, ''
+                return False, f'El monto máximo de la orden es {amount}.'
+            if op == self.Operator.BETWEEN:
+                min_val = v.get('min', 0)
+                max_val = v.get('max', float('inf'))
+                if min_val <= cart_total <= max_val:
+                    return True, ''
+                return False, f'El monto de la orden debe estar entre {min_val} y {max_val}.'
+
+        # --- min_item_quantity ------------------------------------------
+        elif rt == self.RuleType.MIN_ITEM_QUANTITY:
+            min_qty   = v.get('quantity', 0)
+            total_qty = sum(item.get('quantity', 1) for item in cart_items)
+            if op == self.Operator.GTE:
+                if total_qty >= min_qty:
+                    return True, ''
+                return False, f'Se requieren al menos {min_qty} ítems en el carrito.'
+            if op == self.Operator.EQ:
+                if total_qty == min_qty:
+                    return True, ''
+                return False, f'Se requieren exactamente {min_qty} ítems en el carrito.'
+            if op == self.Operator.BETWEEN:
+                max_qty = v.get('max', float('inf'))
+                if min_qty <= total_qty <= max_qty:
+                    return True, ''
+                return False, f'La cantidad de ítems debe estar entre {min_qty} y {max_qty}.'
+
+        # --- allowed_categories -----------------------------------------
+        elif rt == self.RuleType.ALLOWED_CATEGORIES:
+            allowed        = v.get('categories', [])
+            cart_categories = {item.get('category_id') for item in cart_items}
+            if op == self.Operator.IN:
+                if cart_categories & set(allowed):
+                    return True, ''
+                return False, 'Ningún ítem del carrito pertenece a las categorías permitidas.'
+
+        # --- first_purchase_only ----------------------------------------
+        elif rt == self.RuleType.FIRST_PURCHASE_ONLY:
+            has_purchases = SaleDetail.objects.filter(usuario=user).exists()
+            if not has_purchases:
+                return True, ''
+            return False, 'Este cupón es válido solo para la primera compra.'
+
+        # --- usage_limit_total ------------------------------------------
+        elif rt == self.RuleType.USAGE_LIMIT_TOTAL:
+            limit      = v.get('limit', 0)
+            total_used = CouponRedemption.objects.filter(coupon=self.coupon).count()
+            if op in (self.Operator.LTE, self.Operator.EQ):
+                if total_used < limit:
+                    return True, ''
+            return False, 'El cupón ha alcanzado el límite máximo de usos.'
+
+        # --- usage_limit_per_user ---------------------------------------
+        elif rt == self.RuleType.USAGE_LIMIT_PER_USER:
+            limit    = v.get('limit', 1)
+            user_used = CouponRedemption.objects.filter(
+                coupon=self.coupon, user=user
+            ).count()
+            if op in (self.Operator.LTE, self.Operator.EQ):
+                if user_used < limit:
+                    return True, ''
+            return False, 'Has alcanzado el límite de usos de este cupón.'
+
+        # --- day_of_week ------------------------------------------------
+        elif rt == self.RuleType.DAY_OF_WEEK:
+            allowed_days = v.get('days', [])  # 0=Monday … 6=Sunday
+            current_day  = timezone.now().weekday()
+            if op == self.Operator.IN:
+                if current_day in allowed_days:
+                    return True, ''
+                day_names    = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+                allowed_names = ', '.join(day_names[d] for d in allowed_days if 0 <= d <= 6)
+                return False, f'El cupón solo es válido los siguientes días: {allowed_names}.'
+
+        # Fallback – unknown / unhandled combination passes silently
+        return True, ''
+
+
+# ------------------------------------------------------------------ #
+#  CouponRedemption                                                    #
+# ------------------------------------------------------------------ #
+
+class CouponRedemption(models.Model):
+    coupon = models.ForeignKey(
+        Coupon, on_delete=models.CASCADE, related_name='redemptions', verbose_name='Cupón'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='coupon_redemptions',
+        verbose_name='Usuario',
+    )
+    order_id    = models.CharField(max_length=100, verbose_name='ID de orden')
+    redeemed_at = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de uso')
+
+    class Meta:
+        verbose_name        = 'uso de cupón'
+        verbose_name_plural = 'usos de cupón'
+        ordering            = ['-redeemed_at']
+        indexes             = [models.Index(fields=['coupon', 'user'])]
+
+    def __str__(self):
+        return f'{self.coupon.name_coupon} – {self.user.username} – {self.order_id}'

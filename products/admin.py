@@ -15,7 +15,7 @@ from products.accountProductForm import AccountProductForm, FileForm
 from products.formProducts import ProductsFormCreate
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ProductsType, SaleDetail, ProductAccounts, Files, GameDetail, Consoles, \
-    TypeGames, VariablesSistema, Licenses, TypeAccounts, Coupon
+    TypeGames, VariablesSistema, Licenses, TypeAccounts, Coupon, CouponRule, CouponRedemption
 from django.contrib.admin import DateFieldListFilter
 from products.UpdateProductForm import UpdateProductForm
 @admin.action(description="Update price and other fields")
@@ -341,20 +341,113 @@ admin.site.register(TypeGames, TypeGamesAdmin)
 admin.site.register(TypeAccounts, TypeAccountsAdmin)
 admin.site.register(VariablesSistema, SystemVariablesAdmin)
 admin.site.register(Licenses, LicencesAdmin)
+# ------------------------------------------------------------------ #
+#  Coupon admin                                                        #
+# ------------------------------------------------------------------ #
+
+class CouponRuleInline(admin.TabularInline):
+    model = CouponRule
+    extra = 1
+    fields = ('rule_type', 'operator', 'value')
+    show_change_link = True
+
+
+@admin.action(description='Desactivar cupones seleccionados')
+def deactivate_coupons(modeladmin, request, queryset):
+    updated = queryset.update(is_valid=False)
+    modeladmin.message_user(
+        request,
+        f'{updated} cupón(es) desactivado(s) correctamente.',
+        messages.SUCCESS,
+    )
+
+
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
+    inlines     = [CouponRuleInline]
+    actions     = [deactivate_coupons]
+
     list_display = (
-        'id_coupon',
         'name_coupon',
-        'user',
-        'is_valid',
+        'is_valid_badge',
+        'expiration_date',
         'percentage_off',
         'points_given',
-        'expiration_date',
-        'created_at',
-        'modified_at',
-        'product',
+        'active_rules_count',
+        'total_redemptions',
     )
-    list_filter = ('is_valid', 'created_at')
-    search_fields = ('name_coupon', 'user__username', 'user__email', 'product__title')
+    list_filter   = ('is_valid', 'expiration_date', 'user', 'product')
+    search_fields = ('name_coupon',)
+    date_hierarchy = 'expiration_date'
+    ordering      = ('-created_at',)
     list_per_page = 25
+
+    readonly_fields = ('created_at', 'modified_at')
+    fieldsets = (
+        (
+            'Información general',
+            {
+                'fields': (
+                    'name_coupon', 'is_valid', 'expiration_date',
+                    'percentage_off', 'points_given',
+                )
+            },
+        ),
+        (
+            'Restricciones',
+            {
+                'fields': ('user', 'product'),
+                'description': (
+                    'Deja en blanco para que el cupón aplique a todos los usuarios / productos.'
+                ),
+            },
+        ),
+        (
+            'Auditoría',
+            {'fields': ('created_at', 'modified_at'), 'classes': ('collapse',)},
+        ),
+    )
+
+    @admin.display(description='Válido', boolean=False, ordering='is_valid')
+    def is_valid_badge(self, obj):
+        if obj.is_valid:
+            return format_html(
+                '<span style="color:#2e7d32;font-weight:bold;">✔ Activo</span>'
+            )
+        return format_html(
+            '<span style="color:#c62828;font-weight:bold;">✘ Inactivo</span>'
+        )
+
+    @admin.display(description='Reglas activas')
+    def active_rules_count(self, obj):
+        return obj.rules.count()
+
+    @admin.display(description='Usos totales')
+    def total_redemptions(self, obj):
+        return obj.redemptions.count()
+
+
+@admin.register(CouponRedemption)
+class CouponRedemptionAdmin(admin.ModelAdmin):
+    list_display   = ('coupon_name', 'username', 'order_id', 'redeemed_at')
+    list_filter    = ('coupon', 'user', 'redeemed_at')
+    search_fields  = ('coupon__name_coupon', 'user__username', 'order_id')
+    ordering       = ('-redeemed_at',)
+    date_hierarchy = 'redeemed_at'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='Cupón', ordering='coupon__name_coupon')
+    def coupon_name(self, obj):
+        return obj.coupon.name_coupon
+
+    @admin.display(description='Usuario', ordering='user__username')
+    def username(self, obj):
+        return obj.user.username
