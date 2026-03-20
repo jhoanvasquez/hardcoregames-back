@@ -22,7 +22,7 @@ from products.AdapterEpaycoApi import AdapterEpaycoApi
 from products.managePriceFile import ManegePricesFile
 from products.models import Products, ShoppingCar, Licenses, Consoles, \
     TypeGames, GameDetail, ProductAccounts, SaleDetail, DaysForRentail, PriceForSuscription, TypeAccounts, \
-    VariablesSistema, TypeSuscriptionAccounts, Transactions
+    VariablesSistema, TypeSuscriptionAccounts, Transactions, Coupon, CouponRedemption
 from products.productSerializers import ProductsSerializer, ProductSerializer, ShoppingCarSerializer, \
     SerializerForTypes, SerializerGameDetail, SerializerForConsole, SerializerSales, SerializerLicencesName, \
     SerializerDaysForRentail, SerializerPriceSuscriptionProduct, SerializerForVariables
@@ -734,6 +734,7 @@ def confirm_sale(request):
     try:
         json_request = json.loads(request)
         id_user = json_request['id_user']
+        coupon_code = json_request.get('couponCode')
         user = User.objects.filter(pk=id_user).first()
         message_html = ""
 
@@ -757,6 +758,9 @@ def confirm_sale(request):
             else:
                 global_exception_handler(request, None)
                 return False
+
+        #order_id = ','.join(str(item['id_combination']) for item in json_request['data'])
+        #apply_coupon_points(coupon_code, id_user, order_id)
 
         return True
     except Exception as e:
@@ -844,6 +848,27 @@ def update_points_sale(id_user, points):
     instance_user = User.objects.filter(pk=id_user).first()
     User_Customized.objects.filter(user=instance_user).update(
         puntos=F("puntos") + points
+    )
+
+
+def apply_coupon_points(coupon_code, id_user, order_id):
+    """If couponCode is present and valid, credit its points_given and log the redemption."""
+    if not coupon_code:
+        return
+    coupon = Coupon.objects.filter(name_coupon=coupon_code, is_valid=True).first()
+    if not coupon:
+        return
+    instance_user = User.objects.filter(pk=id_user).first()
+    if not instance_user:
+        return
+    if coupon.points_given:
+        User_Customized.objects.filter(user=instance_user).update(
+            puntos=F("puntos") + coupon.points_given
+        )
+    CouponRedemption.objects.create(
+        coupon=coupon,
+        user=instance_user,
+        order_id=order_id,
     )
 
 
