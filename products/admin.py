@@ -255,7 +255,8 @@ class GameDetailAdmin(admin.ModelAdmin):
             game_details.update(precio_descuento=new_price)
         else:
             new_price = request.POST.get('precio')
-            game_details.update(precio=new_price)
+            price_off = request.POST.get('precio_descuento')
+            game_details.update(precio=new_price, precio_descuento=price_off)
 
         cache.clear()
         messages.success(request, f"Successfully updated game details.")
@@ -364,8 +365,9 @@ def deactivate_coupons(modeladmin, request, queryset):
 
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
-    inlines     = [CouponRuleInline]
-    actions     = [deactivate_coupons]
+    inlines            = [CouponRuleInline]
+    actions            = [deactivate_coupons]
+    autocomplete_fields = ('user', 'product')
 
     list_display = (
         'name_coupon',
