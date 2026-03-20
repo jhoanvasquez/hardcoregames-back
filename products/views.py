@@ -734,7 +734,7 @@ def confirm_sale(request):
     try:
         json_request = json.loads(request)
         id_user = json_request['id_user']
-        coupon_code = json_request.get('couponCode')
+        #coupon_code = json_request.get('couponCode')
         user = User.objects.filter(pk=id_user).first()
         message_html = ""
 
