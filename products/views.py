@@ -754,7 +754,6 @@ def confirm_sale(request):
                     combination_selected.save()
                 create_sale(item, id_user, account_selected)
                 message_html += build_div_html(product_selected, combination_selected, account_selected, name_console)
-                send_email_notification(id_user, message_html)
             else:
                 global_exception_handler(request, None)
                 return False
@@ -762,6 +761,8 @@ def confirm_sale(request):
         #order_id = ','.join(str(item['id_combination']) for item in json_request['data'])
         #apply_coupon_points(coupon_code, id_user, order_id)
 
+        if message_html != "":
+            send_email_notification(id_user, message_html)
         return True
     except Exception as e:
         send_email = True
