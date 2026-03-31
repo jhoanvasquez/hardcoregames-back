@@ -142,7 +142,8 @@ class GameDetail(models.Model):
         verbose_name_plural = 'Precios por consola y licencia'
 
     def __str__(self):
-        return str(self.consola) + " " + str(self.licencia)
+        product_name = self.producto.title if self.producto else 'Sin producto'
+        return f"{product_name} | {self.licencia} | {self.consola} | {self.duracion_dias_alquiler}"
 
 
 class SaleDetail(models.Model):
@@ -248,7 +249,7 @@ class Coupon(models.Model):
     expiration_date = models.DateTimeField()
     is_valid = models.BooleanField(default=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    product = models.ForeignKey(Products, on_delete=models.CASCADE, null=True, blank=True)
+    game_details = models.ManyToManyField('GameDetail', blank=True, related_name='coupons')
     percentage_off = models.IntegerField(default=0)
     points_given = models.IntegerField(default=0)
 
@@ -288,9 +289,10 @@ class Coupon(models.Model):
         if self.user_id and self.user_id != user.pk:
             return False, 'Este cupón no es válido para tu cuenta.'
 
-        if self.product_id:
-            cart_product_ids = [item.get('product_id') for item in cart_items]
-            if self.product_id not in cart_product_ids:
+        coupon_game_detail_ids = list(self.game_details.values_list('id_game_detail', flat=True))
+        if coupon_game_detail_ids:
+            cart_combination_ids = [item.get('id_combination') for item in cart_items]
+            if not any(gd_id in cart_combination_ids for gd_id in coupon_game_detail_ids):
                 return False, 'El cupón no aplica a los productos del carrito.'
 
         for rule in self.rules.select_related():

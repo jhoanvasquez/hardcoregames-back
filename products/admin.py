@@ -233,6 +233,15 @@ class GameDetailAdmin(admin.ModelAdmin):
     @staticmethod
     def has_module_permission(request):
         return False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('producto', 'consola', 'licencia', 'cuenta')
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        queryset = queryset.filter(stock__gt=0, precio__gt=0,)
+        return queryset, use_distinct
+
     def product(obj):
         url = reverse('admin:products_products_change', args=[obj.producto.id_product])
         return format_html(u'<a href="{}" style="margin-right:100px">{}</a>',
@@ -367,7 +376,7 @@ def deactivate_coupons(modeladmin, request, queryset):
 class CouponAdmin(admin.ModelAdmin):
     inlines            = [CouponRuleInline]
     actions            = [deactivate_coupons]
-    autocomplete_fields = ('user', 'product')
+    autocomplete_fields = ('user', 'game_details')
 
     list_display = (
         'name_coupon',
@@ -378,7 +387,7 @@ class CouponAdmin(admin.ModelAdmin):
         'active_rules_count',
         'total_redemptions',
     )
-    list_filter   = ('is_valid', 'expiration_date', 'user', 'product')
+    list_filter   = ('is_valid', 'expiration_date', 'user')
     search_fields = ('name_coupon',)
     date_hierarchy = 'expiration_date'
     ordering      = ('-created_at',)
@@ -398,7 +407,7 @@ class CouponAdmin(admin.ModelAdmin):
         (
             'Restricciones',
             {
-                'fields': ('user', 'product'),
+                'fields': ('user', 'game_details'),
                 'description': (
                     'Deja en blanco para que el cupón aplique a todos los usuarios / productos.'
                 ),
