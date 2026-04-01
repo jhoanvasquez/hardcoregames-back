@@ -2,17 +2,6 @@ from django import forms
 from products.models import GameDetail, Licenses  # Import Licenses model
 
 class UpdateProductForm(forms.ModelForm):
-    PRICE_CHOICES = [
-        ('1', 'Precio Regular'),
-        ('2', 'Precio Promoción')
-    ]
-
-    price_type = forms.ChoiceField(
-        choices=PRICE_CHOICES,
-        widget=forms.Select,
-        required=True,
-        label="Seleccionar Tipo Precio"
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,4 +38,4 @@ class UpdateProductForm(forms.ModelForm):
 
     class Meta:
         model = GameDetail
-        fields = ('producto', 'licencia', 'precio', 'precio_descuento', 'duracion_dias_alquiler', 'price_type')
+        fields = ('producto', 'licencia', 'precio', 'precio_descuento', 'duracion_dias_alquiler')

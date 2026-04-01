@@ -484,3 +484,29 @@ class CouponRedemption(models.Model):
 
     def __str__(self):
         return f'{self.coupon.name_coupon} – {self.user.username} – {self.order_id}'
+
+
+# ------------------------------------------------------------------ #
+#  Proxy model – Productos Destacados                                  #
+# ------------------------------------------------------------------ #
+
+class ProductoDestacado(Products):
+    """Proxy model used exclusively by the Productos Destacados admin page."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Producto Destacado'
+        verbose_name_plural = 'Productos Destacados'
+
+
+# ------------------------------------------------------------------ #
+#  Proxy model – Inventario de GameDetail                              #
+# ------------------------------------------------------------------ #
+
+class GameDetailInventario(GameDetail):
+    """Proxy model for the Inventario de Productos admin page."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Inventario de Producto'
+        verbose_name_plural = 'Inventario de Productos'
