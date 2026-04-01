@@ -734,7 +734,7 @@ def confirm_sale(request):
     try:
         json_request = json.loads(request)
         id_user = json_request['id_user']
-        #coupon_code = json_request.get('couponCode')
+        coupon_code = json_request.get('couponCode')
         user = User.objects.filter(pk=id_user).first()
         message_html = ""
 
@@ -758,8 +758,8 @@ def confirm_sale(request):
                 global_exception_handler(request, None)
                 return False
 
-        #order_id = ','.join(str(item['id_combination']) for item in json_request['data'])
-        #apply_coupon_points(coupon_code, id_user, order_id)
+        order_id = ','.join(str(item['id_combination']) for item in json_request['data'])
+        apply_coupon_points(coupon_code, id_user, order_id)
 
         if message_html != "":
             send_email_notification(id_user, message_html)
